@@ -414,8 +414,8 @@ const soundRegions = [
 
 const feudTargetRegion = {
   id: "feudTarget",
-  minX: 0.500,
-  maxX: 0.555,
+  minX: 0.445,
+  maxX: 0.500,
   minY: 0.035,
   maxY: 0.145
 };
