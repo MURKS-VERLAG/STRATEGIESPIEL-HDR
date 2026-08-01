@@ -1,0 +1,337 @@
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  color-scheme: dark;
+  --stage-ratio: 3 / 2;
+  --ink: #111;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  overflow: hidden;
+  background: #050505;
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+button {
+  font: inherit;
+}
+
+.page {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  background:
+    radial-gradient(circle at center, #222 0%, #080808 72%, #000 100%);
+}
+
+.stage {
+  position: relative;
+  width: min(100vw, calc(100vh * 1.5));
+  aspect-ratio: var(--stage-ratio);
+  overflow: hidden;
+  isolation: isolate;
+  background: #fff;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.85);
+}
+
+.scene {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+  pointer-events: none;
+}
+
+/*
+  Der Text liegt nur in der freien Wandfläche.
+  Unterkante bei etwa 45 % der Bildhöhe: direkt oberhalb der Tischlinie.
+*/
+.text-window {
+  position: absolute;
+  z-index: 3;
+  top: 3.7%;
+  left: 26.2%;
+  width: 49.8%;
+  height: 41.3%;
+  overflow: hidden;
+  pointer-events: none;
+
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    #000 4%,
+    #000 83%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    #000 4%,
+    #000 83%,
+    transparent 100%
+  );
+}
+
+.intro-copy {
+  width: 100%;
+  margin: 0;
+  color: var(--ink);
+  text-align: center;
+  text-wrap: balance;
+  opacity: 0;
+  transform: translateY(-2.5%);
+  filter: blur(0.15px);
+  will-change: opacity, transform;
+}
+
+.intro-copy.is-running {
+  animation:
+    copyEntrance 1.4s ease-out 0.8s forwards,
+    copyDrift 58s linear 0.8s forwards,
+    copyExit 2.8s ease-in 56s forwards;
+}
+
+.intro-copy.is-skipped {
+  animation: copySkip 420ms ease forwards;
+}
+
+.intro-copy h1 {
+  margin: 0 0 0.58em;
+  font-size: clamp(15px, 2.05vw, 31px);
+  line-height: 1.05;
+  font-weight: 700;
+  letter-spacing: 0.025em;
+}
+
+.intro-copy p {
+  margin: 0 0 0.58em;
+  font-size: clamp(9px, 1.15vw, 17px);
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: 0.006em;
+}
+
+.intro-copy p:last-child {
+  margin-bottom: 0;
+}
+
+@keyframes copyEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(-2.5%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/*
+  Sehr langsames Absinken des gesamten Textblocks.
+  Die eigentliche Lesebewegung entsteht zusätzlich durch den
+  absatzweisen Auftritt in JavaScript.
+*/
+@keyframes copyDrift {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(10%);
+  }
+}
+
+@keyframes copyExit {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes copySkip {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.intro-copy h1,
+.intro-copy p {
+  opacity: 0;
+  transform: translateY(-10px);
+  will-change: opacity, transform;
+}
+
+.intro-copy.is-running h1,
+.intro-copy.is-running p {
+  animation: lineReveal 1.15s ease-out forwards;
+}
+
+@keyframes lineReveal {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Dezentes Kerzenlicht exakt über der vorhandenen Flamme. */
+.candle-light {
+  position: absolute;
+  z-index: 2;
+  border-radius: 50%;
+  pointer-events: none;
+  transform-origin: center;
+  mix-blend-mode: multiply;
+  will-change: opacity, transform;
+}
+
+.candle-light--wide {
+  left: 7.4%;
+  top: 1.4%;
+  width: 13%;
+  aspect-ratio: 0.78;
+  background:
+    radial-gradient(
+      ellipse at center,
+      rgba(255, 205, 92, 0.18) 0%,
+      rgba(255, 190, 75, 0.10) 34%,
+      rgba(255, 173, 53, 0.035) 62%,
+      rgba(255, 170, 45, 0) 100%
+    );
+  filter: blur(12px);
+  animation: candleWide 1.82s ease-in-out infinite alternate;
+}
+
+.candle-light--core {
+  left: 11.5%;
+  top: 4.3%;
+  width: 4.6%;
+  aspect-ratio: 0.65;
+  background:
+    radial-gradient(
+      ellipse at center,
+      rgba(255, 230, 142, 0.25) 0%,
+      rgba(255, 196, 75, 0.10) 48%,
+      rgba(255, 185, 55, 0) 100%
+    );
+  filter: blur(5px);
+  animation: candleCore 1.27s ease-in-out infinite alternate;
+}
+
+@keyframes candleWide {
+  0% {
+    opacity: 0.42;
+    transform: translate(-1px, 1px) scale(0.97);
+  }
+  38% {
+    opacity: 0.56;
+    transform: translate(2px, -1px) scale(1.025);
+  }
+  72% {
+    opacity: 0.46;
+    transform: translate(-1px, -2px) scale(0.99);
+  }
+  100% {
+    opacity: 0.60;
+    transform: translate(1px, 1px) scale(1.045);
+  }
+}
+
+@keyframes candleCore {
+  0% {
+    opacity: 0.34;
+    transform: translate(0, 1px) scale(0.96);
+  }
+  45% {
+    opacity: 0.52;
+    transform: translate(1px, -2px) scale(1.045);
+  }
+  100% {
+    opacity: 0.40;
+    transform: translate(-1px, 0) scale(0.985);
+  }
+}
+
+.intro-control {
+  position: absolute;
+  right: 2.1%;
+  bottom: 1.7%;
+  z-index: 5;
+  padding: 0.35em 0.55em;
+  border: 0;
+  background: transparent;
+  color: rgba(15, 15, 15, 0.48);
+  cursor: pointer;
+  font-size: clamp(9px, 0.9vw, 14px);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  transition:
+    color 180ms ease,
+    opacity 180ms ease;
+}
+
+.intro-control:hover,
+.intro-control:focus-visible {
+  color: rgba(0, 0, 0, 0.9);
+  outline: none;
+}
+
+.stage.intro-finished .intro-control {
+  color: rgba(15, 15, 15, 0.58);
+}
+
+/* Kleinere Hochformatfenster: Bühne bleibt vollständig sichtbar. */
+@media (max-aspect-ratio: 3 / 2) {
+  .stage {
+    width: 100vw;
+    height: auto;
+  }
+}
+
+@media (min-aspect-ratio: 3 / 2) {
+  .stage {
+    width: auto;
+    height: 100vh;
+  }
+}
+
+/* Barrierearme Alternative. */
+@media (prefers-reduced-motion: reduce) {
+  .candle-light {
+    animation-duration: 4s;
+  }
+
+  .intro-copy.is-running {
+    animation:
+      copyEntrance 400ms ease-out forwards,
+      copyExit 800ms ease-in 18s forwards;
+  }
+
+  .intro-copy.is-running h1,
+  .intro-copy.is-running p {
+    animation-duration: 350ms;
+  }
+}
