@@ -12,6 +12,8 @@ const introControl = document.querySelector("#introControl");
 
 const mapViewport = document.querySelector("#mapViewport");
 const campaignMap = document.querySelector("#campaignMap");
+const mapOverlay = document.querySelector("#mapOverlay");
+const yearDisplay = document.querySelector("#yearDisplay");
 const zoomDisplay = document.querySelector("#zoomDisplay");
 const mapHint = document.querySelector("#mapHint");
 
@@ -152,6 +154,10 @@ function initializeMap() {
   campaignMap.style.width = `${fittedWidth}px`;
   campaignMap.style.height = `${fittedHeight}px`;
 
+  mapOverlay.style.width = `${fittedWidth}px`;
+  mapOverlay.style.height = `${fittedHeight}px`;
+  mapOverlay.style.fontSize = `${Math.max(26, fittedWidth * 0.036)}px`;
+
   mapState.fitScale = fitScale;
   mapState.zoom = 1;
   mapState.x = (viewportWidth - fittedWidth) / 2;
@@ -184,6 +190,9 @@ function renderMap() {
   clampMapPosition();
 
   campaignMap.style.transform =
+    `translate(${mapState.x}px, ${mapState.y}px) scale(${mapState.zoom})`;
+
+  mapOverlay.style.transform =
     `translate(${mapState.x}px, ${mapState.y}px) scale(${mapState.zoom})`;
 
   zoomDisplay.textContent = `${Math.round(mapState.zoom * 100)} %`;
@@ -426,3 +435,85 @@ mapViewport.addEventListener("pointerleave", () => {
   activeSoundRegion = null;
   mapViewport.style.cursor = "default";
 });
+
+/* V18: Jahreswechsel über einen Klick auf die Glocke. */
+const gameState = {
+  year: 1430
+};
+
+let yearChangeInProgress = false;
+
+function updateYearDisplay() {
+  yearDisplay.textContent = String(gameState.year);
+}
+
+function getNormalizedMapPosition(event) {
+  if (!mapReady || campaignMap.offsetWidth <= 0 || campaignMap.offsetHeight <= 0) {
+    return null;
+  }
+
+  const rect = mapViewport.getBoundingClientRect();
+  const mouseX = event.clientX - rect.left;
+  const mouseY = event.clientY - rect.top;
+
+  const imageX = (mouseX - mapState.x) / mapState.zoom;
+  const imageY = (mouseY - mapState.y) / mapState.zoom;
+
+  return {
+    x: imageX / campaignMap.offsetWidth,
+    y: imageY / campaignMap.offsetHeight
+  };
+}
+
+function isInsideRegion(position, region) {
+  return (
+    position.x >= region.minX &&
+    position.x <= region.maxX &&
+    position.y >= region.minY &&
+    position.y <= region.maxY
+  );
+}
+
+function advanceYear() {
+  if (yearChangeInProgress) {
+    return;
+  }
+
+  yearChangeInProgress = true;
+  mapViewport.classList.add("is-year-changing");
+
+  window.setTimeout(() => {
+    gameState.year += 1;
+    updateYearDisplay();
+
+    mapState.zoom = 1;
+    initializeMap();
+
+    window.setTimeout(() => {
+      mapViewport.classList.remove("is-year-changing");
+
+      window.setTimeout(() => {
+        yearChangeInProgress = false;
+      }, 780);
+    }, 190);
+  }, 760);
+}
+
+mapViewport.addEventListener("click", (event) => {
+  if (yearChangeInProgress) {
+    return;
+  }
+
+  const position = getNormalizedMapPosition(event);
+  const bellRegion = soundRegions.find((region) => region.id === "bell");
+
+  if (!position || !bellRegion) {
+    return;
+  }
+
+  if (isInsideRegion(position, bellRegion)) {
+    advanceYear();
+  }
+});
+
+updateYearDisplay();

@@ -308,3 +308,44 @@ button {
     height: 100vh;
   }
 }
+
+/* V18: Jahreszahl und sanfter Jahreswechsel. */
+.map-viewport {
+  transition: opacity 760ms ease;
+}
+
+.map-viewport.is-year-changing {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.map-overlay {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 3;
+  width: 0;
+  height: 0;
+  transform-origin: 0 0;
+  will-change: transform, width, height;
+  pointer-events: none;
+}
+
+.year-display {
+  position: absolute;
+  left: 80.5%;
+  top: 88%;
+  transform: translate(-50%, -50%);
+  color: #861010;
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.045em;
+  white-space: nowrap;
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.32),
+    0 2px 3px rgba(0, 0, 0, 0.36);
+  user-select: none;
+  pointer-events: none;
+}
+
