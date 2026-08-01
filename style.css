@@ -333,8 +333,8 @@ button {
 
 .year-display {
   position: absolute;
-  left: 93.2%;
-  top: 77.5%;
+  left: 94.0%;
+  top: 80.2%;
   transform: translate(-50%, -100%);
   color: #861010;
   font-family: Georgia, "Times New Roman", serif;
@@ -349,7 +349,7 @@ button {
   pointer-events: none;
 }
 
-/* V19: Nebelschleier über der Kampagnenkarte. */
+/* V20: echte, langsam ziehende Nebelschwaden. */
 .map-fog-layer {
   position: absolute;
   left: 0;
@@ -363,86 +363,134 @@ button {
   pointer-events: none;
 }
 
-.map-fog {
+.fog-bank {
   position: absolute;
-  inset: -8% -38%;
-  opacity: 0.20;
+  left: -68%;
+  width: 100%;
+  height: 27%;
+  opacity: 0.28;
   pointer-events: none;
   will-change: transform;
   mix-blend-mode: screen;
-  filter: blur(14px);
+  filter: blur(13px);
 
   background:
     radial-gradient(
-      ellipse at 12% 44%,
-      rgba(255, 255, 255, 0.30) 0%,
-      rgba(255, 255, 255, 0.13) 28%,
-      rgba(255, 255, 255, 0) 66%
-    ),
-    radial-gradient(
-      ellipse at 48% 60%,
-      rgba(246, 246, 246, 0.22) 0%,
-      rgba(246, 246, 246, 0.10) 34%,
-      rgba(246, 246, 246, 0) 70%
-    ),
-    radial-gradient(
-      ellipse at 82% 40%,
-      rgba(255, 255, 255, 0.17) 0%,
-      rgba(255, 255, 255, 0.07) 32%,
+      ellipse at 12% 55%,
+      rgba(255, 255, 255, 0.48) 0%,
+      rgba(255, 255, 255, 0.22) 29%,
       rgba(255, 255, 255, 0) 68%
-    );
-
-  animation: mapFogDrift 34s linear infinite;
-}
-
-.map-fog::before,
-.map-fog::after {
-  content: "";
-  position: absolute;
-  inset: -10% -25%;
-  pointer-events: none;
-  will-change: transform;
-}
-
-.map-fog::before {
-  background:
-    radial-gradient(
-      ellipse at 20% 62%,
-      rgba(255, 255, 255, 0.17) 0%,
-      rgba(255, 255, 255, 0) 66%
     ),
     radial-gradient(
-      ellipse at 66% 34%,
-      rgba(255, 255, 255, 0.13) 0%,
+      ellipse at 43% 42%,
+      rgba(248, 248, 248, 0.38) 0%,
+      rgba(248, 248, 248, 0.17) 34%,
+      rgba(248, 248, 248, 0) 70%
+    ),
+    radial-gradient(
+      ellipse at 76% 58%,
+      rgba(255, 255, 255, 0.34) 0%,
+      rgba(255, 255, 255, 0.14) 32%,
       rgba(255, 255, 255, 0) 69%
     );
-  filter: blur(18px);
-  animation: mapFogLayerTwo 46s linear infinite;
 }
 
-.map-fog::after {
-  background:
-    radial-gradient(
-      ellipse at 35% 52%,
-      rgba(255, 255, 255, 0.11) 0%,
-      rgba(255, 255, 255, 0) 72%
-    );
-  filter: blur(22px);
-  animation: mapFogLayerThree 58s linear infinite;
+.fog-bank--one {
+  top: 8%;
+  animation: fogMoveOne 52s linear infinite;
 }
 
-@keyframes mapFogDrift {
-  from { transform: translateX(-30%); }
-  to   { transform: translateX(30%); }
+.fog-bank--two {
+  top: 31%;
+  opacity: 0.23;
+  animation: fogMoveTwo 67s linear infinite;
 }
 
-@keyframes mapFogLayerTwo {
-  from { transform: translateX(-24%); }
-  to   { transform: translateX(26%); }
+.fog-bank--three {
+  top: 56%;
+  opacity: 0.27;
+  animation: fogMoveThree 59s linear infinite;
 }
 
-@keyframes mapFogLayerThree {
-  from { transform: translateX(-18%); }
-  to   { transform: translateX(30%); }
+.fog-bank--four {
+  top: 77%;
+  opacity: 0.20;
+  animation: fogMoveFour 74s linear infinite;
+}
+
+@keyframes fogMoveOne {
+  from { transform: translateX(0); }
+  to   { transform: translateX(178%); }
+}
+
+@keyframes fogMoveTwo {
+  from { transform: translateX(-8%); }
+  to   { transform: translateX(190%); }
+}
+
+@keyframes fogMoveThree {
+  from { transform: translateX(-15%); }
+  to   { transform: translateX(185%); }
+}
+
+@keyframes fogMoveFour {
+  from { transform: translateX(-5%); }
+  to   { transform: translateX(195%); }
+}
+
+/* V20: Kasernenfenster über der Karte. */
+.barracks-modal[hidden] {
+  display: none;
+}
+
+.barracks-modal {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  pointer-events: auto;
+  transition: opacity 540ms ease;
+}
+
+.barracks-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(20, 17, 13, 0.38);
+  backdrop-filter: blur(1px);
+}
+
+.barracks-window {
+  position: relative;
+  z-index: 31;
+  width: min(84vw, 1180px);
+  max-height: 84vh;
+  transform: scale(0.965);
+  opacity: 0;
+  transition:
+    transform 540ms ease,
+    opacity 540ms ease;
+  box-shadow:
+    0 14px 42px rgba(0, 0, 0, 0.48),
+    0 0 0 1px rgba(230, 225, 210, 0.28);
+}
+
+.barracks-image {
+  display: block;
+  width: 100%;
+  max-height: 84vh;
+  object-fit: contain;
+  user-select: none;
+  pointer-events: none;
+}
+
+.barracks-modal.is-open {
+  opacity: 1;
+}
+
+.barracks-modal.is-open .barracks-window {
+  transform: scale(1);
+  opacity: 1;
 }
 

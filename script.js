@@ -17,12 +17,15 @@ const mapFogLayer = document.querySelector("#mapFogLayer");
 const yearDisplay = document.querySelector("#yearDisplay");
 const zoomDisplay = document.querySelector("#zoomDisplay");
 const mapHint = document.querySelector("#mapHint");
+const barracksModal = document.querySelector("#barracksModal");
 
 const INTRO_DURATION = 72000;
 const TRANSITION_DURATION = 1400;
 
 let crawlAnimation = null;
 let mapReady = false;
+let barracksOpen = false;
+let barracksClosing = false;
 
 const mapState = {
   fitScale: 1,
@@ -208,6 +211,10 @@ function renderMap() {
 mapViewport.addEventListener("wheel", (event) => {
   event.preventDefault();
 
+  if (barracksOpen || barracksClosing) {
+    return;
+  }
+
   const rect = mapViewport.getBoundingClientRect();
   const cursorX = event.clientX - rect.left;
   const cursorY = event.clientY - rect.top;
@@ -235,6 +242,10 @@ mapViewport.addEventListener("wheel", (event) => {
 }, { passive: false });
 
 mapViewport.addEventListener("dblclick", () => {
+  if (barracksOpen || barracksClosing) {
+    return;
+  }
+
   mapState.zoom = 1;
   initializeMap();
 });
@@ -246,6 +257,10 @@ let lastFrameTime = performance.now();
 
 window.addEventListener("keydown", (event) => {
   const key = event.key.toLowerCase();
+
+  if (barracksOpen || barracksClosing) {
+    return;
+  }
 
   if (["w", "a", "s", "d"].includes(key)) {
     event.preventDefault();
@@ -266,7 +281,12 @@ function updateKeyboardPan(now) {
   const deltaSeconds = Math.min(0.05, (now - lastFrameTime) / 1000);
   lastFrameTime = now;
 
-  if (mapScreen.classList.contains("is-active") && mapState.zoom > 1) {
+  if (
+    mapScreen.classList.contains("is-active") &&
+    mapState.zoom > 1 &&
+    !barracksOpen &&
+    !barracksClosing
+  ) {
     const distance = PAN_SPEED * deltaSeconds;
 
     if (pressedKeys.has("a")) mapState.x += distance;
@@ -411,6 +431,12 @@ function playHoverSound(audioId) {
 }
 
 mapViewport.addEventListener("pointermove", (event) => {
+  if (barracksOpen || barracksClosing) {
+    activeSoundRegion = null;
+    mapViewport.style.cursor = "default";
+    return;
+  }
+
   const rect = mapViewport.getBoundingClientRect();
 
   const mouseX = event.clientX - rect.left;
@@ -507,20 +533,90 @@ function advanceYear() {
 }
 
 mapViewport.addEventListener("click", (event) => {
-  if (yearChangeInProgress) {
+  if (
+    yearChangeInProgress ||
+    barracksOpen ||
+    barracksClosing
+  ) {
     return;
   }
 
   const position = getNormalizedMapPosition(event);
   const bellRegion = soundRegions.find((region) => region.id === "bell");
+  const blackShieldRegion = soundRegions.find(
+    (region) => region.id === "blackShield"
+  );
 
-  if (!position || !bellRegion) {
+  if (!position) {
     return;
   }
 
-  if (isInsideRegion(position, bellRegion)) {
+  if (bellRegion && isInsideRegion(position, bellRegion)) {
     advanceYear();
+    return;
+  }
+
+  if (
+    blackShieldRegion &&
+    isInsideRegion(position, blackShieldRegion)
+  ) {
+    openBarracks();
   }
 });
 
 updateYearDisplay();
+
+
+/* V20: Kasernenansicht öffnen und schließen. */
+function openBarracks() {
+  if (
+    barracksOpen ||
+    barracksClosing ||
+    yearChangeInProgress
+  ) {
+    return;
+  }
+
+  barracksOpen = true;
+  activeSoundRegion = null;
+  pressedKeys.clear();
+  mapViewport.style.cursor = "default";
+  barracksModal.hidden = false;
+
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
+      barracksModal.classList.add("is-open");
+    });
+  });
+}
+
+function closeBarracks() {
+  if (!barracksOpen || barracksClosing) {
+    return;
+  }
+
+  barracksClosing = true;
+  barracksModal.classList.remove("is-open");
+
+  window.setTimeout(() => {
+    barracksModal.hidden = true;
+    barracksOpen = false;
+    barracksClosing = false;
+  }, 560);
+}
+
+window.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && barracksOpen) {
+    event.preventDefault();
+    closeBarracks();
+  }
+});
+
+barracksModal.addEventListener("contextmenu", (event) => {
+  event.preventDefault();
+
+  if (barracksOpen) {
+    closeBarracks();
+  }
+});
+

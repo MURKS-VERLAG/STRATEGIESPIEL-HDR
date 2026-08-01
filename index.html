@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#050505">
   <title>Die Herren der Rench</title>
-  <link rel="stylesheet" href="style.css?v=19">
+  <link rel="stylesheet" href="style.css?v=20">
 </head>
 <body>
   <main class="game">
@@ -92,7 +92,10 @@
         >
 
         <div class="map-fog-layer" id="mapFogLayer" aria-hidden="true">
-          <div class="map-fog"></div>
+          <div class="fog-bank fog-bank--one"></div>
+          <div class="fog-bank fog-bank--two"></div>
+          <div class="fog-bank fog-bank--three"></div>
+          <div class="fog-bank fog-bank--four"></div>
         </div>
 
         <div class="map-overlay" id="mapOverlay" aria-hidden="true">
@@ -114,9 +117,29 @@
       <audio id="familyTreeSound" preload="auto"><source src="assets/cheer2(1).mp3?v=17" type="audio/mpeg"></audio>
       <audio id="scrollSound" preload="auto"><source src="assets/drawbridge_lowering(1).mp3?v=17" type="audio/mpeg"></audio>
       <audio id="handbookSound" preload="auto"><source src="assets/opencldrn_01(1).mp3?v=17" type="audio/mpeg"></audio>
+
+      <div
+        class="barracks-modal"
+        id="barracksModal"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Kaserne Reinbold Ringelnatz"
+        hidden
+      >
+        <div class="barracks-backdrop"></div>
+
+        <div class="barracks-window">
+          <img
+            class="barracks-image"
+            src="assets/kaserne-ringelnatz.jpg?v=20"
+            alt="Kaserne Reinbold Ringelnatz"
+            draggable="false"
+          >
+        </div>
+      </div>
     </section>
   </main>
 
-  <script src="script.js?v=19"></script>
+  <script src="script.js?v=20"></script>
 </body>
 </html>
