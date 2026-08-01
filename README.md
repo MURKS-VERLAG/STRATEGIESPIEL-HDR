@@ -1,29 +1,14 @@
-# Die Herren der Rench – Karte V9
+# Die Herren der Rench – Karten-Fix V7
 
-Dieser Build verwendet die Kampagnenkarte exakt 1:1 aus dem Original-Word-Dokument.
+Dieser Build korrigiert ausschließlich die Kartenpositionierung:
 
-## Unverändert übernommen
+- ganze Karte beim Start vollständig sichtbar
+- horizontal und vertikal exakt zentriert
+- falscher Versatz nach unten rechts beseitigt
+- Mausrad-Zoom zum Mauszeiger bleibt
+- W/A/S/D bleibt
+- Mausziehen bleibt entfernt
+- Doppelklick setzt auf die vollständige zentrierte Ansicht zurück
+- freie Flächen bei abweichendem Bildschirmformat bleiben pergamentfarben, niemals schwarz
 
-- dieselbe Original-PNG-Datei
-- keine Neuberechnung
-- kein Nachzeichnen
-- keine zusätzlichen Grenzlinien
-- keine Farbänderung
-- keine Komprimierung
-- kein erneutes Speichern der Bilddatei
-
-Die Engine verändert ausschließlich die Bildschirmdarstellung mit:
-
-- `translate(...)`
-- `scale(...)`
-
-## Weiterhin enthalten
-
-- vollständig sichtbare, exakt zentrierte Startansicht
-- kein schwarzer Rand
-- Mausrad-Zoom zum Mauszeiger
-- WASD-Steuerung
-- kein Ziehen mit der Maus
-- Doppelklick zum Zurücksetzen
-- maximal 300 Prozent Zoom
-- Intro, Musik und Bildschirmwechsel unverändert
+Den gesamten ZIP-Inhalt in GitHub hochladen und vorhandene Dateien ersetzen.
