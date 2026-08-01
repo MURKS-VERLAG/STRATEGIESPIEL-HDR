@@ -13,6 +13,7 @@ const introControl = document.querySelector("#introControl");
 const mapViewport = document.querySelector("#mapViewport");
 const campaignMap = document.querySelector("#campaignMap");
 const mapOverlay = document.querySelector("#mapOverlay");
+const mapFogLayer = document.querySelector("#mapFogLayer");
 const yearDisplay = document.querySelector("#yearDisplay");
 const zoomDisplay = document.querySelector("#zoomDisplay");
 const mapHint = document.querySelector("#mapHint");
@@ -158,6 +159,9 @@ function initializeMap() {
   mapOverlay.style.height = `${fittedHeight}px`;
   mapOverlay.style.fontSize = `${Math.max(26, fittedWidth * 0.036)}px`;
 
+  mapFogLayer.style.width = `${fittedWidth}px`;
+  mapFogLayer.style.height = `${fittedHeight}px`;
+
   mapState.fitScale = fitScale;
   mapState.zoom = 1;
   mapState.x = (viewportWidth - fittedWidth) / 2;
@@ -193,6 +197,9 @@ function renderMap() {
     `translate(${mapState.x}px, ${mapState.y}px) scale(${mapState.zoom})`;
 
   mapOverlay.style.transform =
+    `translate(${mapState.x}px, ${mapState.y}px) scale(${mapState.zoom})`;
+
+  mapFogLayer.style.transform =
     `translate(${mapState.x}px, ${mapState.y}px) scale(${mapState.zoom})`;
 
   zoomDisplay.textContent = `${Math.round(mapState.zoom * 100)} %`;
