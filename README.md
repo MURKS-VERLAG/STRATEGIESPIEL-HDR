@@ -1,19 +1,29 @@
-# Die Herren der Rench – Karte V8
+# Die Herren der Rench – Karte V9
 
-Dieser Build basiert vollständig auf der idealen, zentrierten V7.
+Dieser Build verwendet die Kampagnenkarte exakt 1:1 aus dem Original-Word-Dokument.
 
-Geändert wurden ausschließlich:
+## Unverändert übernommen
 
-- die originalen gestrichelten Gebietsgrenzen aus dem Word-Anhang wurden auf die UHD-Karte übernommen
-- die vier stärksten Zoomstufen wurden entfernt
-- maximaler Zoom beträgt nun 300 Prozent
+- dieselbe Original-PNG-Datei
+- keine Neuberechnung
+- kein Nachzeichnen
+- keine zusätzlichen Grenzlinien
+- keine Farbänderung
+- keine Komprimierung
+- kein erneutes Speichern der Bilddatei
 
-Unverändert bleiben:
+Die Engine verändert ausschließlich die Bildschirmdarstellung mit:
 
-- vollständig sichtbare und zentrierte Startansicht
+- `translate(...)`
+- `scale(...)`
+
+## Weiterhin enthalten
+
+- vollständig sichtbare, exakt zentrierte Startansicht
 - kein schwarzer Rand
 - Mausrad-Zoom zum Mauszeiger
 - WASD-Steuerung
 - kein Ziehen mit der Maus
 - Doppelklick zum Zurücksetzen
-- Intro, Musik und Bildschirmwechsel
+- maximal 300 Prozent Zoom
+- Intro, Musik und Bildschirmwechsel unverändert
