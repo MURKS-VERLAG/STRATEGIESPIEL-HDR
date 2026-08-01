@@ -308,24 +308,3 @@ button {
     height: 100vh;
   }
 }
-
-.map-hotspots{position:absolute;left:50%;top:50%;z-index:3;width:0;height:0;transform-origin:0 0;will-change:transform,width,height;pointer-events:auto}
-.map-hotspot{position:absolute;display:block;padding:0;border:0;background:transparent;opacity:0;pointer-events:auto;cursor:pointer}
-.map-hotspot--handbook{left:89.3%;top:1.4%;width:9.2%;height:16.2%}
-.map-hotspot--scroll{left:87.2%;top:27.5%;width:11.8%;height:12.8%}
-.map-hotspot--family-tree{left:89.0%;top:43.2%;width:9.7%;height:12.0%}
-.map-hotspot--black-shield{left:88.4%;top:57.2%;width:10.6%;height:19.0%}
-.map-hotspot--bell{left:87.9%;top:79.0%;width:11.2%;height:20.0%}
-
-
-/* V16: sichere Hover-Ebene über der Karte */
-.map-hotspots {
-  z-index: 20 !important;
-  pointer-events: auto !important;
-}
-
-.map-hotspot {
-  z-index: 21 !important;
-  pointer-events: auto !important;
-  visibility: visible !important;
-}

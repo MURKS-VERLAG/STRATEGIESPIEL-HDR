@@ -12,7 +12,6 @@ const introControl = document.querySelector("#introControl");
 
 const mapViewport = document.querySelector("#mapViewport");
 const campaignMap = document.querySelector("#campaignMap");
-const mapHotspots = document.querySelector("#mapHotspots");
 const zoomDisplay = document.querySelector("#zoomDisplay");
 const mapHint = document.querySelector("#mapHint");
 
@@ -152,8 +151,6 @@ function initializeMap() {
 
   campaignMap.style.width = `${fittedWidth}px`;
   campaignMap.style.height = `${fittedHeight}px`;
-  mapHotspots.style.width = `${fittedWidth}px`;
-  mapHotspots.style.height = `${fittedHeight}px`;
 
   mapState.fitScale = fitScale;
   mapState.zoom = 1;
@@ -187,8 +184,6 @@ function renderMap() {
   clampMapPosition();
 
   campaignMap.style.transform =
-    `translate(${mapState.x}px, ${mapState.y}px) scale(${mapState.zoom})`;
-  mapHotspots.style.transform =
     `translate(${mapState.x}px, ${mapState.y}px) scale(${mapState.zoom})`;
 
   zoomDisplay.textContent = `${Math.round(mapState.zoom * 100)} %`;
@@ -279,11 +274,7 @@ window.addEventListener("resize", () => {
   }
 });
 
-
-
-
-
-/* V16: Hover-Sounds zuverlässig für Browser freischalten. */
+/* V17: direkte Koordinatenprüfung auf dem transformierten Kartenbild. */
 const hoverSoundIds = [
   "bellSound",
   "blackShieldSound",
@@ -300,21 +291,16 @@ hoverAudios.forEach((audio) => {
   audio.volume = 0.55;
 });
 
-/*
-  Chrome/Edge blockieren Sound oft, wenn play() erstmals nur durch Hover
-  ausgelöst wird. Deshalb werden alle fünf Sounds beim echten Klick auf
-  „Intro starten“ stumm freigeschaltet und sofort zurückgesetzt.
-*/
 function unlockHoverSounds() {
   hoverAudios.forEach((audio) => {
-    const originalVolume = audio.volume;
+    const originalVolume = 0.55;
     audio.muted = true;
     audio.currentTime = 0;
 
-    const playPromise = audio.play();
+    const result = audio.play();
 
-    if (playPromise && typeof playPromise.then === "function") {
-      playPromise
+    if (result && typeof result.then === "function") {
+      result
         .then(() => {
           audio.pause();
           audio.currentTime = 0;
@@ -336,24 +322,107 @@ function unlockHoverSounds() {
 
 startButton.addEventListener("click", unlockHoverSounds, { once: true });
 
-document.querySelectorAll(".map-hotspot[data-sound]").forEach((hotspot) => {
-  hotspot.addEventListener("pointerenter", () => {
-    const audio = document.querySelector(`#${hotspot.dataset.sound}`);
+const soundRegions = [
+  {
+    id: "handbook",
+    minX: 0.895,
+    maxX: 0.985,
+    minY: 0.010,
+    maxY: 0.175,
+    audioId: "handbookSound"
+  },
+  {
+    id: "scroll",
+    minX: 0.870,
+    maxX: 0.995,
+    minY: 0.275,
+    maxY: 0.405,
+    audioId: "scrollSound"
+  },
+  {
+    id: "familyTree",
+    minX: 0.885,
+    maxX: 0.995,
+    minY: 0.425,
+    maxY: 0.565,
+    audioId: "familyTreeSound"
+  },
+  {
+    id: "blackShield",
+    minX: 0.875,
+    maxX: 0.995,
+    minY: 0.565,
+    maxY: 0.790,
+    audioId: "blackShieldSound"
+  },
+  {
+    id: "bell",
+    minX: 0.875,
+    maxX: 0.995,
+    minY: 0.785,
+    maxY: 0.995,
+    audioId: "bellSound"
+  }
+];
 
-    if (!audio) {
-      return;
-    }
+let activeSoundRegion = null;
 
-    audio.pause();
-    audio.currentTime = 0;
-    audio.muted = false;
-    audio.volume = 0.55;
+function findSoundRegion(x, y) {
+  return soundRegions.find((region) =>
+    x >= region.minX &&
+    x <= region.maxX &&
+    y >= region.minY &&
+    y <= region.maxY
+  ) || null;
+}
 
-    audio.play().catch((error) => {
-      console.warn(
-        `Hover-Sound ${hotspot.dataset.sound} konnte nicht abgespielt werden:`,
-        error
-      );
-    });
+function playHoverSound(audioId) {
+  const audio = document.querySelector(`#${audioId}`);
+
+  if (!audio) {
+    console.error(`Audioelement fehlt: ${audioId}`);
+    return;
+  }
+
+  audio.pause();
+  audio.currentTime = 0;
+  audio.muted = false;
+  audio.volume = 0.55;
+
+  audio.play().catch((error) => {
+    console.error(`Sound konnte nicht abgespielt werden: ${audioId}`, error);
   });
+}
+
+mapViewport.addEventListener("pointermove", (event) => {
+  const rect = mapViewport.getBoundingClientRect();
+
+  const mouseX = event.clientX - rect.left;
+  const mouseY = event.clientY - rect.top;
+
+  const imageX = (mouseX - mapState.x) / mapState.zoom;
+  const imageY = (mouseY - mapState.y) / mapState.zoom;
+
+  const normalizedX = imageX / campaignMap.offsetWidth;
+  const normalizedY = imageY / campaignMap.offsetHeight;
+
+  const region = findSoundRegion(normalizedX, normalizedY);
+  const regionId = region ? region.id : null;
+
+  mapViewport.style.cursor = region ? "pointer" : "default";
+
+  if (regionId === activeSoundRegion) {
+    return;
+  }
+
+  activeSoundRegion = regionId;
+
+  if (region) {
+    playHoverSound(region.audioId);
+  }
+});
+
+mapViewport.addEventListener("pointerleave", () => {
+  activeSoundRegion = null;
+  mapViewport.style.cursor = "default";
 });
