@@ -1,30 +1,26 @@
 # Die Herren der Rench
 
-Erster Entwicklungsstand des browserbasierten Strategiespiels.
+Korrigierter erster GitHub-Build für das Intro von **Reinbold Ringelnatz**.
 
-Dieser Build enthält das animierte Intro der Fraktion **Reinbold Ringelnatz**.
+## Verhalten
 
-## Start
+- Der Text entsteht exakt an der Tischkante in der Bildmitte.
+- Der Text wandert langsam nach oben.
+- Der vollständige Text läuft über die obere Bildkante hinaus.
+- Unterhalb der Tischkante erscheint kein Text.
+- Die beigefügte Musik startet nach Klick auf „Intro starten“.
+- Die Kerze besitzt einen dezenten Lichtflackereffekt.
 
-Die Datei `index.html` im Browser öffnen.
+## GitHub hochladen
+
+Den Inhalt dieses Ordners vollständig in das Repository hochladen:
+
+- `index.html`
+- `style.css`
+- `script.js`
+- `README.md`
+- Ordner `assets`
 
 ## GitHub Pages
 
-1. Repository öffnen
-2. `Settings`
-3. `Pages`
-4. Unter **Build and deployment**: `Deploy from a branch`
-5. Branch `main`
-6. Ordner `/root`
-7. `Save`
-
-## Enthalten
-
-- unverändertes Introbild
-- automatisch startender Ringelnatz-Text
-- ruhige Textbewegung und weiche Ausblendung
-- dezentes Kerzenflackern
-- Intro überspringen
-- Intro wiederholen
-- keine Musik
-- keine externen Bibliotheken
+`Settings` → `Pages` → `Deploy from a branch` → `main` → `/root` → `Save`
