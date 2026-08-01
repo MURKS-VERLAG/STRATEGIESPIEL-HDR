@@ -770,3 +770,82 @@ button {
   background: #d9cfb8 !important;
 }
 
+/* V24 – Kastelberg-Einheiten erscheinen nacheinander. */
+.battle-screen {
+  display: grid !important;
+  place-items: center !important;
+  background: #d9cfb8 !important;
+}
+
+.battle-stage {
+  position: relative;
+  width: min(100vw, calc(100vh * 1.50037));
+  height: min(100vh, calc(100vw / 1.50037));
+  aspect-ratio: 2048 / 1365;
+  overflow: hidden;
+}
+
+.battle-stage .battle-screen-image {
+  position: absolute !important;
+  inset: 0 !important;
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  object-fit: fill !important;
+  object-position: center !important;
+  background: transparent !important;
+}
+
+.battle-units {
+  position: absolute;
+  inset: 0;
+  z-index: 62;
+  pointer-events: none;
+}
+
+.battle-unit {
+  position: absolute;
+  display: block;
+  height: auto;
+  opacity: 0;
+  transform: translate(-50%, -96%) scale(0.94);
+  transform-origin: 50% 100%;
+  transition:
+    opacity 650ms ease,
+    transform 650ms ease;
+  pointer-events: none;
+  user-select: none;
+  will-change: opacity, transform;
+  filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.34));
+}
+
+.battle-unit.is-visible {
+  opacity: 1;
+  transform: translate(-50%, -100%) scale(1);
+}
+
+/* Positionen exakt nach der gelieferten Übersicht. */
+.battle-unit--archer-one {
+  left: 61.8%;
+  top: 41.2%;
+  width: 5.8%;
+}
+
+.battle-unit--swordsman {
+  left: 70.2%;
+  top: 45.2%;
+  width: 5.5%;
+}
+
+.battle-unit--archer-two {
+  left: 61.7%;
+  top: 60.1%;
+  width: 5.8%;
+}
+
+.surrender-button {
+  z-index: 64 !important;
+}
+

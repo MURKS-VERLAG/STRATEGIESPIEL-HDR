@@ -24,6 +24,12 @@ const feudConfirmYes = document.querySelector("#feudConfirmYes");
 const feudConfirmNo = document.querySelector("#feudConfirmNo");
 const feudPortraitModal = document.querySelector("#feudPortraitModal");
 const battleScreen = document.querySelector("#battleScreen");
+const battleStage = document.querySelector("#battleStage");
+const battleArcherOne = document.querySelector("#battleArcherOne");
+const battleSwordsman = document.querySelector("#battleSwordsman");
+const battleArcherTwo = document.querySelector("#battleArcherTwo");
+const archerAppearSound = document.querySelector("#archerAppearSound");
+const swordsmanAppearSound = document.querySelector("#swordsmanAppearSound");
 const surrenderButton = document.querySelector("#surrenderButton");
 
 const INTRO_DURATION = 72000;
@@ -36,6 +42,8 @@ let barracksClosing = false;
 let feudConfirmationOpen = false;
 let feudSequenceInProgress = false;
 let battleScreenOpen = false;
+let battleUnitTimers = [];
+let battleUnitSequenceStarted = false;
 
 const mapState = {
   fitScale: 1,
@@ -717,6 +725,85 @@ function hidePortraitTransition() {
   });
 }
 
+
+function clearBattleUnitTimers() {
+  battleUnitTimers.forEach((timer) => {
+    window.clearTimeout(timer);
+  });
+
+  battleUnitTimers = [];
+}
+
+function playBattleUnitSound(audio) {
+  if (!audio) {
+    return;
+  }
+
+  audio.pause();
+  audio.currentTime = 0;
+  audio.volume = 0.70;
+
+  audio.play().catch((error) => {
+    console.error("Einheitensound konnte nicht abgespielt werden:", error);
+  });
+}
+
+function resetBattleUnits() {
+  clearBattleUnitTimers();
+  battleUnitSequenceStarted = false;
+
+  battleArcherOne.classList.remove("is-visible");
+  battleSwordsman.classList.remove("is-visible");
+  battleArcherTwo.classList.remove("is-visible");
+
+  [archerAppearSound, swordsmanAppearSound].forEach((audio) => {
+    if (!audio) {
+      return;
+    }
+
+    audio.pause();
+    audio.currentTime = 0;
+  });
+}
+
+function startBattleUnitSequence() {
+  resetBattleUnits();
+  battleUnitSequenceStarted = true;
+
+  battleUnitTimers.push(
+    window.setTimeout(() => {
+      if (!battleScreenOpen) {
+        return;
+      }
+
+      battleArcherOne.classList.add("is-visible");
+      playBattleUnitSound(archerAppearSound);
+    }, 2000)
+  );
+
+  battleUnitTimers.push(
+    window.setTimeout(() => {
+      if (!battleScreenOpen) {
+        return;
+      }
+
+      battleSwordsman.classList.add("is-visible");
+      playBattleUnitSound(swordsmanAppearSound);
+    }, 4000)
+  );
+
+  battleUnitTimers.push(
+    window.setTimeout(() => {
+      if (!battleScreenOpen) {
+        return;
+      }
+
+      battleArcherTwo.classList.add("is-visible");
+      playBattleUnitSound(archerAppearSound);
+    }, 6000)
+  );
+}
+
 function showBattleScreen() {
   battleScreen.hidden = false;
 
@@ -726,6 +813,12 @@ function showBattleScreen() {
       battleScreenOpen = true;
       feudSequenceInProgress = false;
       surrenderButton.focus();
+
+      window.setTimeout(() => {
+        if (battleScreenOpen) {
+          startBattleUnitSequence();
+        }
+      }, 850);
     });
   });
 }
@@ -762,6 +855,7 @@ function returnToCampaignMap() {
     return;
   }
 
+  resetBattleUnits();
   battleScreenOpen = false;
   battleScreen.classList.remove("is-open");
 

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#050505">
   <title>Die Herren der Rench</title>
-  <link rel="stylesheet" href="style.css?v=23">
+  <link rel="stylesheet" href="style.css?v=24">
 </head>
 <body>
   <main class="game">
@@ -194,12 +194,40 @@
       aria-label="Schlachtfeld Kastelberg"
       hidden
     >
-      <img
-        class="battle-screen-image"
-        src="assets/kastelberg-battleground.png?v=21"
-        alt="Schlachtfeld am Kastelberg"
-        draggable="false"
-      >
+      <div class="battle-stage" id="battleStage">
+        <img
+          class="battle-screen-image"
+          src="assets/kastelberg-battleground.png?v=21"
+          alt="Schlachtfeld am Kastelberg"
+          draggable="false"
+        >
+
+        <div class="battle-units" id="battleUnits" aria-hidden="true">
+          <img
+            class="battle-unit battle-unit--archer-one"
+            id="battleArcherOne"
+            src="assets/kastelberg-bogenschuetze.png?v=24"
+            alt=""
+            draggable="false"
+          >
+
+          <img
+            class="battle-unit battle-unit--swordsman"
+            id="battleSwordsman"
+            src="assets/kastelberg-schwertkaempfer.png?v=24"
+            alt=""
+            draggable="false"
+          >
+
+          <img
+            class="battle-unit battle-unit--archer-two"
+            id="battleArcherTwo"
+            src="assets/kastelberg-bogenschuetze.png?v=24"
+            alt=""
+            draggable="false"
+          >
+        </div>
+      </div>
 
       <button
         class="surrender-button"
@@ -209,9 +237,17 @@
       >
         <span class="white-flag" aria-hidden="true"></span>
       </button>
+
+      <audio id="archerAppearSound" preload="auto">
+        <source src="assets/Arch_s4.mp3?v=24" type="audio/mpeg">
+      </audio>
+
+      <audio id="swordsmanAppearSound" preload="auto">
+        <source src="assets/Sword_ATKW4.mp3?v=24" type="audio/mpeg">
+      </audio>
     </section>
   </main>
 
-  <script src="script.js?v=23"></script>
+  <script src="script.js?v=24"></script>
 </body>
 </html>
