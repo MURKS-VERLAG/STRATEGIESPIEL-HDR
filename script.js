@@ -18,6 +18,13 @@ const yearDisplay = document.querySelector("#yearDisplay");
 const zoomDisplay = document.querySelector("#zoomDisplay");
 const mapHint = document.querySelector("#mapHint");
 const barracksModal = document.querySelector("#barracksModal");
+const feudHoverIcon = document.querySelector("#feudHoverIcon");
+const feudConfirmation = document.querySelector("#feudConfirmation");
+const feudConfirmYes = document.querySelector("#feudConfirmYes");
+const feudConfirmNo = document.querySelector("#feudConfirmNo");
+const feudPortraitModal = document.querySelector("#feudPortraitModal");
+const battleScreen = document.querySelector("#battleScreen");
+const surrenderButton = document.querySelector("#surrenderButton");
 
 const INTRO_DURATION = 72000;
 const TRANSITION_DURATION = 1400;
@@ -26,6 +33,9 @@ let crawlAnimation = null;
 let mapReady = false;
 let barracksOpen = false;
 let barracksClosing = false;
+let feudConfirmationOpen = false;
+let feudSequenceInProgress = false;
+let battleScreenOpen = false;
 
 const mapState = {
   fitScale: 1,
@@ -211,7 +221,7 @@ function renderMap() {
 mapViewport.addEventListener("wheel", (event) => {
   event.preventDefault();
 
-  if (barracksOpen || barracksClosing) {
+  if (barracksOpen || barracksClosing || feudConfirmationOpen || feudSequenceInProgress || battleScreenOpen) {
     return;
   }
 
@@ -242,7 +252,7 @@ mapViewport.addEventListener("wheel", (event) => {
 }, { passive: false });
 
 mapViewport.addEventListener("dblclick", () => {
-  if (barracksOpen || barracksClosing) {
+  if (barracksOpen || barracksClosing || feudConfirmationOpen || feudSequenceInProgress || battleScreenOpen) {
     return;
   }
 
@@ -258,7 +268,7 @@ let lastFrameTime = performance.now();
 window.addEventListener("keydown", (event) => {
   const key = event.key.toLowerCase();
 
-  if (barracksOpen || barracksClosing) {
+  if (barracksOpen || barracksClosing || feudConfirmationOpen || feudSequenceInProgress || battleScreenOpen) {
     return;
   }
 
@@ -401,6 +411,15 @@ const soundRegions = [
   }
 ];
 
+
+const feudTargetRegion = {
+  id: "feudTarget",
+  minX: 0.500,
+  maxX: 0.555,
+  minY: 0.035,
+  maxY: 0.145
+};
+
 let activeSoundRegion = null;
 
 function findSoundRegion(x, y) {
@@ -431,41 +450,47 @@ function playHoverSound(audioId) {
 }
 
 mapViewport.addEventListener("pointermove", (event) => {
-  if (barracksOpen || barracksClosing) {
+  if (
+    barracksOpen ||
+    barracksClosing ||
+    feudConfirmationOpen ||
+    feudSequenceInProgress ||
+    battleScreenOpen ||
+    yearChangeInProgress
+  ) {
     activeSoundRegion = null;
+    feudHoverIcon.classList.remove("is-visible");
     mapViewport.style.cursor = "default";
     return;
   }
 
-  const rect = mapViewport.getBoundingClientRect();
+  const position = getNormalizedMapPosition(event);
 
-  const mouseX = event.clientX - rect.left;
-  const mouseY = event.clientY - rect.top;
-
-  const imageX = (mouseX - mapState.x) / mapState.zoom;
-  const imageY = (mouseY - mapState.y) / mapState.zoom;
-
-  const normalizedX = imageX / campaignMap.offsetWidth;
-  const normalizedY = imageY / campaignMap.offsetHeight;
-
-  const region = findSoundRegion(normalizedX, normalizedY);
-  const regionId = region ? region.id : null;
-
-  mapViewport.style.cursor = region ? "pointer" : "default";
-
-  if (regionId === activeSoundRegion) {
+  if (!position) {
+    feudHoverIcon.classList.remove("is-visible");
+    mapViewport.style.cursor = "default";
     return;
   }
 
-  activeSoundRegion = regionId;
+  const region = findSoundRegion(position.x, position.y);
+  const regionId = region ? region.id : null;
+  const overFeudTarget = isInsideRegion(position, feudTargetRegion);
 
-  if (region) {
-    playHoverSound(region.audioId);
+  feudHoverIcon.classList.toggle("is-visible", overFeudTarget);
+  mapViewport.style.cursor = (region || overFeudTarget) ? "pointer" : "default";
+
+  if (regionId !== activeSoundRegion) {
+    activeSoundRegion = regionId;
+
+    if (region) {
+      playHoverSound(region.audioId);
+    }
   }
 });
 
 mapViewport.addEventListener("pointerleave", () => {
   activeSoundRegion = null;
+  feudHoverIcon.classList.remove("is-visible");
   mapViewport.style.cursor = "default";
 });
 
@@ -536,7 +561,10 @@ mapViewport.addEventListener("click", (event) => {
   if (
     yearChangeInProgress ||
     barracksOpen ||
-    barracksClosing
+    barracksClosing ||
+    feudConfirmationOpen ||
+    feudSequenceInProgress ||
+    battleScreenOpen
   ) {
     return;
   }
@@ -561,6 +589,11 @@ mapViewport.addEventListener("click", (event) => {
     isInsideRegion(position, blackShieldRegion)
   ) {
     openBarracks();
+    return;
+  }
+
+  if (isInsideRegion(position, feudTargetRegion)) {
+    openFeudConfirmation();
   }
 });
 
@@ -617,6 +650,139 @@ barracksModal.addEventListener("contextmenu", (event) => {
 
   if (barracksOpen) {
     closeBarracks();
+  }
+});
+
+
+/* V21: Fehde-Erklärung und Übergang zum Kastelberg. */
+function openFeudConfirmation() {
+  if (
+    feudConfirmationOpen ||
+    feudSequenceInProgress ||
+    battleScreenOpen ||
+    barracksOpen ||
+    barracksClosing ||
+    yearChangeInProgress
+  ) {
+    return;
+  }
+
+  feudConfirmationOpen = true;
+  activeSoundRegion = null;
+  pressedKeys.clear();
+  feudHoverIcon.classList.remove("is-visible");
+  mapViewport.style.cursor = "default";
+  feudConfirmation.hidden = false;
+
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
+      feudConfirmation.classList.add("is-open");
+      feudConfirmYes.focus();
+    });
+  });
+}
+
+function closeFeudConfirmation() {
+  if (!feudConfirmationOpen || feudSequenceInProgress) {
+    return;
+  }
+
+  feudConfirmation.classList.remove("is-open");
+
+  window.setTimeout(() => {
+    feudConfirmation.hidden = true;
+    feudConfirmationOpen = false;
+    mapViewport.focus?.();
+  }, 430);
+}
+
+function showPortraitTransition() {
+  feudPortraitModal.hidden = false;
+
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
+      feudPortraitModal.classList.add("is-open");
+    });
+  });
+}
+
+function hidePortraitTransition() {
+  feudPortraitModal.classList.remove("is-open");
+
+  return new Promise((resolve) => {
+    window.setTimeout(() => {
+      feudPortraitModal.hidden = true;
+      resolve();
+    }, 670);
+  });
+}
+
+function showBattleScreen() {
+  battleScreen.hidden = false;
+
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
+      battleScreen.classList.add("is-open");
+      battleScreenOpen = true;
+      feudSequenceInProgress = false;
+      surrenderButton.focus();
+    });
+  });
+}
+
+async function beginFeudSequence() {
+  if (
+    !feudConfirmationOpen ||
+    feudSequenceInProgress ||
+    battleScreenOpen
+  ) {
+    return;
+  }
+
+  feudSequenceInProgress = true;
+  feudConfirmationOpen = false;
+  feudConfirmation.classList.remove("is-open");
+
+  window.setTimeout(() => {
+    feudConfirmation.hidden = true;
+  }, 430);
+
+  window.setTimeout(() => {
+    showPortraitTransition();
+
+    window.setTimeout(async () => {
+      await hidePortraitTransition();
+      showBattleScreen();
+    }, 2650);
+  }, 470);
+}
+
+function returnToCampaignMap() {
+  if (!battleScreenOpen) {
+    return;
+  }
+
+  battleScreenOpen = false;
+  battleScreen.classList.remove("is-open");
+
+  window.setTimeout(() => {
+    battleScreen.hidden = true;
+    feudSequenceInProgress = false;
+    feudConfirmationOpen = false;
+    activeSoundRegion = null;
+    feudHoverIcon.classList.remove("is-visible");
+    mapViewport.style.cursor = "default";
+  }, 870);
+}
+
+feudConfirmYes.addEventListener("click", beginFeudSequence);
+feudConfirmNo.addEventListener("click", closeFeudConfirmation);
+surrenderButton.addEventListener("click", returnToCampaignMap);
+
+window.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && feudConfirmationOpen) {
+    event.preventDefault();
+    closeFeudConfirmation();
   }
 });
 

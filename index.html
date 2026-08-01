@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#050505">
   <title>Die Herren der Rench</title>
-  <link rel="stylesheet" href="style.css?v=20">
+  <link rel="stylesheet" href="style.css?v=21">
 </head>
 <body>
   <main class="game">
@@ -100,6 +100,10 @@
 
         <div class="map-overlay" id="mapOverlay" aria-hidden="true">
           <div class="year-display" id="yearDisplay" aria-live="polite">1430</div>
+          <div class="feud-hover-icon" id="feudHoverIcon" aria-hidden="true">
+            <span class="feud-swords">⚔︎</span>
+            <span class="feud-question">?</span>
+          </div>
         </div>
 </div>
 
@@ -117,6 +121,51 @@
       <audio id="familyTreeSound" preload="auto"><source src="assets/cheer2(1).mp3?v=17" type="audio/mpeg"></audio>
       <audio id="scrollSound" preload="auto"><source src="assets/drawbridge_lowering(1).mp3?v=17" type="audio/mpeg"></audio>
       <audio id="handbookSound" preload="auto"><source src="assets/opencldrn_01(1).mp3?v=17" type="audio/mpeg"></audio>
+
+
+      <div
+        class="feud-confirmation"
+        id="feudConfirmation"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Fehde erklären"
+        hidden
+      >
+        <div class="feud-confirmation-panel">
+          <p>WIRKLICH DIE FEHDE ERKLÄREN?</p>
+
+          <div class="feud-confirmation-actions">
+            <button
+              class="feud-confirm-button feud-confirm-button--yes"
+              id="feudConfirmYes"
+              type="button"
+              aria-label="Fehde bestätigen"
+            >✓</button>
+
+            <button
+              class="feud-confirm-button feud-confirm-button--no"
+              id="feudConfirmNo"
+              type="button"
+              aria-label="Fehde abbrechen"
+            >✕</button>
+          </div>
+        </div>
+      </div>
+
+      <div
+        class="feud-portrait-modal"
+        id="feudPortraitModal"
+        aria-hidden="true"
+        hidden
+      >
+        <div class="feud-portrait-backdrop"></div>
+        <img
+          class="feud-portrait-image"
+          src="assets/fehde-ringelnatz-portraet.png?v=21"
+          alt="Reinbold Ringelnatz erklärt die Fehde"
+          draggable="false"
+        >
+      </div>
 
       <div
         class="barracks-modal"
@@ -138,8 +187,31 @@
         </div>
       </div>
     </section>
+
+    <section
+      class="battle-screen"
+      id="battleScreen"
+      aria-label="Schlachtfeld Kastelberg"
+      hidden
+    >
+      <img
+        class="battle-screen-image"
+        src="assets/kastelberg-battleground.png?v=21"
+        alt="Schlachtfeld am Kastelberg"
+        draggable="false"
+      >
+
+      <button
+        class="surrender-button"
+        id="surrenderButton"
+        type="button"
+        aria-label="Zur Kampagnenkarte zurückkehren"
+      >
+        <span class="white-flag" aria-hidden="true"></span>
+      </button>
+    </section>
   </main>
 
-  <script src="script.js?v=20"></script>
+  <script src="script.js?v=21"></script>
 </body>
 </html>
