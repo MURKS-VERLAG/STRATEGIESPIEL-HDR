@@ -1,10 +1,12 @@
-# Die Herren der Rench – Version 15
+# Die Herren der Rench – Version 16
 
-Änderungen:
-- vier weitere Zoomstufen entfernt
-- maximaler Zoom ca. 136 %
-- Hover-Sounds für Glocke, schwarzes Schild, Stammbaum, Schriftrolle und Handbuch
-- Hover-Sounds mit 55 % Lautstärke
-- Cache-Version ?v=15
+Fix für die Hover-Sounds:
 
-Alles andere bleibt wie in V14.
+- Hotspot-Ebene liegt sicher über der Karte
+- Pointer-Ereignisse sind auf der Hotspot-Ebene aktiviert
+- Sounds werden beim Klick auf „Intro starten“ browserkonform freigeschaltet
+- Auslösung erfolgt mit `pointerenter`
+- jeder Sound startet einmal pro Betreten des Symbols
+- Cache-Version auf `?v=16`
+
+Alle übrigen Funktionen aus V15 bleiben unverändert.

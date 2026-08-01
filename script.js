@@ -281,13 +281,79 @@ window.addEventListener("resize", () => {
 
 
 
-const hoverSoundIds=["bellSound","blackShieldSound","familyTreeSound","scrollSound","handbookSound"];
-hoverSoundIds.forEach(id=>{const a=document.querySelector(`#${id}`);if(a)a.volume=0.55;});
-document.querySelectorAll(".map-hotspot[data-sound]").forEach(h=>{
-  h.addEventListener("mouseenter",()=>{
-    const a=document.querySelector(`#${h.dataset.sound}`);
-    if(!a)return;
-    a.currentTime=0;
-    a.play().catch(()=>{});
+
+
+/* V16: Hover-Sounds zuverlässig für Browser freischalten. */
+const hoverSoundIds = [
+  "bellSound",
+  "blackShieldSound",
+  "familyTreeSound",
+  "scrollSound",
+  "handbookSound"
+];
+
+const hoverAudios = hoverSoundIds
+  .map((id) => document.querySelector(`#${id}`))
+  .filter(Boolean);
+
+hoverAudios.forEach((audio) => {
+  audio.volume = 0.55;
+});
+
+/*
+  Chrome/Edge blockieren Sound oft, wenn play() erstmals nur durch Hover
+  ausgelöst wird. Deshalb werden alle fünf Sounds beim echten Klick auf
+  „Intro starten“ stumm freigeschaltet und sofort zurückgesetzt.
+*/
+function unlockHoverSounds() {
+  hoverAudios.forEach((audio) => {
+    const originalVolume = audio.volume;
+    audio.muted = true;
+    audio.currentTime = 0;
+
+    const playPromise = audio.play();
+
+    if (playPromise && typeof playPromise.then === "function") {
+      playPromise
+        .then(() => {
+          audio.pause();
+          audio.currentTime = 0;
+          audio.muted = false;
+          audio.volume = originalVolume;
+        })
+        .catch(() => {
+          audio.muted = false;
+          audio.volume = originalVolume;
+        });
+    } else {
+      audio.pause();
+      audio.currentTime = 0;
+      audio.muted = false;
+      audio.volume = originalVolume;
+    }
+  });
+}
+
+startButton.addEventListener("click", unlockHoverSounds, { once: true });
+
+document.querySelectorAll(".map-hotspot[data-sound]").forEach((hotspot) => {
+  hotspot.addEventListener("pointerenter", () => {
+    const audio = document.querySelector(`#${hotspot.dataset.sound}`);
+
+    if (!audio) {
+      return;
+    }
+
+    audio.pause();
+    audio.currentTime = 0;
+    audio.muted = false;
+    audio.volume = 0.55;
+
+    audio.play().catch((error) => {
+      console.warn(
+        `Hover-Sound ${hotspot.dataset.sound} konnte nicht abgespielt werden:`,
+        error
+      );
+    });
   });
 });
