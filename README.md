@@ -1,24 +1,18 @@
-# Die Herren der Rench – Kampagnenkarte V5
+# Die Herren der Rench – Kampagnenkarte V6
 
-Dieser Build enthält:
+Korrigierter Karten-Build.
 
-- Ringelnatz-Intro
-- alte Intro-Musik während des Intros
-- automatischen Bildschirmwechsel zur Diplomatiekarte
-- neue Musik auf der Kampagnenkarte
-- vollständige Diplomatiekarte aus dem Word-Anhang
-- UHD-Kartendatei mit 4096 Pixel Breite
-- Mausrad-Zoom von 100 % bis 500 %
-- Zoom zum Mauszeiger
-- Verschieben der Karte durch Ziehen
-- Doppelklick setzt den Zoom zurück
+## Änderungen
+
+- Ziehen mit der Maus vollständig entfernt
+- Bewegung der vergrößerten Karte mit `W`, `A`, `S`, `D`
+- Mausrad-Zoom bleibt erhalten
+- Zoom richtet sich weiterhin nach der Position des Mauszeigers
+- vollständig herausgezoomte Karte wird exakt mittig dargestellt
+- die gesamte Karte bleibt vollständig sichtbar
+- schwarze Ränder wurden durch eine passende Pergamentfläche ersetzt
+- Doppelklick setzt Zoom und Kartenposition zurück
 
 ## Hochladen
 
-Den gesamten Inhalt des ZIP direkt in das GitHub-Repository hochladen und vorhandene Dateien ersetzen.
-
-Wichtig: Auch den vollständigen Ordner `assets` hochladen.
-
-## GitHub Pages
-
-`Settings` → `Pages` → `Deploy from a branch` → `main` → `/root` → `Save`
+Den gesamten Inhalt dieses ZIP direkt in GitHub hochladen und vorhandene Dateien ersetzen.

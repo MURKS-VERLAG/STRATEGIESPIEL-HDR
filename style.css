@@ -222,7 +222,7 @@ button {
 .map-screen {
   z-index: 5;
   overflow: hidden;
-  background: #111;
+  background: #e9e1d0;
   transition: opacity 1.4s ease;
 }
 
@@ -234,13 +234,9 @@ button {
   position: absolute;
   inset: 0;
   overflow: hidden;
-  cursor: grab;
+  cursor: default;
   touch-action: none;
-  background: #111;
-}
-
-.map-viewport.is-dragging {
-  cursor: grabbing;
+  background: #e9e1d0;
 }
 
 .campaign-map {

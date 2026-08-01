@@ -26,10 +26,7 @@ const mapState = {
   zoom: 1,
   maxZoom: 5,
   x: 0,
-  y: 0,
-  dragging: false,
-  pointerX: 0,
-  pointerY: 0
+  y: 0
 };
 
 function stopIntro() {
@@ -219,50 +216,63 @@ mapViewport.addEventListener("wheel", (event) => {
   mapHint.classList.add("is-hidden");
 }, { passive: false });
 
-mapViewport.addEventListener("pointerdown", (event) => {
-  if (mapState.zoom <= 1) {
-    return;
-  }
-
-  mapState.dragging = true;
-  mapState.pointerX = event.clientX;
-  mapState.pointerY = event.clientY;
-  mapViewport.classList.add("is-dragging");
-  mapViewport.setPointerCapture(event.pointerId);
-});
-
-mapViewport.addEventListener("pointermove", (event) => {
-  if (!mapState.dragging) {
-    return;
-  }
-
-  mapState.x += event.clientX - mapState.pointerX;
-  mapState.y += event.clientY - mapState.pointerY;
-  mapState.pointerX = event.clientX;
-  mapState.pointerY = event.clientY;
-
-  renderMap();
-});
-
-function stopDragging(event) {
-  mapState.dragging = false;
-  mapViewport.classList.remove("is-dragging");
-
-  if (event.pointerId !== undefined && mapViewport.hasPointerCapture(event.pointerId)) {
-    mapViewport.releasePointerCapture(event.pointerId);
-  }
-}
-
-mapViewport.addEventListener("pointerup", stopDragging);
-mapViewport.addEventListener("pointercancel", stopDragging);
-
 mapViewport.addEventListener("dblclick", () => {
   mapState.zoom = 1;
   initializeMap();
 });
+
+
+const pressedKeys = new Set();
+const PAN_SPEED = 520;
+let lastFrameTime = performance.now();
+
+window.addEventListener("keydown", (event) => {
+  const key = event.key.toLowerCase();
+
+  if (["w", "a", "s", "d"].includes(key)) {
+    event.preventDefault();
+    pressedKeys.add(key);
+    mapHint.classList.add("is-hidden");
+  }
+});
+
+window.addEventListener("keyup", (event) => {
+  pressedKeys.delete(event.key.toLowerCase());
+});
+
+window.addEventListener("blur", () => {
+  pressedKeys.clear();
+});
+
+function updateKeyboardPan(now) {
+  const deltaSeconds = Math.min(0.05, (now - lastFrameTime) / 1000);
+  lastFrameTime = now;
+
+  if (mapScreen.classList.contains("is-active") && mapState.zoom > 1) {
+    const distance = PAN_SPEED * deltaSeconds;
+
+    if (pressedKeys.has("a")) mapState.x += distance;
+    if (pressedKeys.has("d")) mapState.x -= distance;
+    if (pressedKeys.has("w")) mapState.y += distance;
+    if (pressedKeys.has("s")) mapState.y -= distance;
+
+    if (pressedKeys.size > 0) {
+      renderMap();
+    }
+  }
+
+  requestAnimationFrame(updateKeyboardPan);
+}
+
+requestAnimationFrame(updateKeyboardPan);
 
 window.addEventListener("resize", () => {
   if (mapScreen.classList.contains("is-active")) {
     initializeMap();
   }
 });
+
+
+if (campaignMap.complete && campaignMap.naturalWidth) {
+  initializeMap();
+}
