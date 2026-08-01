@@ -24,7 +24,7 @@ let mapReady = false;
 const mapState = {
   fitScale: 1,
   zoom: 1,
-  maxZoom: 5,
+  maxZoom: 3,
   x: 0,
   y: 0
 };

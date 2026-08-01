@@ -1,14 +1,19 @@
-# Die Herren der Rench – Karten-Fix V7
+# Die Herren der Rench – Karte V8
 
-Dieser Build korrigiert ausschließlich die Kartenpositionierung:
+Dieser Build basiert vollständig auf der idealen, zentrierten V7.
 
-- ganze Karte beim Start vollständig sichtbar
-- horizontal und vertikal exakt zentriert
-- falscher Versatz nach unten rechts beseitigt
-- Mausrad-Zoom zum Mauszeiger bleibt
-- W/A/S/D bleibt
-- Mausziehen bleibt entfernt
-- Doppelklick setzt auf die vollständige zentrierte Ansicht zurück
-- freie Flächen bei abweichendem Bildschirmformat bleiben pergamentfarben, niemals schwarz
+Geändert wurden ausschließlich:
 
-Den gesamten ZIP-Inhalt in GitHub hochladen und vorhandene Dateien ersetzen.
+- die originalen gestrichelten Gebietsgrenzen aus dem Word-Anhang wurden auf die UHD-Karte übernommen
+- die vier stärksten Zoomstufen wurden entfernt
+- maximaler Zoom beträgt nun 300 Prozent
+
+Unverändert bleiben:
+
+- vollständig sichtbare und zentrierte Startansicht
+- kein schwarzer Rand
+- Mausrad-Zoom zum Mauszeiger
+- WASD-Steuerung
+- kein Ziehen mit der Maus
+- Doppelklick zum Zurücksetzen
+- Intro, Musik und Bildschirmwechsel
