@@ -5,21 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#050505">
   <title>Die Herren der Rench – Reinbold Ringelnatz</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
-  <main class="page" aria-label="Intro der Fraktion Reinbold Ringelnatz">
+  <main class="page">
     <section class="stage" id="stage">
-      <img
-        class="scene"
-        src="assets/ringelnatz-intro.png"
-        alt="Schwarz-weißer mittelalterlicher Schreibtisch mit Kerze, Buch, Pergament, Feder, Schwert und Apfel."
-        draggable="false"
-      >
+      <img class="scene" src="assets/ringelnatz-intro.png?v=4" alt="" draggable="false">
 
       <div class="candle-light candle-light--wide" aria-hidden="true"></div>
       <div class="candle-light candle-light--core" aria-hidden="true"></div>
 
+      <!-- Dieses Fenster endet EXAKT an der Tischkante. -->
       <div class="text-window" id="textWindow">
         <article class="intro-copy" id="introCopy">
           <h1>Reinbold Ringelnatz</h1>
@@ -67,13 +63,11 @@
       </div>
 
       <audio id="introMusic" preload="auto">
-        <source src="assets/darktime-stronghold-ost.mp3" type="audio/mpeg">
+        <source src="assets/darktime-stronghold-ost.mp3?v=4" type="audio/mpeg">
       </audio>
 
       <div class="start-overlay" id="startOverlay">
-        <button class="start-button" id="startButton" type="button">
-          Intro starten
-        </button>
+        <button class="start-button" id="startButton" type="button">Intro starten</button>
       </div>
 
       <button class="intro-control" id="introControl" type="button" hidden>
@@ -82,6 +76,6 @@
     </section>
   </main>
 
-  <script src="script.js"></script>
+  <script src="script.js?v=4"></script>
 </body>
 </html>

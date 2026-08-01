@@ -1,26 +1,16 @@
-# Die Herren der Rench
+# Ringelnatz-Intro – Fix V4
 
-Korrigierter erster GitHub-Build für das Intro von **Reinbold Ringelnatz**.
+Dieser Build ersetzt den bisherigen Stand vollständig.
 
-## Verhalten
+## Wichtig
 
-- Der Text entsteht exakt an der Tischkante in der Bildmitte.
-- Der Text wandert langsam nach oben.
-- Der vollständige Text läuft über die obere Bildkante hinaus.
-- Unterhalb der Tischkante erscheint kein Text.
-- Die beigefügte Musik startet nach Klick auf „Intro starten“.
-- Die Kerze besitzt einen dezenten Lichtflackereffekt.
+Nicht nur `index.html` ersetzen. Auch diese Dateien müssen hochgeladen/ersetzt werden:
 
-## GitHub hochladen
-
-Den Inhalt dieses Ordners vollständig in das Repository hochladen:
-
-- `index.html`
 - `style.css`
 - `script.js`
-- `README.md`
-- Ordner `assets`
+- `assets/ringelnatz-intro.png`
+- `assets/darktime-stronghold-ost.mp3`
 
-## GitHub Pages
+Der Text startet mit seiner ersten Zeile exakt an der Tischkante und läuft nach oben.
 
-`Settings` → `Pages` → `Deploy from a branch` → `main` → `/root` → `Save`
+Die Versionszusätze `?v=4` verhindern, dass GitHub Pages noch alte CSS- oder JavaScript-Dateien aus dem Browsercache lädt.
