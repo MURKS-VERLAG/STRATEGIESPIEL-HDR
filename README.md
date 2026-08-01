@@ -1,20 +1,10 @@
-# Die Herren der Rench – Karte V13
+# Die Herren der Rench – Version 15
 
-Dieser Build basiert vollständig auf V12.
+Änderungen:
+- vier weitere Zoomstufen entfernt
+- maximaler Zoom ca. 136 %
+- Hover-Sounds für Glocke, schwarzes Schild, Stammbaum, Schriftrolle und Handbuch
+- Hover-Sounds mit 55 % Lautstärke
+- Cache-Version ?v=15
 
-Geändert wurde ausschließlich:
-
-- die bisherige Kampagnenkarte wurde durch die neue HD-Datei `Design ohne Titel.png` ersetzt
-- die neue Karte wurde 1:1 als PNG übernommen
-- Cache-Version auf `?v=13` erhöht
-
-Unverändert bleiben:
-
-- exakt zentrierte und vollständig sichtbare Startansicht
-- schmaler silberner Mittelalterrahmen
-- maximaler Zoom von ungefähr 230 Prozent
-- Mausrad-Zoom zum Mauszeiger
-- WASD-Steuerung
-- kein Ziehen mit der Maus
-- Doppelklick zum Zurücksetzen
-- Intro, Musik und Bildschirmwechsel
+Alles andere bleibt wie in V14.

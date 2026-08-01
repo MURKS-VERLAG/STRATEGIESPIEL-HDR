@@ -12,6 +12,7 @@ const introControl = document.querySelector("#introControl");
 
 const mapViewport = document.querySelector("#mapViewport");
 const campaignMap = document.querySelector("#campaignMap");
+const mapHotspots = document.querySelector("#mapHotspots");
 const zoomDisplay = document.querySelector("#zoomDisplay");
 const mapHint = document.querySelector("#mapHint");
 
@@ -24,7 +25,7 @@ let mapReady = false;
 const mapState = {
   fitScale: 1,
   zoom: 1,
-  maxZoom: 2.3,
+  maxZoom: 1.36,
   x: 0,
   y: 0
 };
@@ -151,6 +152,8 @@ function initializeMap() {
 
   campaignMap.style.width = `${fittedWidth}px`;
   campaignMap.style.height = `${fittedHeight}px`;
+  mapHotspots.style.width = `${fittedWidth}px`;
+  mapHotspots.style.height = `${fittedHeight}px`;
 
   mapState.fitScale = fitScale;
   mapState.zoom = 1;
@@ -184,6 +187,8 @@ function renderMap() {
   clampMapPosition();
 
   campaignMap.style.transform =
+    `translate(${mapState.x}px, ${mapState.y}px) scale(${mapState.zoom})`;
+  mapHotspots.style.transform =
     `translate(${mapState.x}px, ${mapState.y}px) scale(${mapState.zoom})`;
 
   zoomDisplay.textContent = `${Math.round(mapState.zoom * 100)} %`;
@@ -275,3 +280,14 @@ window.addEventListener("resize", () => {
 });
 
 
+
+const hoverSoundIds=["bellSound","blackShieldSound","familyTreeSound","scrollSound","handbookSound"];
+hoverSoundIds.forEach(id=>{const a=document.querySelector(`#${id}`);if(a)a.volume=0.55;});
+document.querySelectorAll(".map-hotspot[data-sound]").forEach(h=>{
+  h.addEventListener("mouseenter",()=>{
+    const a=document.querySelector(`#${h.dataset.sound}`);
+    if(!a)return;
+    a.currentTime=0;
+    a.play().catch(()=>{});
+  });
+});
