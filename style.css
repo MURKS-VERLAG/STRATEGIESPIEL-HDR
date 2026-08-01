@@ -1,6 +1,9 @@
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
-html, body {
+html,
+body {
   width: 100%;
   height: 100%;
   margin: 0;
@@ -12,26 +15,55 @@ body {
   font-family: Georgia, "Times New Roman", serif;
 }
 
-button { font: inherit; }
-
-.page {
-  display: grid;
-  width: 100%;
-  height: 100%;
-  place-items: center;
-  background: #050505;
+button {
+  font: inherit;
 }
 
-.stage {
+.game,
+.intro-screen,
+.map-screen {
+  width: 100%;
+  height: 100%;
+}
+
+.intro-screen,
+.map-screen {
+  position: fixed;
+  inset: 0;
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.intro-screen.is-active,
+.map-screen.is-active {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.intro-screen {
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  background: #050505;
+  transition: opacity 1.4s ease;
+}
+
+.intro-screen.is-leaving {
+  opacity: 0;
+}
+
+.intro-stage {
   position: relative;
   width: min(100vw, calc(100vh * 1.5));
   aspect-ratio: 3 / 2;
   overflow: hidden;
   isolation: isolate;
-  background: white;
+  background: #fff;
 }
 
-.scene {
+.intro-scene {
   position: absolute;
   inset: 0;
   z-index: 0;
@@ -42,11 +74,7 @@ button { font: inherit; }
   user-select: none;
 }
 
-/*
-  WICHTIG:
-  Unterkante dieses Fensters = Tischkante.
-  Der Text startet mit seiner Oberkante genau unten bei 100 %.
-*/
+/* Textfenster endet an der Tischkante. */
 .text-window {
   position: absolute;
   z-index: 3;
@@ -157,19 +185,19 @@ button { font: inherit; }
   z-index: 10;
   display: grid;
   place-items: center;
-  background: rgba(255,255,255,.02);
+  background: rgba(255, 255, 255, 0.02);
   transition: opacity .35s ease;
 }
 
-.start-overlay.hidden {
+.start-overlay.is-hidden {
   opacity: 0;
   pointer-events: none;
 }
 
 .start-button,
 .intro-control {
-  border: 1px solid rgba(0,0,0,.45);
-  background: rgba(255,255,255,.84);
+  border: 1px solid rgba(0, 0, 0, .45);
+  background: rgba(255, 255, 255, .84);
   color: #111;
   cursor: pointer;
   letter-spacing: .05em;
@@ -190,10 +218,84 @@ button { font: inherit; }
   font-size: clamp(9px, .85vw, 13px);
 }
 
+/* Kampagnenkarte */
+.map-screen {
+  z-index: 5;
+  overflow: hidden;
+  background: #111;
+  transition: opacity 1.4s ease;
+}
+
+.map-screen.is-active {
+  display: block;
+}
+
+.map-viewport {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  cursor: grab;
+  touch-action: none;
+  background: #111;
+}
+
+.map-viewport.is-dragging {
+  cursor: grabbing;
+}
+
+.campaign-map {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  max-width: none;
+  max-height: none;
+  user-select: none;
+  pointer-events: none;
+  transform-origin: 0 0;
+  will-change: transform, width, height;
+  image-rendering: auto;
+}
+
+.map-hint,
+.zoom-display {
+  position: absolute;
+  z-index: 4;
+  padding: .45rem .7rem;
+  border: 1px solid rgba(49, 39, 25, .45);
+  background: rgba(239, 228, 201, .78);
+  color: #2a2117;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .18);
+  font-size: clamp(11px, .9vw, 15px);
+  pointer-events: none;
+  transition: opacity 1s ease;
+}
+
+.map-hint {
+  left: 1rem;
+  bottom: 1rem;
+}
+
+.zoom-display {
+  right: 1rem;
+  bottom: 1rem;
+  min-width: 68px;
+  text-align: center;
+}
+
+.map-hint.is-hidden {
+  opacity: 0;
+}
+
 @media (max-aspect-ratio: 3 / 2) {
-  .stage { width: 100vw; height: auto; }
+  .intro-stage {
+    width: 100vw;
+    height: auto;
+  }
 }
 
 @media (min-aspect-ratio: 3 / 2) {
-  .stage { width: auto; height: 100vh; }
+  .intro-stage {
+    width: auto;
+    height: 100vh;
+  }
 }

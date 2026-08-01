@@ -1,16 +1,24 @@
-# Ringelnatz-Intro – Fix V4
+# Die Herren der Rench – Kampagnenkarte V5
 
-Dieser Build ersetzt den bisherigen Stand vollständig.
+Dieser Build enthält:
 
-## Wichtig
+- Ringelnatz-Intro
+- alte Intro-Musik während des Intros
+- automatischen Bildschirmwechsel zur Diplomatiekarte
+- neue Musik auf der Kampagnenkarte
+- vollständige Diplomatiekarte aus dem Word-Anhang
+- UHD-Kartendatei mit 4096 Pixel Breite
+- Mausrad-Zoom von 100 % bis 500 %
+- Zoom zum Mauszeiger
+- Verschieben der Karte durch Ziehen
+- Doppelklick setzt den Zoom zurück
 
-Nicht nur `index.html` ersetzen. Auch diese Dateien müssen hochgeladen/ersetzt werden:
+## Hochladen
 
-- `style.css`
-- `script.js`
-- `assets/ringelnatz-intro.png`
-- `assets/darktime-stronghold-ost.mp3`
+Den gesamten Inhalt des ZIP direkt in das GitHub-Repository hochladen und vorhandene Dateien ersetzen.
 
-Der Text startet mit seiner ersten Zeile exakt an der Tischkante und läuft nach oben.
+Wichtig: Auch den vollständigen Ordner `assets` hochladen.
 
-Die Versionszusätze `?v=4` verhindern, dass GitHub Pages noch alte CSS- oder JavaScript-Dateien aus dem Browsercache lädt.
+## GitHub Pages
+
+`Settings` → `Pages` → `Deploy from a branch` → `main` → `/root` → `Save`
