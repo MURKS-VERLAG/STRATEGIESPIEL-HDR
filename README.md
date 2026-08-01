@@ -1,13 +1,12 @@
-# Die Herren der Rench – Karte V12
+# Die Herren der Rench – Karte V13
 
-Dieser Build basiert vollständig auf dem funktionierenden Stand V11.
+Dieser Build basiert vollständig auf V12.
 
 Geändert wurde ausschließlich:
 
-- die bisherige Kampagnenkarte wurde durch den neuen Anhang `HAUPTSCREEN(1).jpg` ersetzt
-- die neue Karte wurde proportional auf Ultra-HD-Auflösung hochskaliert
-- behutsame Schärfung für klare Darstellung beim Zoomen
-- Cache-Version auf `?v=12` erhöht
+- die bisherige Kampagnenkarte wurde durch die neue HD-Datei `Design ohne Titel.png` ersetzt
+- die neue Karte wurde 1:1 als PNG übernommen
+- Cache-Version auf `?v=13` erhöht
 
 Unverändert bleiben:
 
