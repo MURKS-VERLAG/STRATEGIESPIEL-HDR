@@ -101,9 +101,10 @@ async function switchToMap() {
   mapScreen.classList.add("is-active");
   introScreen.classList.add("is-leaving");
 
-  if (!mapReady) {
+  // Erst nach dem Sichtbarmachen messen und immer sauber zentrieren.
+  window.requestAnimationFrame(() => {
     initializeMap();
-  }
+  });
 
   mapMusic.pause();
   mapMusic.currentTime = 0;
@@ -133,24 +134,25 @@ function initializeMap() {
 
   const viewportWidth = mapViewport.clientWidth;
   const viewportHeight = mapViewport.clientHeight;
-  const imageRatio = campaignMap.naturalWidth / campaignMap.naturalHeight;
-  const viewportRatio = viewportWidth / viewportHeight;
 
-  let fittedWidth;
-  let fittedHeight;
-
-  if (imageRatio > viewportRatio) {
-    fittedWidth = viewportWidth;
-    fittedHeight = viewportWidth / imageRatio;
-  } else {
-    fittedHeight = viewportHeight;
-    fittedWidth = viewportHeight * imageRatio;
+  if (viewportWidth <= 0 || viewportHeight <= 0) {
+    window.requestAnimationFrame(initializeMap);
+    return;
   }
+
+  // Exaktes "contain": Die gesamte Karte bleibt immer sichtbar.
+  const fitScale = Math.min(
+    viewportWidth / campaignMap.naturalWidth,
+    viewportHeight / campaignMap.naturalHeight
+  );
+
+  const fittedWidth = campaignMap.naturalWidth * fitScale;
+  const fittedHeight = campaignMap.naturalHeight * fitScale;
 
   campaignMap.style.width = `${fittedWidth}px`;
   campaignMap.style.height = `${fittedHeight}px`;
 
-  mapState.fitScale = 1;
+  mapState.fitScale = fitScale;
   mapState.zoom = 1;
   mapState.x = (viewportWidth - fittedWidth) / 2;
   mapState.y = (viewportHeight - fittedHeight) / 2;
@@ -273,6 +275,3 @@ window.addEventListener("resize", () => {
 });
 
 
-if (campaignMap.complete && campaignMap.naturalWidth) {
-  initializeMap();
-}

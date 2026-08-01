@@ -1,18 +1,14 @@
-# Die Herren der Rench – Kampagnenkarte V6
+# Die Herren der Rench – Karten-Fix V7
 
-Korrigierter Karten-Build.
+Dieser Build korrigiert ausschließlich die Kartenpositionierung:
 
-## Änderungen
+- ganze Karte beim Start vollständig sichtbar
+- horizontal und vertikal exakt zentriert
+- falscher Versatz nach unten rechts beseitigt
+- Mausrad-Zoom zum Mauszeiger bleibt
+- W/A/S/D bleibt
+- Mausziehen bleibt entfernt
+- Doppelklick setzt auf die vollständige zentrierte Ansicht zurück
+- freie Flächen bei abweichendem Bildschirmformat bleiben pergamentfarben, niemals schwarz
 
-- Ziehen mit der Maus vollständig entfernt
-- Bewegung der vergrößerten Karte mit `W`, `A`, `S`, `D`
-- Mausrad-Zoom bleibt erhalten
-- Zoom richtet sich weiterhin nach der Position des Mauszeigers
-- vollständig herausgezoomte Karte wird exakt mittig dargestellt
-- die gesamte Karte bleibt vollständig sichtbar
-- schwarze Ränder wurden durch eine passende Pergamentfläche ersetzt
-- Doppelklick setzt Zoom und Kartenposition zurück
-
-## Hochladen
-
-Den gesamten Inhalt dieses ZIP direkt in GitHub hochladen und vorhandene Dateien ersetzen.
+Den gesamten ZIP-Inhalt in GitHub hochladen und vorhandene Dateien ersetzen.

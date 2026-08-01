@@ -241,8 +241,8 @@ button {
 
 .campaign-map {
   position: absolute;
-  left: 50%;
-  top: 50%;
+  left: 0;
+  top: 0;
   max-width: none;
   max-height: none;
   user-select: none;
