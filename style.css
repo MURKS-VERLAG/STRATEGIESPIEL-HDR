@@ -250,6 +250,19 @@ button {
   transform-origin: 0 0;
   will-change: transform, width, height;
   image-rendering: auto;
+
+  /*
+    Schmaler silberner Mittelalterrahmen.
+    Outline und Schatten verändern weder Bildinhalt noch Zoom-Berechnung.
+  */
+  outline: 2px solid #d9d9d4;
+  outline-offset: 0;
+  box-shadow:
+    0 0 0 3px #6f716f,
+    0 0 0 5px #c9cac6,
+    0 0 0 7px #454744,
+    0 0 0 8px rgba(235, 235, 229, 0.94),
+    0 3px 13px rgba(0, 0, 0, 0.35);
 }
 
 .map-hint,

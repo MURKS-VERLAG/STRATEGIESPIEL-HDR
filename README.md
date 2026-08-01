@@ -1,14 +1,21 @@
-# Die Herren der Rench – Karten-Fix V7
+# Die Herren der Rench – Karte V11
 
-Dieser Build korrigiert ausschließlich die Kartenpositionierung:
+Dieser Build basiert vollständig auf V10.
 
-- ganze Karte beim Start vollständig sichtbar
-- horizontal und vertikal exakt zentriert
-- falscher Versatz nach unten rechts beseitigt
-- Mausrad-Zoom zum Mauszeiger bleibt
-- W/A/S/D bleibt
-- Mausziehen bleibt entfernt
-- Doppelklick setzt auf die vollständige zentrierte Ansicht zurück
-- freie Flächen bei abweichendem Bildschirmformat bleiben pergamentfarben, niemals schwarz
+Geändert wurden ausschließlich:
 
-Den gesamten ZIP-Inhalt in GitHub hochladen und vorhandene Dateien ersetzen.
+- dieselbe Karte wurde auf 5264 × 3696 Pixel hochskaliert
+- behutsame Schärfung für klarere Darstellung beim Zoomen
+- schmaler silberner Mittelalterrahmen um die Karte
+- die letzten zwei Zoomstufen wurden entfernt
+- maximaler Zoom beträgt nun ungefähr 230 Prozent
+
+Unverändert bleiben:
+
+- Karteninhalt, Grenzen, Figuren, Wappen und Farben
+- vollständige zentrierte Startansicht
+- Mausrad-Zoom zum Mauszeiger
+- WASD-Steuerung
+- kein Ziehen mit der Maus
+- Doppelklick zum Zurücksetzen
+- Intro, Musik und Bildschirmwechsel
