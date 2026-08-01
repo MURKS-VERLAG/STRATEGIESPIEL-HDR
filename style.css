@@ -849,3 +849,79 @@ button {
   z-index: 64 !important;
 }
 
+/* V25 – Ringelnatz-Einheitenleiste am linken Kastelberg-Bildrand. */
+.ringelnatz-unit-column {
+  position: absolute;
+  inset: 0;
+  z-index: 63;
+  pointer-events: none;
+}
+
+.ringelnatz-unit {
+  position: absolute;
+  display: block;
+  width: auto;
+  opacity: 0;
+  transform: translate(-50%, 8px) scale(0.94);
+  transform-origin: 50% 50%;
+  transition:
+    opacity 360ms ease,
+    transform 360ms ease;
+  pointer-events: none;
+  user-select: none;
+  will-change: opacity, transform;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.35));
+}
+
+.ringelnatz-unit.is-visible {
+  opacity: 1;
+  transform: translate(-50%, 0) scale(1);
+}
+
+/* Vertikale Reihenfolge: Bauer bis Söldner. */
+.ringelnatz-unit--farmer {
+  left: 4.5%;
+  top: 4.5%;
+  height: 10.2%;
+}
+
+.ringelnatz-unit--spearman {
+  left: 4.5%;
+  top: 13.8%;
+  height: 10.2%;
+}
+
+.ringelnatz-unit--cavalry {
+  left: 5.2%;
+  top: 23.1%;
+  height: 11.2%;
+}
+
+.ringelnatz-unit--crossbow {
+  left: 4.5%;
+  top: 33.4%;
+  height: 10.2%;
+}
+
+.ringelnatz-unit--builder {
+  left: 4.5%;
+  top: 42.7%;
+  height: 10.2%;
+}
+
+.ringelnatz-unit--assassin {
+  left: 4.5%;
+  top: 52.0%;
+  height: 10.2%;
+}
+
+.ringelnatz-unit--mercenary {
+  left: 4.5%;
+  top: 61.3%;
+  height: 8.8%;
+}
+
+.surrender-button {
+  z-index: 64 !important;
+}
+

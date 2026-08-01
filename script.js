@@ -30,6 +30,13 @@ const battleSwordsman = document.querySelector("#battleSwordsman");
 const battleArcherTwo = document.querySelector("#battleArcherTwo");
 const archerAppearSound = document.querySelector("#archerAppearSound");
 const swordsmanAppearSound = document.querySelector("#swordsmanAppearSound");
+const ringelnatzFarmer = document.querySelector("#ringelnatzFarmer");
+const ringelnatzSpearman = document.querySelector("#ringelnatzSpearman");
+const ringelnatzCavalry = document.querySelector("#ringelnatzCavalry");
+const ringelnatzCrossbow = document.querySelector("#ringelnatzCrossbow");
+const ringelnatzBuilder = document.querySelector("#ringelnatzBuilder");
+const ringelnatzAssassin = document.querySelector("#ringelnatzAssassin");
+const ringelnatzMercenary = document.querySelector("#ringelnatzMercenary");
 const surrenderButton = document.querySelector("#surrenderButton");
 
 const INTRO_DURATION = 72000;
@@ -44,6 +51,17 @@ let feudSequenceInProgress = false;
 let battleScreenOpen = false;
 let battleUnitTimers = [];
 let battleUnitSequenceStarted = false;
+let ringelnatzUnitTimers = [];
+
+const ringelnatzUnits = [
+  ringelnatzFarmer,
+  ringelnatzSpearman,
+  ringelnatzCavalry,
+  ringelnatzCrossbow,
+  ringelnatzBuilder,
+  ringelnatzAssassin,
+  ringelnatzMercenary
+];
 
 const mapState = {
   fitScale: 1,
@@ -726,6 +744,38 @@ function hidePortraitTransition() {
 }
 
 
+function clearRingelnatzUnitTimers() {
+  ringelnatzUnitTimers.forEach((timer) => {
+    window.clearTimeout(timer);
+  });
+
+  ringelnatzUnitTimers = [];
+}
+
+function resetRingelnatzUnits() {
+  clearRingelnatzUnitTimers();
+
+  ringelnatzUnits.forEach((unit) => {
+    unit.classList.remove("is-visible");
+  });
+}
+
+function startRingelnatzUnitSequence() {
+  resetRingelnatzUnits();
+
+  ringelnatzUnits.forEach((unit, index) => {
+    ringelnatzUnitTimers.push(
+      window.setTimeout(() => {
+        if (!battleScreenOpen) {
+          return;
+        }
+
+        unit.classList.add("is-visible");
+      }, index * 200)
+    );
+  });
+}
+
 function clearBattleUnitTimers() {
   battleUnitTimers.forEach((timer) => {
     window.clearTimeout(timer);
@@ -750,6 +800,7 @@ function playBattleUnitSound(audio) {
 
 function resetBattleUnits() {
   clearBattleUnitTimers();
+  resetRingelnatzUnits();
   battleUnitSequenceStarted = false;
 
   battleArcherOne.classList.remove("is-visible");
@@ -801,6 +852,16 @@ function startBattleUnitSequence() {
       battleArcherTwo.classList.add("is-visible");
       playBattleUnitSound(archerAppearSound);
     }, 6000)
+  );
+
+  battleUnitTimers.push(
+    window.setTimeout(() => {
+      if (!battleScreenOpen) {
+        return;
+      }
+
+      startRingelnatzUnitSequence();
+    }, 6800)
   );
 }
 
