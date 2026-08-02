@@ -1260,6 +1260,8 @@ function playUnitProductionSound(unitType) {
 
 const marchUnitDefinitions = {
   farmer: {
+    type: "farmer",
+    armorClass: "light",
     idleSrc: "assets/ringelnatz-marsch-bauer.png?v=28",
     attackSrc: "assets/ringelnatz-angriff-bauer.png?v=31",
     width: 6.4,
@@ -1271,6 +1273,8 @@ const marchUnitDefinitions = {
     attackOffsetY: 0
   },
   spearman: {
+    type: "spearman",
+    armorClass: "light",
     idleSrc: "assets/ringelnatz-marsch-lanzentraeger.png?v=28",
     attackSrc: "assets/ringelnatz-angriff-lanzentraeger.png?v=31",
     width: 6.2,
@@ -1282,6 +1286,8 @@ const marchUnitDefinitions = {
     attackOffsetY: 0
   },
   cavalry: {
+    type: "cavalry",
+    armorClass: "medium",
     idleSrc: "assets/ringelnatz-marsch-lanzenreiter.png?v=28",
     attackSrc: null,
     width: 9.2,
@@ -1290,6 +1296,8 @@ const marchUnitDefinitions = {
     switchesPoseOnCollision: false
   },
   crossbow: {
+    type: "crossbow",
+    armorClass: "medium",
     idleSrc: "assets/ringelnatz-marsch-armbrustschuetze.png?v=28",
     attackSrc: "assets/ringelnatz-angriff-armbrustschuetze.png?v=31",
     width: 6.4,
@@ -1302,6 +1310,8 @@ const marchUnitDefinitions = {
     attackOffsetY: 0
   },
   builder: {
+    type: "builder",
+    armorClass: "light",
     idleSrc: "assets/ringelnatz-marsch-baumeister.png?v=28",
     attackSrc: null,
     width: 6.2,
@@ -1310,6 +1320,8 @@ const marchUnitDefinitions = {
     switchesPoseOnCollision: false
   },
   assassin: {
+    type: "assassin",
+    armorClass: "light",
     idleSrc: "assets/ringelnatz-marsch-assassine.png?v=28",
     attackSrc: "assets/ringelnatz-angriff-assassine.png?v=31",
     width: 6.6,
@@ -1321,6 +1333,8 @@ const marchUnitDefinitions = {
     attackOffsetY: "-2cm"
   },
   mercenary: {
+    type: "mercenary",
+    armorClass: "heavy",
     idleSrc: "assets/ringelnatz-marsch-soeldner.png?v=28",
     attackSrc: null,
     width: 6.0,
@@ -1347,6 +1361,493 @@ preloadCombatImages();
 
 
 
+
+const RINGELNATZ_DAMAGE_TABLE = {
+  farmer: {
+    light: 20,
+    medium: 10,
+    heavy: 5
+  },
+  spearman: {
+    light: 50,
+    medium: 25,
+    heavy: 10
+  },
+  cavalry: {
+    light: 100,
+    medium: 50,
+    heavy: 25
+  },
+  crossbow: {
+    light: 100,
+    medium: 35,
+    heavy: 15
+  },
+  builder: {
+    light: 35,
+    medium: 20,
+    heavy: 10
+  },
+  assassin: {
+    light: 100,
+    medium: 70,
+    heavy: 40
+  },
+  mercenary: {
+    light: 100,
+    medium: 35,
+    heavy: 25
+  }
+};
+
+const ASSASSIN_INSTANT_KILL_CHANCE = 0.30;
+const CROSSBOW_HIT_CHANCE = 0.80;
+const CROSSBOW_SHOT_POSE_DURATION = 1000;
+const CROSSBOW_RELOAD_DURATION = 3000;
+const CROSSBOW_BOLT_FLIGHT_DURATION = 520;
+
+function createUnitHealthBar(side) {
+  const healthBar = document.createElement("div");
+  healthBar.className =
+    `unit-health-bar unit-health-bar--${side}`;
+
+  const healthFill = document.createElement("div");
+  healthFill.className = "unit-health-fill";
+  healthBar.appendChild(healthFill);
+
+  return {
+    healthBar,
+    healthFill
+  };
+}
+
+function updateUnitHealthBar(unit) {
+  if (!unit || !unit.healthFill) {
+    return;
+  }
+
+  const percentage = Math.max(
+    0,
+    Math.min(
+      100,
+      unit.health / unit.maxHealth * 100
+    )
+  );
+
+  unit.healthFill.style.width = `${percentage}%`;
+}
+
+function assertValidArmorClass(unit) {
+  return [
+    "light",
+    "medium",
+    "heavy"
+  ].includes(unit?.armorClass);
+}
+
+function triggerNeuensteinHitReaction(unit) {
+  if (!unit || unit.cancelled || unit.isDead) {
+    return;
+  }
+
+  unit.element.classList.remove("is-hit");
+  void unit.element.offsetWidth;
+  unit.element.classList.add("is-hit");
+
+  window.setTimeout(() => {
+    if (!unit.cancelled) {
+      unit.element.classList.remove("is-hit");
+    }
+  }, 230);
+}
+
+function getRingelnatzDamage(attacker, target) {
+  if (
+    !attacker ||
+    !target ||
+    !assertValidArmorClass(target)
+  ) {
+    if (target && !assertValidArmorClass(target)) {
+      console.warn(
+        "Fehlende Rüstungsklasse:",
+        target.type
+      );
+    }
+
+    return null;
+  }
+
+  const type =
+    attacker.type ||
+    attacker.definition?.type;
+
+  const table =
+    RINGELNATZ_DAMAGE_TABLE[type];
+
+  if (!table) {
+    return null;
+  }
+
+  if (type === "assassin") {
+    if (target.armorClass === "light") {
+      return {
+        damage: 100,
+        instantKill: true
+      };
+    }
+
+    const instantKill =
+      Math.random() <
+      ASSASSIN_INSTANT_KILL_CHANCE;
+
+    return {
+      damage:
+        target.armorClass === "medium"
+          ? 70
+          : 40,
+      instantKill
+    };
+  }
+
+  const damage =
+    table[target.armorClass] ?? 0;
+
+  return {
+    damage,
+    instantKill: damage >= 100
+  };
+}
+
+function resumeRingelnatzMarch(instance) {
+  if (
+    !instance ||
+    instance.cancelled ||
+    instance.isDead ||
+    instance.definition.shortMove ||
+    !battleScreenOpen
+  ) {
+    return;
+  }
+
+  stopCombatPoseCycle(instance);
+  instance.combatTarget = null;
+  instance.parked = false;
+  instance.combatActive = false;
+  setUnitPose(instance, "idle");
+
+  instance.startX = getMarchInstanceX(instance);
+  instance.currentX = instance.startX;
+  instance.targetX = 78.5;
+  instance.startTime = 0;
+  instance.duration = Math.max(
+    700,
+    Math.abs(instance.targetX - instance.startX) * 95
+  );
+
+  instance.element.classList.add("is-walking");
+  instance.animationFrame =
+    window.requestAnimationFrame((timestamp) => {
+      animateMarchInstance(instance, timestamp);
+    });
+}
+
+function defeatNeuensteinUnit(unit, attacker = null) {
+  if (!unit || unit.isDead) {
+    return;
+  }
+
+  unit.isDead = true;
+  unit.health = 0;
+  updateUnitHealthBar(unit);
+  unit.walking = false;
+  unit.parked = true;
+  unit.combatActive = false;
+
+  stopNeuensteinAttackCycle(unit);
+
+  const waitingAttackers =
+    marchingUnitInstances.filter((instance) =>
+      !instance.cancelled &&
+      instance.combatTarget === unit
+    );
+
+  waitingAttackers.forEach((instance) => {
+    instance.combatTarget = null;
+  });
+
+  unit.cancelled = true;
+  unit.element.classList.add("is-defeated");
+
+  window.setTimeout(() => {
+    unit.element.remove();
+
+    neuensteinUnits =
+      neuensteinUnits.filter(
+        (entry) => entry !== unit
+      );
+
+    waitingAttackers.forEach((instance) => {
+      resumeRingelnatzMarch(instance);
+    });
+  }, 460);
+}
+
+function applyDamage(
+  target,
+  damageAmount,
+  options = {}
+) {
+  if (
+    !target ||
+    target.cancelled ||
+    target.isDead ||
+    damageAmount <= 0
+  ) {
+    return false;
+  }
+
+  const {
+    instantKill = false,
+    attacker = null
+  } = options;
+
+  target.health = instantKill
+    ? 0
+    : Math.max(
+        0,
+        target.health - damageAmount
+      );
+
+  updateUnitHealthBar(target);
+  triggerNeuensteinHitReaction(target);
+
+  if (target.health <= 0) {
+    defeatNeuensteinUnit(target, attacker);
+  }
+
+  return true;
+}
+
+function executeRingelnatzMeleeHit(attacker) {
+  if (
+    !attacker ||
+    attacker.cancelled ||
+    attacker.isDead
+  ) {
+    return;
+  }
+
+  const target = attacker.combatTarget;
+
+  if (
+    !target ||
+    target.isDead ||
+    target.cancelled ||
+    target.health <= 0
+  ) {
+    attacker.combatTarget = null;
+    return;
+  }
+
+  const result =
+    getRingelnatzDamage(
+      attacker,
+      target
+    );
+
+  if (!result) {
+    return;
+  }
+
+  applyDamage(
+    target,
+    result.damage,
+    {
+      instantKill: result.instantKill,
+      attacker
+    }
+  );
+}
+
+function findCrossbowTarget(instance) {
+  return neuensteinUnits
+    .filter((unit) =>
+      !unit.cancelled &&
+      !unit.isDead &&
+      unit.health > 0 &&
+      unit.x <= CROSSBOW_TRIGGER_X &&
+      unit.x > getMarchInstanceX(instance)
+    )
+    .sort((a, b) => a.x - b.x)[0] || null;
+}
+
+function launchRingelnatzCrossbowBolt(
+  attacker,
+  target,
+  hit
+) {
+  if (
+    !attacker ||
+    !target ||
+    attacker.cancelled ||
+    target.cancelled ||
+    target.isDead ||
+    !battleScreenOpen
+  ) {
+    return;
+  }
+
+  const bolt = document.createElement("span");
+  bolt.className = "ringelnatz-crossbow-bolt";
+
+  const startX =
+    getMarchInstanceX(attacker) + 1.5;
+  const targetX = target.x - 1.2;
+  const startY = 78.0;
+  const targetY = 77.0;
+  const deltaX = targetX - startX;
+  const deltaY = targetY - startY;
+  const angle =
+    Math.atan2(deltaY, deltaX) *
+    180 / Math.PI;
+
+  bolt.style.left = `${startX}%`;
+  bolt.style.top = `${startY}%`;
+  bolt.style.transform =
+    `rotate(${angle}deg)`;
+  bolt.style.transition =
+    `left ${CROSSBOW_BOLT_FLIGHT_DURATION}ms linear, ` +
+    `top ${CROSSBOW_BOLT_FLIGHT_DURATION}ms ease-in`;
+
+  marchUnitLayer.appendChild(bolt);
+
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
+      bolt.style.left = `${targetX}%`;
+      bolt.style.top = `${targetY}%`;
+    });
+  });
+
+  window.setTimeout(() => {
+    bolt.remove();
+
+    if (
+      !hit ||
+      target.cancelled ||
+      target.isDead
+    ) {
+      return;
+    }
+
+    const result =
+      getRingelnatzDamage(
+        attacker,
+        target
+      );
+
+    if (!result) {
+      return;
+    }
+
+    applyDamage(
+      target,
+      result.damage,
+      {
+        instantKill:
+          result.instantKill,
+        attacker
+      }
+    );
+  }, CROSSBOW_BOLT_FLIGHT_DURATION);
+}
+
+function scheduleRingelnatzCrossbowCycle(
+  instance,
+  delay
+) {
+  if (
+    !instance ||
+    instance.cancelled ||
+    instance.isDead
+  ) {
+    return;
+  }
+
+  instance.poseTimer =
+    window.setTimeout(() => {
+      instance.poseTimer = null;
+
+      if (
+        instance.cancelled ||
+        !battleScreenOpen
+      ) {
+        return;
+      }
+
+      const target =
+        findCrossbowTarget(instance);
+
+      if (!target) {
+        instance.combatActive = false;
+        setUnitPose(instance, "idle");
+        scheduleRingelnatzCrossbowCycle(
+          instance,
+          500
+        );
+        return;
+      }
+
+      instance.combatActive = true;
+      instance.combatTarget = target;
+      setUnitPose(instance, "attack");
+
+      const hit =
+        Math.random() <
+        CROSSBOW_HIT_CHANCE;
+
+      launchRingelnatzCrossbowBolt(
+        instance,
+        target,
+        hit
+      );
+
+      instance.poseTimer =
+        window.setTimeout(() => {
+          instance.poseTimer = null;
+
+          if (
+            instance.cancelled ||
+            !battleScreenOpen
+          ) {
+            return;
+          }
+
+          setUnitPose(instance, "idle");
+
+          scheduleRingelnatzCrossbowCycle(
+            instance,
+            CROSSBOW_RELOAD_DURATION
+          );
+        }, CROSSBOW_SHOT_POSE_DURATION);
+    }, delay);
+}
+
+function startRingelnatzCrossbowCycle(instance) {
+  if (
+    !instance ||
+    instance.poseTimer ||
+    instance.cancelled
+  ) {
+    return;
+  }
+
+  scheduleRingelnatzCrossbowCycle(
+    instance,
+    100
+  );
+}
+
+
 const NEUENSTEIN_SPAWN_INTERVAL = 4000;
 const NEUENSTEIN_SPAWN_X = 88.0;
 const NEUENSTEIN_TENT_STOP_X = 15.8;
@@ -1357,6 +1858,8 @@ const NEUENSTEIN_ARCHER_IDLE_DURATION = 3000;
 
 const neuensteinUnitDefinitions = {
   archer: {
+    type: "archer",
+    armorClass: "light",
     idleSrc: "assets/neuenstein-bogenschuetze-idle.png?v=37",
     attackSrc: "assets/neuenstein-bogenschuetze-angriff.png?v=37",
     width: 6.4,
@@ -1368,6 +1871,8 @@ const neuensteinUnitDefinitions = {
     attackOffsetY: 0
   },
   halberdier: {
+    type: "halberdier",
+    armorClass: "heavy",
     idleSrc: "assets/neuenstein-hellebardier-idle.png?v=37",
     attackSrc: "assets/neuenstein-hellebardier-angriff.png?v=37",
     width: 7.15,
@@ -1379,6 +1884,8 @@ const neuensteinUnitDefinitions = {
     attackOffsetY: 0
   },
   flail: {
+    type: "flail",
+    armorClass: "medium",
     idleSrc: "assets/neuenstein-flegel-idle.png?v=37",
     attackSrc: "assets/neuenstein-flegel-angriff.png?v=37",
     width: 6.3,
@@ -1390,6 +1897,8 @@ const neuensteinUnitDefinitions = {
     attackOffsetY: 0
   },
   swordsman: {
+    type: "swordsman",
+    armorClass: "heavy",
     idleSrc: "assets/neuenstein-schwertkaempfer-idle.png?v=37",
     attackSrc: "assets/neuenstein-schwertkaempfer-angriff.png?v=37",
     width: 6.4,
@@ -1538,7 +2047,11 @@ function startNeuensteinMeleeCycle(unit) {
 
 function findNearestRingelnatzTargetForArcher(unit) {
   const targets = getActiveRingelnatzTargets()
-    .filter((entry) => entry.x < unit.x)
+    .filter((entry) =>
+      !entry.instance.isDead &&
+      entry.instance.health > 0 &&
+      entry.x < unit.x
+    )
     .sort((a, b) => b.x - a.x);
 
   return targets[0] || null;
@@ -1675,9 +2188,21 @@ function createNeuensteinUnitElement(type, definition) {
   attackImage.draggable = false;
   wrapper.appendChild(attackImage);
 
+  const {
+    healthBar,
+    healthFill
+  } = createUnitHealthBar("neuenstein");
+
+  wrapper.appendChild(healthBar);
   neuensteinMarchUnitLayer.appendChild(wrapper);
 
-  return { wrapper, idleImage, attackImage };
+  return {
+    wrapper,
+    idleImage,
+    attackImage,
+    healthBar,
+    healthFill
+  };
 }
 
 function spawnNeuensteinUnit(type, options = {}) {
@@ -1686,8 +2211,16 @@ function spawnNeuensteinUnit(type, options = {}) {
   }
 
   const definition = neuensteinUnitDefinitions[type];
-  const { wrapper, idleImage, attackImage } =
-    createNeuensteinUnitElement(type, definition);
+  const {
+    wrapper,
+    idleImage,
+    attackImage,
+    healthBar,
+    healthFill
+  } = createNeuensteinUnitElement(
+    type,
+    definition
+  );
 
   const unit = {
     id: ++neuensteinUnitCounter,
@@ -1708,6 +2241,13 @@ function spawnNeuensteinUnit(type, options = {}) {
     attackPoseVisible: false,
     attackTimer: null,
     cancelled: false,
+    isDead: false,
+    maxHealth: 100,
+    health: 100,
+    armorClass: definition.armorClass,
+    healthBar,
+    healthFill,
+    combatTarget: null,
     firstArcher: Boolean(options.firstArcher)
   };
 
@@ -1757,7 +2297,11 @@ function getEnemyAheadStopX(unit) {
 
 function getRingelnatzCollisionForEnemy(unit) {
   const targets = getActiveRingelnatzTargets()
-    .filter((entry) => entry.x < unit.x)
+    .filter((entry) =>
+      !entry.instance.isDead &&
+      entry.instance.health > 0 &&
+      entry.x < unit.x
+    )
     .sort((a, b) => b.x - a.x);
 
   const nearest = targets[0];
@@ -1824,7 +2368,15 @@ function updateNeuensteinUnit(unit, deltaSeconds) {
     unit.parked = true;
     unit.element.style.left = `${unit.x}%`;
 
-    if (collision || desiredStopX <= NEUENSTEIN_TENT_STOP_X + 0.2) {
+    if (collision) {
+      unit.combatTarget = collision.target;
+    }
+
+    if (
+      collision ||
+      desiredStopX <=
+        NEUENSTEIN_TENT_STOP_X + 0.2
+    ) {
       startNeuensteinMeleeCycle(unit);
     }
   }
@@ -1949,10 +2501,15 @@ function resetNeuensteinBattleSystem() {
     .forEach((element) => element.remove());
 }
 
-function getRingelnatzCollisionStopX(instance, proposedX) {
+function getRingelnatzCollisionStopX(
+  instance,
+  proposedX
+) {
   const enemiesAhead = neuensteinUnits
     .filter((unit) =>
       !unit.cancelled &&
+      !unit.isDead &&
+      unit.health > 0 &&
       unit.x > proposedX
     )
     .sort((a, b) => a.x - b.x);
@@ -1966,7 +2523,10 @@ function getRingelnatzCollisionStopX(instance, proposedX) {
   const stopX = nearest.x - 4.3;
 
   if (proposedX >= stopX) {
-    return stopX;
+    return {
+      stopX,
+      target: nearest
+    };
   }
 
   return null;
@@ -2071,6 +2631,7 @@ function startCombatPoseCycle(instance) {
 
   instance.combatActive = true;
   setUnitPose(instance, "attack");
+  executeRingelnatzMeleeHit(instance);
 
   instance.poseTimer = window.setInterval(() => {
     if (
@@ -2081,12 +2642,16 @@ function startCombatPoseCycle(instance) {
       return;
     }
 
-    setUnitPose(
-      instance,
+    const nextPose =
       instance.attackPoseVisible
         ? "idle"
-        : "attack"
-    );
+        : "attack";
+
+    setUnitPose(instance, nextPose);
+
+    if (nextPose === "attack") {
+      executeRingelnatzMeleeHit(instance);
+    }
   }, 1000);
 }
 
@@ -2121,6 +2686,7 @@ function startImpactPulseCycle(instance) {
     }
 
     triggerImpactPulse(instance);
+    executeRingelnatzMeleeHit(instance);
   }, 1000);
 }
 
@@ -2156,8 +2722,8 @@ function activateCrossbowCombatState(instance) {
     return;
   }
 
-  // No shake and no dust for the ranged unit.
-  startCombatPoseCycle(instance);
+  // Kein Wackeln und kein Staub für die Fernkampfeinheit.
+  startRingelnatzCrossbowCycle(instance);
 }
 
 function updateCrossbowEnemyRange(enemyX) {
@@ -2191,6 +2757,7 @@ function finishMarchInstance(instance) {
 
   // Units 3, 5 and 7 keep the same image, but repeat collision shake and dust every second.
   triggerImpactPulse(instance);
+  executeRingelnatzMeleeHit(instance);
 
   window.setTimeout(() => {
     if (!instance.cancelled) {
@@ -2213,15 +2780,20 @@ function animateMarchInstance(instance, timestamp) {
   let currentX =
     instance.startX + (instance.targetX - instance.startX) * progress;
 
-  const enemyCollisionStopX =
-    getRingelnatzCollisionStopX(instance, currentX);
+  const enemyCollision =
+    getRingelnatzCollisionStopX(
+      instance,
+      currentX
+    );
 
   if (
-    enemyCollisionStopX !== null &&
+    enemyCollision !== null &&
     !instance.definition.shortMove
   ) {
-    currentX = enemyCollisionStopX;
-    instance.targetX = enemyCollisionStopX;
+    currentX = enemyCollision.stopX;
+    instance.targetX = enemyCollision.stopX;
+    instance.combatTarget =
+      enemyCollision.target;
     instance.currentX = currentX;
     instance.element.style.left = `${currentX}%`;
     finishMarchInstance(instance);
@@ -2301,6 +2873,12 @@ function spawnAndMarchUnit(unitType) {
     wrapper.appendChild(attackImage);
   }
 
+  const {
+    healthBar,
+    healthFill
+  } = createUnitHealthBar("ringelnatz");
+
+  wrapper.appendChild(healthBar);
   marchUnitLayer.appendChild(wrapper);
 
   const instance = {
@@ -2319,7 +2897,15 @@ function spawnAndMarchUnit(unitType) {
     combatActive: false,
     attackPoseVisible: false,
     poseTimer: null,
-    cancelled: false
+    cancelled: false,
+    isDead: false,
+    maxHealth: 100,
+    health: 100,
+    armorClass: definition.armorClass,
+    type: definition.type,
+    healthBar,
+    healthFill,
+    combatTarget: null
   };
 
   marchingUnitInstances.push(instance);
@@ -2360,8 +2946,10 @@ function resetMarchingUnits() {
   marchInstanceCounter = 0;
 
   marchUnitLayer
-    .querySelectorAll(".march-dust-instance")
-    .forEach((dust) => dust.remove());
+    .querySelectorAll(
+      ".march-dust-instance, .ringelnatz-crossbow-bolt"
+    )
+    .forEach((element) => element.remove());
 
   Object.values(unitProductionSounds).forEach((audio) => {
     if (!audio) {

@@ -1608,3 +1608,113 @@ button {
   margin-top: 2cm;
 }
 
+/* V40 – Lebens- und Schadenssystem, Ringelnatz greift an. */
+.unit-health-bar {
+  position: absolute;
+  left: 50%;
+  bottom: -8px;
+  z-index: 90;
+  width: 78%;
+  height: 5px;
+  transform: translateX(-50%);
+  overflow: hidden;
+  border: 1px solid rgba(18, 14, 8, 0.95);
+  box-sizing: border-box;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.9),
+    0 0 4px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+
+.unit-health-fill {
+  width: 100%;
+  height: 100%;
+  transform-origin: left center;
+  transition: width 260ms ease;
+}
+
+.unit-health-bar--ringelnatz {
+  background: #050505;
+}
+
+.unit-health-bar--ringelnatz .unit-health-fill {
+  background: #ffd21a;
+  box-shadow: 0 0 5px rgba(255, 210, 26, 0.95);
+}
+
+.unit-health-bar--neuenstein {
+  background: #a41616;
+}
+
+.unit-health-bar--neuenstein .unit-health-fill {
+  background: #67f7ff;
+  box-shadow:
+    0 0 5px rgba(103, 247, 255, 1),
+    0 0 9px rgba(45, 223, 240, 0.75);
+}
+
+.neuenstein-unit-instance.is-hit {
+  animation: neuensteinHitReaction 220ms ease-out;
+}
+
+.neuenstein-unit-instance.is-defeated {
+  opacity: 0 !important;
+  transform: translate(-50%, -100%) scale(0.88) !important;
+  transition:
+    opacity 420ms ease,
+    transform 420ms ease !important;
+  pointer-events: none;
+}
+
+.ringelnatz-crossbow-bolt {
+  position: absolute;
+  z-index: 96;
+  width: 38px;
+  height: 3px;
+  border-radius: 999px;
+  background:
+    linear-gradient(
+      90deg,
+      #3f2c18 0 82%,
+      #c8c8c8 82% 100%
+    );
+  transform-origin: 0 50%;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.7));
+  pointer-events: none;
+}
+
+.ringelnatz-crossbow-bolt::before,
+.ringelnatz-crossbow-bolt::after {
+  content: "";
+  position: absolute;
+  left: -7px;
+  width: 11px;
+  height: 2px;
+  background: #8f6b3a;
+  transform-origin: right center;
+}
+
+.ringelnatz-crossbow-bolt::before {
+  top: -2px;
+  transform: rotate(24deg);
+}
+
+.ringelnatz-crossbow-bolt::after {
+  bottom: -2px;
+  transform: rotate(-24deg);
+}
+
+@keyframes neuensteinHitReaction {
+  0% {
+    filter: brightness(1);
+  }
+
+  35% {
+    filter: brightness(1.35) contrast(1.08);
+  }
+
+  100% {
+    filter: brightness(1);
+  }
+}
+
