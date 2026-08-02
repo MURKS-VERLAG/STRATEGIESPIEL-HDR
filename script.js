@@ -27,6 +27,8 @@ const diplomacyCharacterBlue = document.querySelector("#diplomacyCharacterBlue")
 const diplomacyCharacterPurple = document.querySelector("#diplomacyCharacterPurple");
 const diplomacyCharacterGreen = document.querySelector("#diplomacyCharacterGreen");
 const diplomacyCharacterBlack = document.querySelector("#diplomacyCharacterBlack");
+const troopSelectionModal = document.querySelector("#troopSelectionModal");
+const troopSelectionWindow = document.querySelector("#troopSelectionWindow");
 const feudHoverIcon = document.querySelector("#feudHoverIcon");
 const feudConfirmation = document.querySelector("#feudConfirmation");
 const feudConfirmYes = document.querySelector("#feudConfirmYes");
@@ -69,6 +71,10 @@ let diplomacyOpen = false;
 let diplomacyClosing = false;
 let diplomacyHoveredCharacter = null;
 let diplomacyPinnedCharacter = null;
+let troopSelectionOpen = false;
+let troopSelectionCloseTimer = null;
+let mapCharacterHovered = false;
+let troopSelectionHovered = false;
 let feudConfirmationOpen = false;
 let feudSequenceInProgress = false;
 let battleScreenOpen = false;
@@ -474,6 +480,69 @@ const feudTargetRegion = {
   maxY: 0.145
 };
 
+const troopSelectionTargetRegion = {
+  id: "ringelnatzTroops",
+  minX: 0.548,
+  maxX: 0.590,
+  minY: 0.285,
+  maxY: 0.445
+};
+
+
+function openTroopSelection() {
+  if (
+    troopSelectionOpen ||
+    barracksOpen ||
+    barracksClosing ||
+    diplomacyOpen ||
+    diplomacyClosing ||
+    feudConfirmationOpen ||
+    feudSequenceInProgress ||
+    battleScreenOpen ||
+    yearChangeInProgress
+  ) {
+    return;
+  }
+
+  window.clearTimeout(troopSelectionCloseTimer);
+  troopSelectionOpen = true;
+  troopSelectionModal.classList.add("is-open");
+  troopSelectionModal.setAttribute("aria-hidden", "false");
+}
+
+function closeTroopSelection() {
+  window.clearTimeout(troopSelectionCloseTimer);
+  troopSelectionCloseTimer = null;
+  troopSelectionOpen = false;
+  mapCharacterHovered = false;
+  troopSelectionHovered = false;
+  troopSelectionModal.classList.remove("is-open");
+  troopSelectionModal.setAttribute("aria-hidden", "true");
+}
+
+function scheduleTroopSelectionClose() {
+  window.clearTimeout(troopSelectionCloseTimer);
+
+  troopSelectionCloseTimer = window.setTimeout(() => {
+    if (mapCharacterHovered || troopSelectionHovered) {
+      return;
+    }
+
+    closeTroopSelection();
+  }, 260);
+}
+
+troopSelectionWindow.addEventListener("pointerenter", () => {
+  troopSelectionHovered = true;
+  window.clearTimeout(troopSelectionCloseTimer);
+});
+
+troopSelectionWindow.addEventListener("pointerleave", () => {
+  troopSelectionHovered = false;
+  scheduleTroopSelectionClose();
+});
+
+
 let activeSoundRegion = null;
 
 function findSoundRegion(x, y) {
@@ -529,9 +598,23 @@ mapViewport.addEventListener("pointermove", (event) => {
   const region = findSoundRegion(position.x, position.y);
   const regionId = region ? region.id : null;
   const overFeudTarget = isInsideRegion(position, feudTargetRegion);
+  const overTroopSelectionTarget =
+    isInsideRegion(position, troopSelectionTargetRegion);
+
+  if (overTroopSelectionTarget) {
+    mapCharacterHovered = true;
+    window.clearTimeout(troopSelectionCloseTimer);
+    openTroopSelection();
+  } else if (mapCharacterHovered) {
+    mapCharacterHovered = false;
+    scheduleTroopSelectionClose();
+  }
 
   feudHoverIcon.classList.toggle("is-visible", overFeudTarget);
-  mapViewport.style.cursor = (region || overFeudTarget) ? "pointer" : "default";
+  mapViewport.style.cursor =
+    (region || overFeudTarget || overTroopSelectionTarget)
+      ? "pointer"
+      : "default";
 
   if (regionId !== activeSoundRegion) {
     activeSoundRegion = regionId;
@@ -544,6 +627,8 @@ mapViewport.addEventListener("pointermove", (event) => {
 
 mapViewport.addEventListener("pointerleave", () => {
   activeSoundRegion = null;
+  mapCharacterHovered = false;
+  scheduleTroopSelectionClose();
   feudHoverIcon.classList.remove("is-visible");
   mapViewport.style.cursor = "default";
 });
@@ -587,6 +672,7 @@ function isInsideRegion(position, region) {
 }
 
 function advanceYear() {
+  closeTroopSelection();
   if (yearChangeInProgress) {
     return;
   }
@@ -667,6 +753,7 @@ updateYearDisplay();
 
 /* V20: Kasernenansicht öffnen und schließen. */
 function openBarracks() {
+  closeTroopSelection();
   if (
     barracksOpen ||
     barracksClosing ||
@@ -891,6 +978,7 @@ diplomacyStage.addEventListener("click", (event) => {
 
 
 function openDiplomacyModal() {
+  closeTroopSelection();
   if (
     diplomacyOpen ||
     diplomacyClosing ||
@@ -960,6 +1048,7 @@ diplomacyModal.addEventListener("contextmenu", (event) => {
 
 /* V21: Fehde-Erklärung und Übergang zum Kastelberg. */
 function openFeudConfirmation() {
+  closeTroopSelection();
   if (
     feudConfirmationOpen ||
     feudSequenceInProgress ||
@@ -1666,6 +1755,7 @@ function showBattleScreen() {
 }
 
 async function beginFeudSequence() {
+  closeTroopSelection();
   if (
     !feudConfirmationOpen ||
     feudSequenceInProgress ||

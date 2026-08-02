@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#050505">
   <title>Die Herren der Rench</title>
-  <link rel="stylesheet" href="style.css?v=31">
+  <link rel="stylesheet" href="style.css?v=33">
 </head>
 <body>
   <main class="game">
@@ -122,6 +122,37 @@
       <audio id="scrollSound" preload="auto"><source src="assets/drawbridge_lowering(1).mp3?v=17" type="audio/mpeg"></audio>
       <audio id="handbookSound" preload="auto"><source src="assets/opencldrn_01(1).mp3?v=17" type="audio/mpeg"></audio>
 
+
+
+      <div
+        class="troop-selection-modal"
+        id="troopSelectionModal"
+        aria-hidden="true"
+      >
+        <div class="troop-selection-backdrop" aria-hidden="true"></div>
+
+        <div
+          class="troop-selection-window"
+          id="troopSelectionWindow"
+        >
+          <div class="troop-selection-stage">
+            <img
+              class="troop-selection-image"
+              src="assets/truppenwahl-ringelnatz.png?v=33"
+              alt="Truppenwahl Reinbold Ringelnatz"
+              draggable="false"
+            >
+
+            <div class="troop-count troop-count--farmer">5</div>
+            <div class="troop-count troop-count--spearman">3</div>
+            <div class="troop-count troop-count--cavalry">0</div>
+            <div class="troop-count troop-count--crossbow">1</div>
+            <div class="troop-count troop-count--builder">0</div>
+            <div class="troop-count troop-count--mercenary">1</div>
+            <div class="troop-count troop-count--assassin">0</div>
+          </div>
+        </div>
+      </div>
 
       <div
         class="feud-confirmation"
@@ -421,6 +452,6 @@
     </section>
   </main>
 
-  <script src="script.js?v=32"></script>
+  <script src="script.js?v=33"></script>
 </body>
 </html>

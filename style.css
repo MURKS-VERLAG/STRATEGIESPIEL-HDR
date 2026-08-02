@@ -1242,3 +1242,129 @@ button {
   z-index: 70 !important;
 }
 
+/* V33 – Hover-Truppenwahl über dem Ringelnatz-Charakter der Hauptkarte. */
+.troop-selection-modal {
+  position: absolute;
+  inset: 0;
+  z-index: 38;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 420ms ease,
+    visibility 0s linear 420ms;
+}
+
+.troop-selection-modal.is-open {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 420ms ease,
+    visibility 0s linear 0s;
+}
+
+.troop-selection-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(20, 17, 12, 0.28);
+  pointer-events: none;
+}
+
+.troop-selection-window {
+  position: relative;
+  z-index: 39;
+  width: min(78vw, 1050px);
+  max-height: 78vh;
+  opacity: 0;
+  transform: scale(0.97);
+  transform-origin: 50% 50%;
+  transition:
+    opacity 420ms ease,
+    transform 420ms ease;
+  pointer-events: auto;
+  box-shadow:
+    0 16px 42px rgba(0, 0, 0, 0.46),
+    0 0 0 1px rgba(235, 230, 215, 0.24);
+}
+
+.troop-selection-modal.is-open .troop-selection-window {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.troop-selection-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 980 / 674;
+  overflow: hidden;
+  background: #f2efe7;
+}
+
+.troop-selection-image {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+  pointer-events: none;
+}
+
+.troop-count {
+  position: absolute;
+  z-index: 4;
+  transform: translate(-50%, -50%);
+  color: #ffd62a;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(25px, 3vw, 45px);
+  font-weight: 900;
+  line-height: 1;
+  text-shadow:
+    -2px -2px 0 #2a1b00,
+     2px -2px 0 #2a1b00,
+    -2px  2px 0 #2a1b00,
+     2px  2px 0 #2a1b00,
+     0 0 8px rgba(255, 214, 42, 0.98),
+     0 0 17px rgba(255, 190, 20, 0.72);
+  pointer-events: none;
+  user-select: none;
+}
+
+.troop-count--farmer {
+  left: 14.4%;
+  top: 14.5%;
+}
+
+.troop-count--spearman {
+  left: 35.3%;
+  top: 14.2%;
+}
+
+.troop-count--cavalry {
+  left: 57.3%;
+  top: 12.3%;
+}
+
+.troop-count--crossbow {
+  left: 84.0%;
+  top: 15.0%;
+}
+
+.troop-count--builder {
+  left: 15.7%;
+  top: 61.0%;
+}
+
+.troop-count--mercenary {
+  left: 52.0%;
+  top: 63.0%;
+}
+
+.troop-count--assassin {
+  left: 84.0%;
+  top: 62.5%;
+}
+
