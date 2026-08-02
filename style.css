@@ -1131,8 +1131,8 @@ button {
   left: 14.5%;
   top: calc(84% + 3cm);
   display: block;
-  width: auto;
-  height: auto;
+  width: 6.4%;
+  height: 22%;
   opacity: 0;
   transform: translate(-50%, -100%) scale(0.92);
   transform-origin: 50% 100%;
@@ -1155,17 +1155,37 @@ button {
   animation: unitWalkBob 420ms ease-in-out infinite alternate;
 }
 
-@keyframes unitWalkBob {
-  from {
-    transform: translate(-50%, -100%) translateY(0) rotate(-0.6deg);
-  }
-  to {
-    transform: translate(-50%, -100%) translateY(-4px) rotate(0.6deg);
-  }
-}
-
 .march-unit-instance.is-impacting {
   animation: unitArrivalShake 420ms ease;
+}
+
+.march-unit-pose {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  opacity: 0;
+  transform: translateX(-50%);
+  transform-origin: 50% 100%;
+  transition: opacity 300ms ease;
+  pointer-events: none;
+  user-select: none;
+}
+
+.march-unit-pose.is-active {
+  opacity: 1;
+}
+
+.march-unit-pose--attack {
+  transform:
+    translateX(calc(-50% + var(--attack-offset-x, 0px)))
+    translateY(var(--attack-offset-y, 0px))
+    scale(var(--attack-scale, 1));
 }
 
 @keyframes unitArrivalShake {

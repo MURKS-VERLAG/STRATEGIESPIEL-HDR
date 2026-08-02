@@ -317,6 +317,20 @@ const pressedKeys = new Set();
 const PAN_SPEED = 520;
 let lastFrameTime = performance.now();
 
+
+function preloadCombatImages() {
+  Object.values(marchUnitDefinitions).forEach((definition) => {
+    if (!definition.attackSrc) {
+      return;
+    }
+
+    const image = new Image();
+    image.src = definition.attackSrc;
+  });
+}
+
+preloadCombatImages();
+
 window.addEventListener("keydown", (event) => {
   const key = event.key.toLowerCase();
 
@@ -1050,42 +1064,77 @@ function playUnitProductionSound(unitType) {
 
 const marchUnitDefinitions = {
   farmer: {
-    src: "assets/ringelnatz-marsch-bauer.png?v=28",
+    idleSrc: "assets/ringelnatz-marsch-bauer.png?v=28",
+    attackSrc: "assets/ringelnatz-angriff-bauer.png?v=31",
     width: 6.4,
-    duration: 6500
+    height: 22,
+    duration: 6500,
+    switchesPoseOnCollision: true,
+    attackScale: 1.12,
+    attackOffsetX: 8,
+    attackOffsetY: 0
   },
   spearman: {
-    src: "assets/ringelnatz-marsch-lanzentraeger.png?v=28",
+    idleSrc: "assets/ringelnatz-marsch-lanzentraeger.png?v=28",
+    attackSrc: "assets/ringelnatz-angriff-lanzentraeger.png?v=31",
     width: 6.2,
-    duration: 5800
+    height: 22,
+    duration: 5800,
+    switchesPoseOnCollision: true,
+    attackScale: 1.08,
+    attackOffsetX: 5,
+    attackOffsetY: 0
   },
   cavalry: {
-    src: "assets/ringelnatz-marsch-lanzenreiter.png?v=28",
+    idleSrc: "assets/ringelnatz-marsch-lanzenreiter.png?v=28",
+    attackSrc: null,
     width: 9.2,
-    duration: 4400
+    height: 25,
+    duration: 4400,
+    switchesPoseOnCollision: false
   },
   crossbow: {
-    src: "assets/ringelnatz-marsch-armbrustschuetze.png?v=28",
+    idleSrc: "assets/ringelnatz-marsch-armbrustschuetze.png?v=28",
+    attackSrc: "assets/ringelnatz-angriff-armbrustschuetze.png?v=31",
     width: 6.4,
+    height: 20,
     duration: 1000,
-    shortMove: true
+    shortMove: true,
+    rangedUnit: true,
+    attackScale: 1.12,
+    attackOffsetX: 8,
+    attackOffsetY: 0
   },
   builder: {
-    src: "assets/ringelnatz-marsch-baumeister.png?v=28",
+    idleSrc: "assets/ringelnatz-marsch-baumeister.png?v=28",
+    attackSrc: null,
     width: 6.2,
-    duration: 6500
+    height: 22,
+    duration: 6500,
+    switchesPoseOnCollision: false
   },
   assassin: {
-    src: "assets/ringelnatz-marsch-assassine.png?v=28",
+    idleSrc: "assets/ringelnatz-marsch-assassine.png?v=28",
+    attackSrc: "assets/ringelnatz-angriff-assassine.png?v=31",
     width: 6.6,
-    duration: 5000
+    height: 20,
+    duration: 5000,
+    switchesPoseOnCollision: true,
+    attackScale: 1.10,
+    attackOffsetX: 4,
+    attackOffsetY: 0
   },
   mercenary: {
-    src: "assets/ringelnatz-marsch-soeldner.png?v=28",
+    idleSrc: "assets/ringelnatz-marsch-soeldner.png?v=28",
+    attackSrc: null,
     width: 5.6,
-    duration: 5600
+    height: 19,
+    duration: 5600,
+    switchesPoseOnCollision: false
   }
 };
+
+const CROSSBOW_TRIGGER_X = 50;
 
 const unitKeyMap = {
   "1": "farmer",
@@ -1145,22 +1194,142 @@ function calculateQueuedTargetX(definition) {
   return Math.max(28, 78.5 - parkedNormalUnits.length * spacing);
 }
 
+function setUnitPose(instance, pose) {
+  const showAttack =
+    pose === "attack" &&
+    Boolean(instance.attackImage);
+
+  instance.attackPoseVisible = showAttack;
+
+  instance.idleImage.classList.toggle(
+    "is-active",
+    !showAttack
+  );
+
+  if (instance.attackImage) {
+    instance.attackImage.classList.toggle(
+      "is-active",
+      showAttack
+    );
+  }
+}
+
+function stopCombatPoseCycle(instance) {
+  if (instance.poseTimer) {
+    window.clearInterval(instance.poseTimer);
+    instance.poseTimer = null;
+  }
+
+  instance.combatActive = false;
+}
+
+function startCombatPoseCycle(instance) {
+  if (
+    !instance.attackImage ||
+    instance.poseTimer ||
+    instance.cancelled
+  ) {
+    return;
+  }
+
+  instance.combatActive = true;
+  setUnitPose(instance, "attack");
+
+  instance.poseTimer = window.setInterval(() => {
+    if (
+      instance.cancelled ||
+      !battleScreenOpen
+    ) {
+      stopCombatPoseCycle(instance);
+      return;
+    }
+
+    setUnitPose(
+      instance,
+      instance.attackPoseVisible
+        ? "idle"
+        : "attack"
+    );
+  }, 1000);
+}
+
+function activateUnitCombatState(instance) {
+  if (
+    instance.combatActive ||
+    !instance.definition.switchesPoseOnCollision
+  ) {
+    return;
+  }
+
+  instance.element.classList.add("is-impacting");
+  createDustAt(instance.targetX);
+
+  window.setTimeout(() => {
+    if (instance.cancelled) {
+      return;
+    }
+
+    instance.element.classList.remove("is-impacting");
+    instance.element.classList.add("is-visible");
+    startCombatPoseCycle(instance);
+  }, 420);
+}
+
+function activateCrossbowCombatState(instance) {
+  if (
+    !instance ||
+    !instance.definition.rangedUnit ||
+    instance.combatActive ||
+    instance.cancelled
+  ) {
+    return;
+  }
+
+  // No shake and no dust for the ranged unit.
+  startCombatPoseCycle(instance);
+}
+
+function updateCrossbowEnemyRange(enemyX) {
+  if (enemyX > CROSSBOW_TRIGGER_X) {
+    return;
+  }
+
+  marchingUnitInstances
+    .filter((instance) =>
+      instance.parked &&
+      instance.definition.rangedUnit
+    )
+    .forEach(activateCrossbowCombatState);
+}
+
 function finishMarchInstance(instance) {
   instance.animationFrame = null;
   instance.element.classList.remove("is-walking");
   instance.parked = true;
 
-  if (!instance.definition.shortMove) {
-    instance.element.classList.add("is-impacting");
-    createDustAt(instance.targetX);
-
-    window.setTimeout(() => {
-      instance.element.classList.remove("is-impacting");
-      instance.element.classList.add("is-visible");
-    }, 430);
-  } else {
+  if (instance.definition.shortMove) {
+    // Crossbow remains idle until a future enemy enters range.
     instance.element.classList.add("is-visible");
+    return;
   }
+
+  if (instance.definition.switchesPoseOnCollision) {
+    activateUnitCombatState(instance);
+    return;
+  }
+
+  // Units 3, 5 and 7 keep their old single-image arrival behaviour.
+  instance.element.classList.add("is-impacting");
+  createDustAt(instance.targetX);
+
+  window.setTimeout(() => {
+    if (instance.cancelled) {
+      return;
+    }
+
+    instance.element.classList.remove("is-impacting");
+    instance.element.classList.add("is-visible");
+  }, 430);
 }
 
 function animateMarchInstance(instance, timestamp) {
@@ -1207,21 +1376,53 @@ function spawnAndMarchUnit(unitType) {
   productionCooldownUntil = Date.now() + 3000;
   playUnitProductionSound(unitType);
 
-  const image = document.createElement("img");
-  image.className = "march-unit-instance";
-  image.src = definition.src;
-  image.alt = "";
-  image.draggable = false;
-  image.style.left = "14.5%";
-  image.style.top = "calc(84% + 3cm)";
-  image.style.width = `${definition.width}%`;
-  image.dataset.marchId = String(++marchInstanceCounter);
+  const wrapper = document.createElement("div");
+  wrapper.className = "march-unit-instance";
+  wrapper.style.left = "14.5%";
+  wrapper.style.top = "calc(84% + 3cm)";
+  wrapper.style.width = `${definition.width}%`;
+  wrapper.style.height = `${definition.height}%`;
+  wrapper.style.setProperty(
+    "--attack-scale",
+    String(definition.attackScale || 1)
+  );
+  wrapper.style.setProperty(
+    "--attack-offset-x",
+    `${definition.attackOffsetX || 0}px`
+  );
+  wrapper.style.setProperty(
+    "--attack-offset-y",
+    `${definition.attackOffsetY || 0}px`
+  );
+  wrapper.dataset.marchId = String(++marchInstanceCounter);
 
-  marchUnitLayer.appendChild(image);
+  const idleImage = document.createElement("img");
+  idleImage.className =
+    "march-unit-pose march-unit-pose--idle is-active";
+  idleImage.src = definition.idleSrc;
+  idleImage.alt = "";
+  idleImage.draggable = false;
+  wrapper.appendChild(idleImage);
+
+  let attackImage = null;
+
+  if (definition.attackSrc) {
+    attackImage = document.createElement("img");
+    attackImage.className =
+      "march-unit-pose march-unit-pose--attack";
+    attackImage.src = definition.attackSrc;
+    attackImage.alt = "";
+    attackImage.draggable = false;
+    wrapper.appendChild(attackImage);
+  }
+
+  marchUnitLayer.appendChild(wrapper);
 
   const instance = {
     id: marchInstanceCounter,
-    element: image,
+    element: wrapper,
+    idleImage,
+    attackImage,
     definition,
     startX: 14.5,
     targetX: calculateQueuedTargetX(definition),
@@ -1229,6 +1430,9 @@ function spawnAndMarchUnit(unitType) {
     startTime: 0,
     animationFrame: null,
     parked: false,
+    combatActive: false,
+    attackPoseVisible: false,
+    poseTimer: null,
     cancelled: false
   };
 
@@ -1236,17 +1440,18 @@ function spawnAndMarchUnit(unitType) {
 
   window.requestAnimationFrame(() => {
     window.requestAnimationFrame(() => {
-      image.classList.add("is-visible");
+      wrapper.classList.add("is-visible");
 
       window.setTimeout(() => {
         if (!battleScreenOpen || instance.cancelled) {
           return;
         }
 
-        image.classList.add("is-walking");
-        instance.animationFrame = window.requestAnimationFrame((timestamp) => {
-          animateMarchInstance(instance, timestamp);
-        });
+        wrapper.classList.add("is-walking");
+        instance.animationFrame =
+          window.requestAnimationFrame((timestamp) => {
+            animateMarchInstance(instance, timestamp);
+          });
       }, 320);
     });
   });
@@ -1255,6 +1460,7 @@ function spawnAndMarchUnit(unitType) {
 function resetMarchingUnits() {
   marchingUnitInstances.forEach((instance) => {
     instance.cancelled = true;
+    stopCombatPoseCycle(instance);
 
     if (instance.animationFrame !== null) {
       window.cancelAnimationFrame(instance.animationFrame);
