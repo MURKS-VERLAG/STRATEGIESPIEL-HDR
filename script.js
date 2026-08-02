@@ -44,6 +44,10 @@ const battleCountdown =
   document.querySelector("#battleCountdown");
 const battleCountdownNumber =
   document.querySelector("#battleCountdownNumber");
+const battleTitleOverlay =
+  document.querySelector("#battleTitleOverlay");
+const battleTitleYear =
+  document.querySelector("#battleTitleYear");
 const battleArcherOne = document.querySelector("#battleArcherOne");
 const battleSwordsman = document.querySelector("#battleSwordsman");
 const battleArcherTwo = document.querySelector("#battleArcherTwo");
@@ -104,6 +108,8 @@ let battleUnitTimers = [];
 let battleUnitSequenceStarted = false;
 let battleCountdownRunning = false;
 let battleCountdownTimers = [];
+let battleTitleTimers = [];
+let battleTitleRunning = false;
 const battleStartHorn =
   new Audio("assets/battle-start-horn.mp3?v=49");
 battleStartHorn.preload = "auto";
@@ -3928,6 +3934,100 @@ function resetRingelnatzUnits() {
 }
 
 
+function clearBattleTitle() {
+  battleTitleTimers.forEach((timer) => {
+    window.clearTimeout(timer);
+  });
+
+  battleTitleTimers = [];
+  battleTitleRunning = false;
+
+  if (battleTitleOverlay) {
+    battleTitleOverlay.classList.remove(
+      "is-visible",
+      "is-leaving"
+    );
+    battleTitleOverlay.setAttribute(
+      "aria-hidden",
+      "true"
+    );
+  }
+}
+
+function startBattleTitleSequence(onComplete) {
+  clearBattleTitle();
+
+  if (
+    !battleTitleOverlay ||
+    !battleTitleYear ||
+    !battleScreenOpen
+  ) {
+    if (typeof onComplete === "function") {
+      onComplete();
+    }
+    return;
+  }
+
+  battleTitleRunning = true;
+  battleTitleYear.textContent =
+    String(gameState.year);
+
+  battleTitleOverlay.classList.remove(
+    "is-leaving"
+  );
+  battleTitleOverlay.setAttribute(
+    "aria-hidden",
+    "false"
+  );
+
+  // Direkt nach dem Erscheinen der Kastelberg-Karte weich einblenden.
+  battleTitleTimers.push(
+    window.setTimeout(() => {
+      if (!battleScreenOpen) {
+        clearBattleTitle();
+        return;
+      }
+
+      battleTitleOverlay.classList.add(
+        "is-visible"
+      );
+    }, 100)
+  );
+
+  // Nach drei Sekunden sichtbarer Dauer weich ausblenden.
+  battleTitleTimers.push(
+    window.setTimeout(() => {
+      if (!battleScreenOpen) {
+        clearBattleTitle();
+        return;
+      }
+
+      battleTitleOverlay.classList.add(
+        "is-leaving"
+      );
+      battleTitleOverlay.classList.remove(
+        "is-visible"
+      );
+    }, 3100)
+  );
+
+  // Erst nach abgeschlossenem Fade läuft der bisherige Prozess weiter.
+  battleTitleTimers.push(
+    window.setTimeout(() => {
+      if (!battleScreenOpen) {
+        clearBattleTitle();
+        return;
+      }
+
+      clearBattleTitle();
+
+      if (typeof onComplete === "function") {
+        onComplete();
+      }
+    }, 3800)
+  );
+}
+
 function clearBattleCountdown() {
   battleCountdownTimers.forEach((timer) => {
     window.clearTimeout(timer);
@@ -4058,6 +4158,7 @@ function playBattleUnitSound(audio) {
 function resetBattleUnits() {
   clearBattleUnitTimers();
   clearBattleCountdown();
+  clearBattleTitle();
   resetTentHealthSystem();
   resetNeuensteinBattleSystem();
   resetRingelnatzUnits();
@@ -4146,11 +4247,19 @@ function showBattleScreen() {
       feudSequenceInProgress = false;
       surrenderButton.focus();
 
+      // Zuerst erscheint ausschließlich der dynamische Schlachttitel.
+      // Danach startet exakt der bisherige Einheiten- und Countdownablauf.
       window.setTimeout(() => {
-        if (battleScreenOpen) {
-          startBattleUnitSequence();
+        if (!battleScreenOpen) {
+          return;
         }
-      }, 850);
+
+        startBattleTitleSequence(() => {
+          if (battleScreenOpen) {
+            startBattleUnitSequence();
+          }
+        });
+      }, 250);
     });
   });
 }
@@ -4240,4 +4349,3 @@ window.addEventListener("keydown", (event) => {
   event.preventDefault();
   spawnAndMarchUnit(unitType);
 });
-

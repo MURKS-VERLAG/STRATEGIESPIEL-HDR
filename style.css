@@ -1978,3 +1978,61 @@ button {
   rotate: 0deg !important;
 }
 
+/* V57 – Dynamischer Schlachttitel vor dem Kampf um den Kastelberg. */
+.battle-title-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 59;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(8px, 1.1vh, 16px);
+  padding: 4vh 4vw;
+  color: #111;
+  text-align: center;
+  pointer-events: none;
+  user-select: none;
+  opacity: 0;
+  transform: translateY(8px) scale(0.985);
+  transition:
+    opacity 600ms ease,
+    transform 600ms ease;
+}
+
+.battle-title-overlay.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.battle-title-overlay.is-leaving {
+  opacity: 0;
+  transform: translateY(-8px) scale(1.015);
+}
+
+.battle-title-main,
+.battle-title-year {
+  font-family:
+    "UnifrakturCook",
+    "Old English Text MT",
+    "Lucida Blackletter",
+    Georgia,
+    "Times New Roman",
+    serif;
+  font-weight: 800;
+  line-height: 1;
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.44),
+    0 2px 3px rgba(255, 255, 255, 0.28);
+}
+
+.battle-title-main {
+  font-size: clamp(30px, 4.4vw, 76px);
+  letter-spacing: 0.035em;
+}
+
+.battle-title-year {
+  font-size: clamp(24px, 3.1vw, 54px);
+  letter-spacing: 0.08em;
+}
+
