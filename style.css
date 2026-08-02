@@ -1600,12 +1600,12 @@ button {
   100% { transform: translate(-50%, -100%) translateX(0) rotate(0); }
 }
 
-/* V38 – Mini-Fix: gesamte dynamische Kampflinie 2 cm tiefer. */
+/* V41 – gemeinsame Kampflinie ohne zusätzliche Zentimeter-Absenkung. */
 .march-unit-instance,
 .march-dust-instance,
 .neuenstein-unit-instance,
 .neuenstein-dust-instance {
-  margin-top: 2cm;
+  margin-top: 0;
 }
 
 /* V40 – Lebens- und Schadenssystem, Ringelnatz greift an. */
@@ -1716,5 +1716,30 @@ button {
   100% {
     filter: brightness(1);
   }
+}
+
+/* V41 – sichtbare Lebensleisten und saubere Ebenen. */
+.march-unit-layer,
+.neuenstein-march-unit-layer {
+  overflow: visible;
+}
+
+.march-unit-instance,
+.neuenstein-unit-instance {
+  overflow: visible;
+}
+
+.unit-health-bar {
+  bottom: -10px;
+  z-index: 120;
+  min-width: 34px;
+  height: 6px;
+  visibility: visible;
+  opacity: 1;
+}
+
+.march-unit-instance .unit-health-bar,
+.neuenstein-unit-instance .unit-health-bar {
+  display: block;
 }
 

@@ -1565,14 +1565,14 @@ function defeatNeuensteinUnit(unit, attacker = null) {
 
   stopNeuensteinAttackCycle(unit);
 
-  const waitingAttackers =
-    marchingUnitInstances.filter((instance) =>
-      !instance.cancelled &&
-      instance.combatTarget === unit
-    );
+  const waitingAttackers = marchingUnitInstances.filter((instance) =>
+    !instance.cancelled &&
+    !instance.isDead &&
+    instance.combatTarget === unit
+  );
 
   waitingAttackers.forEach((instance) => {
-    instance.combatTarget = null;
+    stopRingelnatzCombat(instance);
   });
 
   unit.cancelled = true;
@@ -1581,13 +1581,16 @@ function defeatNeuensteinUnit(unit, attacker = null) {
   window.setTimeout(() => {
     unit.element.remove();
 
-    neuensteinUnits =
-      neuensteinUnits.filter(
-        (entry) => entry !== unit
-      );
+    neuensteinUnits = neuensteinUnits.filter(
+      (entry) => entry !== unit
+    );
 
     waitingAttackers.forEach((instance) => {
-      resumeRingelnatzMarch(instance);
+      if (instance.definition.rangedUnit) {
+        activateCrossbowCombatState(instance);
+      } else {
+        resumeRingelnatzMarch(instance);
+      }
     });
   }, 460);
 }
@@ -1851,7 +1854,8 @@ function startRingelnatzCrossbowCycle(instance) {
 const NEUENSTEIN_SPAWN_INTERVAL = 4000;
 const NEUENSTEIN_SPAWN_X = 88.0;
 const NEUENSTEIN_TENT_STOP_X = 15.8;
-const NEUENSTEIN_BATTLE_LINE_TOP = "calc(84% + 5cm)";
+const BATTLE_LINE_TOP = "94%";
+const NEUENSTEIN_BATTLE_LINE_TOP = BATTLE_LINE_TOP;
 const NEUENSTEIN_MELEE_SPACING = 4.8;
 const NEUENSTEIN_ARCHER_ATTACK_DURATION = 1000;
 const NEUENSTEIN_ARCHER_IDLE_DURATION = 3000;
@@ -2252,6 +2256,7 @@ function spawnNeuensteinUnit(type, options = {}) {
   };
 
   neuensteinUnits.push(unit);
+  updateUnitHealthBar(unit);
 
   window.requestAnimationFrame(() => {
     window.requestAnimationFrame(() => {
@@ -2293,6 +2298,74 @@ function getEnemyAheadStopX(unit) {
   }
 
   return meleeAhead.x + NEUENSTEIN_MELEE_SPACING;
+}
+
+
+function isLivingCombatUnit(unit) {
+  return Boolean(
+    unit &&
+    !unit.cancelled &&
+    !unit.isDead &&
+    unit.health > 0
+  );
+}
+
+function stopRingelnatzCombat(instance) {
+  if (!instance) {
+    return;
+  }
+
+  stopCombatPoseCycle(instance);
+  instance.combatActive = false;
+  instance.combatTarget = null;
+  setUnitPose(instance, "idle");
+}
+
+function connectCombatants(ringelnatzUnit, neuensteinUnit) {
+  if (
+    !isLivingCombatUnit(ringelnatzUnit) ||
+    !isLivingCombatUnit(neuensteinUnit)
+  ) {
+    return false;
+  }
+
+  ringelnatzUnit.combatTarget = neuensteinUnit;
+  neuensteinUnit.combatTarget = ringelnatzUnit;
+
+  ringelnatzUnit.parked = true;
+  neuensteinUnit.parked = true;
+  neuensteinUnit.walking = false;
+
+  if (ringelnatzUnit.animationFrame !== null) {
+    window.cancelAnimationFrame(ringelnatzUnit.animationFrame);
+    ringelnatzUnit.animationFrame = null;
+  }
+
+  ringelnatzUnit.element.classList.remove("is-walking");
+
+  if (ringelnatzUnit.definition.rangedUnit) {
+    activateCrossbowCombatState(ringelnatzUnit);
+  } else if (ringelnatzUnit.definition.switchesPoseOnCollision) {
+    activateUnitCombatState(ringelnatzUnit);
+  } else {
+    triggerImpactPulse(ringelnatzUnit);
+    executeRingelnatzMeleeHit(ringelnatzUnit);
+
+    window.setTimeout(() => {
+      if (
+        isLivingCombatUnit(ringelnatzUnit) &&
+        isLivingCombatUnit(ringelnatzUnit.combatTarget)
+      ) {
+        startImpactPulseCycle(ringelnatzUnit);
+      }
+    }, 1000);
+  }
+
+  if (!neuensteinUnit.definition.ranged) {
+    startNeuensteinMeleeCycle(neuensteinUnit);
+  }
+
+  return true;
 }
 
 function getRingelnatzCollisionForEnemy(unit) {
@@ -2369,16 +2442,14 @@ function updateNeuensteinUnit(unit, deltaSeconds) {
     unit.element.style.left = `${unit.x}%`;
 
     if (collision) {
-      unit.combatTarget = collision.target;
+      connectCombatants(collision.target, unit);
+      return;
     }
 
-    if (
-      collision ||
-      desiredStopX <=
-        NEUENSTEIN_TENT_STOP_X + 0.2
-    ) {
-      startNeuensteinMeleeCycle(unit);
-    }
+    // Ohne echten Gegner bleibt die Einheit nur stehen.
+    unit.combatTarget = null;
+    unit.combatActive = false;
+    setNeuensteinPose(unit, "idle");
   }
 }
 
@@ -2569,7 +2640,7 @@ function createDustAt(x) {
   const dust = document.createElement("div");
   dust.className = "march-dust-instance";
   dust.style.left = `${x}%`;
-  dust.style.top = "calc(84% + 5cm)";
+  dust.style.top = BATTLE_LINE_TOP;
   marchUnitLayer.appendChild(dust);
 
   window.setTimeout(() => {
@@ -2579,11 +2650,40 @@ function createDustAt(x) {
 
 function calculateQueuedTargetX(definition) {
   if (definition.shortMove) {
-    return 20.5;
+    const CROSSBOW_FIRST_X = 20.5;
+    const CROSSBOW_SPACING = 5.2;
+
+    const occupiedCrossbowXs = marchingUnitInstances
+      .filter((instance) =>
+        !instance.cancelled &&
+        !instance.isDead &&
+        instance.definition.shortMove
+      )
+      .map((instance) => getMarchInstanceX(instance))
+      .filter(Number.isFinite)
+      .sort((a, b) => a - b);
+
+    if (occupiedCrossbowXs.length === 0) {
+      return CROSSBOW_FIRST_X;
+    }
+
+    let candidate = CROSSBOW_FIRST_X;
+
+    while (
+      occupiedCrossbowXs.some(
+        (x) => Math.abs(x - candidate) < CROSSBOW_SPACING * 0.72
+      )
+    ) {
+      candidate += CROSSBOW_SPACING;
+    }
+
+    return candidate;
   }
 
   const parkedNormalUnits = marchingUnitInstances.filter((instance) =>
     instance.parked &&
+    !instance.cancelled &&
+    !instance.isDead &&
     !instance.definition.shortMove
   );
 
@@ -2636,9 +2736,10 @@ function startCombatPoseCycle(instance) {
   instance.poseTimer = window.setInterval(() => {
     if (
       instance.cancelled ||
-      !battleScreenOpen
+      !battleScreenOpen ||
+      !isLivingCombatUnit(instance.combatTarget)
     ) {
-      stopCombatPoseCycle(instance);
+      stopRingelnatzCombat(instance);
       return;
     }
 
@@ -2674,14 +2775,22 @@ function triggerImpactPulse(instance) {
 }
 
 function startImpactPulseCycle(instance) {
-  if (instance.poseTimer || instance.cancelled) {
+  if (
+    instance.poseTimer ||
+    instance.cancelled ||
+    !isLivingCombatUnit(instance.combatTarget)
+  ) {
     return;
   }
 
   instance.combatActive = true;
   instance.poseTimer = window.setInterval(() => {
-    if (instance.cancelled || !battleScreenOpen) {
-      stopCombatPoseCycle(instance);
+    if (
+      instance.cancelled ||
+      !battleScreenOpen ||
+      !isLivingCombatUnit(instance.combatTarget)
+    ) {
+      stopRingelnatzCombat(instance);
       return;
     }
 
@@ -2693,7 +2802,8 @@ function startImpactPulseCycle(instance) {
 function activateUnitCombatState(instance) {
   if (
     instance.combatActive ||
-    !instance.definition.switchesPoseOnCollision
+    !instance.definition.switchesPoseOnCollision ||
+    !isLivingCombatUnit(instance.combatTarget)
   ) {
     return;
   }
@@ -2743,27 +2853,23 @@ function finishMarchInstance(instance) {
   instance.animationFrame = null;
   instance.element.classList.remove("is-walking");
   instance.parked = true;
+  instance.element.classList.add("is-visible");
 
   if (instance.definition.shortMove) {
-    // Crossbow remains idle until a future enemy enters range.
-    instance.element.classList.add("is-visible");
+    // Armbrustschützen warten an ihrer individuell gestaffelten Position.
+    activateCrossbowCombatState(instance);
     return;
   }
 
-  if (instance.definition.switchesPoseOnCollision) {
-    activateUnitCombatState(instance);
+  if (!isLivingCombatUnit(instance.combatTarget)) {
+    // Parkplatz oder Zelt erreicht: kein Gegner, also keine Kampfanimation.
+    instance.combatTarget = null;
+    instance.combatActive = false;
+    setUnitPose(instance, "idle");
     return;
   }
 
-  // Units 3, 5 and 7 keep the same image, but repeat collision shake and dust every second.
-  triggerImpactPulse(instance);
-  executeRingelnatzMeleeHit(instance);
-
-  window.setTimeout(() => {
-    if (!instance.cancelled) {
-      startImpactPulseCycle(instance);
-    }
-  }, 1000);
+  connectCombatants(instance, instance.combatTarget);
 }
 
 function animateMarchInstance(instance, timestamp) {
@@ -2796,7 +2902,8 @@ function animateMarchInstance(instance, timestamp) {
       enemyCollision.target;
     instance.currentX = currentX;
     instance.element.style.left = `${currentX}%`;
-    finishMarchInstance(instance);
+    instance.parked = true;
+    connectCombatants(instance, enemyCollision.target);
     return;
   }
 
@@ -2834,7 +2941,7 @@ function spawnAndMarchUnit(unitType) {
   const wrapper = document.createElement("div");
   wrapper.className = "march-unit-instance";
   wrapper.style.left = "14.5%";
-  wrapper.style.top = "calc(84% + 5cm)";
+  wrapper.style.top = BATTLE_LINE_TOP;
   wrapper.style.width = `${definition.width}%`;
   wrapper.style.height = `${definition.height}%`;
   wrapper.style.setProperty(
@@ -2909,6 +3016,7 @@ function spawnAndMarchUnit(unitType) {
   };
 
   marchingUnitInstances.push(instance);
+  updateUnitHealthBar(instance);
 
   window.requestAnimationFrame(() => {
     window.requestAnimationFrame(() => {
