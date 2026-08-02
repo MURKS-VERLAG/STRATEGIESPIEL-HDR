@@ -1392,6 +1392,20 @@ const HORSE_DEATH_SOUNDS = [
   "assets/horse-death-02.mp3?v=45"
 ];
 
+
+const SPEAR_KILL_SOUNDS = [
+  "assets/spear-death-01.mp3?v=46",
+  "assets/spear-death-02.mp3?v=46"
+];
+
+const SWORD_KILL_SOUNDS = [
+  "assets/sword-death-01.mp3?v=46",
+  "assets/sword-death-02.mp3?v=46",
+  "assets/sword-death-03.mp3?v=46",
+  "assets/sword-death-04.mp3?v=46"
+];
+
+
 function playRandomBattleSound(soundPaths) {
   if (
     !Array.isArray(soundPaths) ||
@@ -1441,10 +1455,16 @@ function playKillSound(victim, attacker) {
 
   /*
    * Priorität:
-   * 1. Stirbt Ringelnatz' Reiter, erklingt immer ein Pferdetod.
+   * 1. Stirbt Ringelnatz' Lanzenreiter, erklingt immer Pferdetod.
    * 2. Kill durch Neuenstein-Flegel oder Ringelnatz-Baumeister:
    *    einer der beiden Wuchtwaffen-Sounds.
-   * 3. Kill durch Bogen oder Armbrust:
+   * 3. Kill durch Ringelnatz-Speerträger, Ringelnatz-Lanzenreiter
+   *    oder Neuenstein-Hellebardier:
+   *    einer der beiden Speer-Todessounds.
+   * 4. Kill durch Neuenstein-Schwertkämpfer, Ringelnatz-Söldner
+   *    oder Ringelnatz-Assassine:
+   *    einer der vier Schwert-Todessounds.
+   * 5. Kill durch Bogen oder Armbrust:
    *    einer der fünf Fernkampf-Todessounds.
    */
   if (
@@ -1464,6 +1484,24 @@ function playKillSound(victim, attacker) {
   }
 
   if (
+    attackerType === "spearman" ||
+    attackerType === "cavalry" ||
+    attackerType === "halberdier"
+  ) {
+    playRandomBattleSound(SPEAR_KILL_SOUNDS);
+    return;
+  }
+
+  if (
+    attackerType === "swordsman" ||
+    attackerType === "mercenary" ||
+    attackerType === "assassin"
+  ) {
+    playRandomBattleSound(SWORD_KILL_SOUNDS);
+    return;
+  }
+
+  if (
     attackerType === "archer" ||
     attackerType === "crossbow"
   ) {
@@ -1475,7 +1513,9 @@ function preloadKillSounds() {
   [
     ...RANGED_KILL_SOUNDS,
     ...CLUB_KILL_SOUNDS,
-    ...HORSE_DEATH_SOUNDS
+    ...HORSE_DEATH_SOUNDS,
+    ...SPEAR_KILL_SOUNDS,
+    ...SWORD_KILL_SOUNDS
   ].forEach((src) => {
     const sound = new Audio();
     sound.preload = "auto";
