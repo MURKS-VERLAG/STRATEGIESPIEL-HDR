@@ -40,6 +40,10 @@ const feudConfirmNo = document.querySelector("#feudConfirmNo");
 const feudPortraitModal = document.querySelector("#feudPortraitModal");
 const battleScreen = document.querySelector("#battleScreen");
 const battleStage = document.querySelector("#battleStage");
+const battleCountdown =
+  document.querySelector("#battleCountdown");
+const battleCountdownNumber =
+  document.querySelector("#battleCountdownNumber");
 const battleArcherOne = document.querySelector("#battleArcherOne");
 const battleSwordsman = document.querySelector("#battleSwordsman");
 const battleArcherTwo = document.querySelector("#battleArcherTwo");
@@ -98,6 +102,11 @@ let feudSequenceInProgress = false;
 let battleScreenOpen = false;
 let battleUnitTimers = [];
 let battleUnitSequenceStarted = false;
+let battleCountdownRunning = false;
+let battleCountdownTimers = [];
+const battleStartHorn =
+  new Audio("assets/battle-start-horn.mp3?v=49");
+battleStartHorn.preload = "auto";
 let ringelnatzUnitTimers = [];
 let marchingUnitInstances = [];
 let productionCooldownUntil = 0;
@@ -1440,7 +1449,7 @@ function playHitSound(attacker) {
 
   if (attackerType === "crossbow") {
     playRandomBattleSound(
-      RANGED_HIT_SOUNDS
+      ARCHER_HIT_SOUNDS
     );
     return;
   }
@@ -2366,6 +2375,10 @@ function scheduleRingelnatzCrossbowCycle(
       const hit =
         Math.random() <
         CROSSBOW_HIT_CHANCE;
+
+      if (!hit) {
+        playArcherMissSound();
+      }
 
       launchRingelnatzCrossbowBolt(
         instance,
@@ -3780,6 +3793,95 @@ function resetRingelnatzUnits() {
   syncUnitKeysWithSelectionUnits();
 }
 
+
+function clearBattleCountdown() {
+  battleCountdownTimers.forEach((timer) => {
+    window.clearTimeout(timer);
+  });
+
+  battleCountdownTimers = [];
+  battleCountdownRunning = false;
+
+  if (battleCountdown) {
+    battleCountdown.classList.remove("is-active");
+    battleCountdown.setAttribute("aria-hidden", "true");
+  }
+
+  if (battleCountdownNumber) {
+    battleCountdownNumber.classList.remove("is-showing");
+    battleCountdownNumber.textContent = "";
+  }
+
+  battleStartHorn.pause();
+  battleStartHorn.currentTime = 0;
+}
+
+function showBattleCountdownNumber(number) {
+  if (
+    !battleCountdown ||
+    !battleCountdownNumber ||
+    !battleScreenOpen
+  ) {
+    return;
+  }
+
+  battleCountdown.classList.add("is-active");
+  battleCountdown.setAttribute("aria-hidden", "false");
+  battleCountdownNumber.classList.remove("is-showing");
+  battleCountdownNumber.textContent = String(number);
+
+  void battleCountdownNumber.offsetWidth;
+  battleCountdownNumber.classList.add("is-showing");
+}
+
+function startBattleCountdown() {
+  if (
+    battleCountdownRunning ||
+    !battleScreenOpen
+  ) {
+    return;
+  }
+
+  clearBattleCountdown();
+  battleCountdownRunning = true;
+
+  [3, 2, 1].forEach((number, index) => {
+    battleCountdownTimers.push(
+      window.setTimeout(() => {
+        if (!battleScreenOpen) {
+          clearBattleCountdown();
+          return;
+        }
+
+        showBattleCountdownNumber(number);
+      }, index * 1000)
+    );
+  });
+
+  battleCountdownTimers.push(
+    window.setTimeout(() => {
+      if (!battleScreenOpen) {
+        clearBattleCountdown();
+        return;
+      }
+
+      battleCountdownNumber.classList.remove("is-showing");
+      battleCountdownNumber.textContent = "";
+      battleCountdown.classList.remove("is-active");
+      battleCountdown.setAttribute("aria-hidden", "true");
+      battleCountdownRunning = false;
+      battleCountdownTimers = [];
+
+      battleStartHorn.currentTime = 0;
+      battleStartHorn.volume = 0.9;
+      battleStartHorn.play().catch(() => {});
+
+      // Erst nach dem vollständigen Countdown beginnt die Produktion.
+      startNeuensteinProduction();
+    }, 3000)
+  );
+}
+
 function startRingelnatzUnitSequence() {
   resetRingelnatzUnits();
 
@@ -3821,6 +3923,7 @@ function playBattleUnitSound(audio) {
 
 function resetBattleUnits() {
   clearBattleUnitTimers();
+  clearBattleCountdown();
   resetTentHealthSystem();
   resetNeuensteinBattleSystem();
   resetRingelnatzUnits();
@@ -3894,7 +3997,7 @@ function startBattleUnitSequence() {
         return;
       }
 
-      startNeuensteinProduction();
+      startBattleCountdown();
     }, 8000)
   );
 }

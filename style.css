@@ -1851,3 +1851,60 @@ button {
   }
 }
 
+/* V49 – Kampf-Countdown nach vollständiger Einblendung der linken Truppenauswahl. */
+.battle-countdown {
+  position: absolute;
+  inset: 0;
+  z-index: 180;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.battle-countdown.is-active {
+  visibility: visible;
+}
+
+.battle-countdown-number {
+  display: block;
+  color: #9e1717;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(82px, 12vw, 190px);
+  font-weight: 900;
+  line-height: 1;
+  -webkit-text-stroke: 1px rgba(55, 5, 5, 0.9);
+  text-shadow:
+    0 3px 0 rgba(35, 0, 0, 0.92),
+    0 0 10px rgba(185, 22, 22, 0.62),
+    0 0 24px rgba(100, 0, 0, 0.42);
+  opacity: 0;
+  transform: scale(0.82);
+}
+
+.battle-countdown-number.is-showing {
+  animation: battleCountdownFade 900ms ease-in-out forwards;
+}
+
+@keyframes battleCountdownFade {
+  0% {
+    opacity: 0;
+    transform: scale(0.82);
+  }
+
+  22% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  68% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.10);
+  }
+}
+
