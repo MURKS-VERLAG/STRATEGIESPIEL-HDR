@@ -1318,13 +1318,15 @@ const marchUnitDefinitions = {
     armorClass: "medium",
     idleSrc: "assets/ringelnatz-marsch-armbrustschuetze.png?v=28",
     attackSrc: "assets/ringelnatz-angriff-armbrustschuetze.png?v=31",
+    reloadSrc: "assets/ringelnatz-armbrustschuetze-nachladen.png?v=51",
+    deathSrc: "assets/ringelnatz-armbrustschuetze-tot.png?v=51",
     width: 6.4,
     height: 20,
     duration: 2000,
     shortMove: true,
     rangedUnit: true,
-    attackScale: 1.12,
-    attackOffsetX: 8,
+    attackScale: 1,
+    attackOffsetX: 0,
     attackOffsetY: 0
   },
   builder: {
@@ -1750,8 +1752,11 @@ const NEUENSTEIN_ARROW_FLIGHT_DURATION = 560;
 const ASSASSIN_INSTANT_KILL_CHANCE = 0.30;
 const CROSSBOW_HIT_CHANCE = 0.80;
 const CROSSBOW_SHOT_POSE_DURATION = 1000;
-const CROSSBOW_RELOAD_DURATION = 3000;
+const CROSSBOW_RELOAD_DURATION = 4000;
 const CROSSBOW_BOLT_FLIGHT_DURATION = 520;
+const ringelnatzCrossbowReloadSound =
+  new Audio("assets/ringelnatz-armbrust-nachladen.mp3?v=51");
+ringelnatzCrossbowReloadSound.preload = "auto";
 
 function createUnitHealthBar(side) {
   const healthBar = document.createElement("div");
@@ -2023,10 +2028,13 @@ function defeatRingelnatzUnit(unit, attacker = null) {
   });
 
   unit.cancelled = true;
-  unit.element.classList.remove("is-walking");
-  unit.element.classList.add("is-defeated");
+  unit.element.classList.remove(
+    "is-walking",
+    "is-impacting",
+    "is-hit"
+  );
 
-  window.setTimeout(() => {
+  const removeUnit = () => {
     unit.element.remove();
 
     marchingUnitInstances =
@@ -2041,7 +2049,33 @@ function defeatRingelnatzUnit(unit, attacker = null) {
         resumeNeuensteinMarch(enemy);
       }
     });
-  }, 460);
+  };
+
+  if (
+    unit.type === "crossbow" &&
+    unit.deathImage
+  ) {
+    setUnitPose(unit, "death");
+    unit.element.classList.add(
+      "is-crossbow-dead"
+    );
+
+    window.setTimeout(() => {
+      unit.element.classList.add(
+        "is-crossbow-dead-fading"
+      );
+
+      window.setTimeout(
+        removeUnit,
+        700
+      );
+    }, 5000);
+
+    return;
+  }
+
+  unit.element.classList.add("is-defeated");
+  window.setTimeout(removeUnit, 460);
 }
 
 function applyDamageToUnit(
@@ -2350,6 +2384,7 @@ function scheduleRingelnatzCrossbowCycle(
 
       if (
         instance.cancelled ||
+        instance.isDead ||
         !battleScreenOpen
       ) {
         return;
@@ -2370,6 +2405,8 @@ function scheduleRingelnatzCrossbowCycle(
 
       instance.combatActive = true;
       instance.combatTarget = target;
+
+      // Exakt eine Sekunde Schussbild, ohne Kippen oder Schrägstellung.
       setUnitPose(instance, "attack");
 
       const hit =
@@ -2392,17 +2429,37 @@ function scheduleRingelnatzCrossbowCycle(
 
           if (
             instance.cancelled ||
+            instance.isDead ||
             !battleScreenOpen
           ) {
             return;
           }
 
-          setUnitPose(instance, "idle");
+          // Vier Sekunden sichtbare Nachladepose.
+          setUnitPose(instance, "reload");
+          ringelnatzCrossbowReloadSound.currentTime = 0;
+          ringelnatzCrossbowReloadSound
+            .play()
+            .catch(() => {});
 
-          scheduleRingelnatzCrossbowCycle(
-            instance,
-            CROSSBOW_RELOAD_DURATION
-          );
+          instance.poseTimer =
+            window.setTimeout(() => {
+              instance.poseTimer = null;
+
+              if (
+                instance.cancelled ||
+                instance.isDead ||
+                !battleScreenOpen
+              ) {
+                return;
+              }
+
+              setUnitPose(instance, "idle");
+              scheduleRingelnatzCrossbowCycle(
+                instance,
+                100
+              );
+            }, CROSSBOW_RELOAD_DURATION);
         }, CROSSBOW_SHOT_POSE_DURATION);
     }, delay);
 }
@@ -3382,18 +3439,38 @@ function setUnitPose(instance, pose) {
   const showAttack =
     pose === "attack" &&
     Boolean(instance.attackImage);
+  const showReload =
+    pose === "reload" &&
+    Boolean(instance.reloadImage);
+  const showDeath =
+    pose === "death" &&
+    Boolean(instance.deathImage);
 
   instance.attackPoseVisible = showAttack;
 
   instance.idleImage.classList.toggle(
     "is-active",
-    !showAttack
+    !showAttack && !showReload && !showDeath
   );
 
   if (instance.attackImage) {
     instance.attackImage.classList.toggle(
       "is-active",
       showAttack
+    );
+  }
+
+  if (instance.reloadImage) {
+    instance.reloadImage.classList.toggle(
+      "is-active",
+      showReload
+    );
+  }
+
+  if (instance.deathImage) {
+    instance.deathImage.classList.toggle(
+      "is-active",
+      showDeath
     );
   }
 }
@@ -3700,6 +3777,8 @@ function spawnAndMarchUnit(unitType) {
   wrapper.appendChild(idleImage);
 
   let attackImage = null;
+  let reloadImage = null;
+  let deathImage = null;
 
   if (definition.attackSrc) {
     attackImage = document.createElement("img");
@@ -3709,6 +3788,26 @@ function spawnAndMarchUnit(unitType) {
     attackImage.alt = "";
     attackImage.draggable = false;
     wrapper.appendChild(attackImage);
+  }
+
+  if (definition.reloadSrc) {
+    reloadImage = document.createElement("img");
+    reloadImage.className =
+      "march-unit-pose march-unit-pose--reload";
+    reloadImage.src = definition.reloadSrc;
+    reloadImage.alt = "";
+    reloadImage.draggable = false;
+    wrapper.appendChild(reloadImage);
+  }
+
+  if (definition.deathSrc) {
+    deathImage = document.createElement("img");
+    deathImage.className =
+      "march-unit-pose march-unit-pose--death";
+    deathImage.src = definition.deathSrc;
+    deathImage.alt = "";
+    deathImage.draggable = false;
+    wrapper.appendChild(deathImage);
   }
 
   const {
@@ -3724,6 +3823,8 @@ function spawnAndMarchUnit(unitType) {
     element: wrapper,
     idleImage,
     attackImage,
+    reloadImage,
+    deathImage,
     definition,
     startX: 14.5,
     currentX: 14.5,

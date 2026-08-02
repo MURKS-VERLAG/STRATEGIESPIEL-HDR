@@ -1908,3 +1908,41 @@ button {
   }
 }
 
+/* V51 – Armbrustschütze: Schuss, Nachladen und Tod ohne Kippen. */
+.march-unit-instance:has(.march-unit-pose--reload) .march-unit-pose--attack,
+.march-unit-pose--reload,
+.march-unit-pose--death {
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%) !important;
+  transform-origin: 50% 100%;
+}
+
+.march-unit-instance:has(.march-unit-pose--reload) .march-unit-pose--attack {
+  scale: 1;
+}
+
+.march-unit-pose--reload,
+.march-unit-pose--death {
+  width: 100%;
+  height: auto;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+}
+
+.march-unit-instance.is-crossbow-dead {
+  opacity: 1 !important;
+  animation: none !important;
+  pointer-events: none;
+}
+
+.march-unit-instance.is-crossbow-dead .unit-health-bar {
+  opacity: 0;
+}
+
+.march-unit-instance.is-crossbow-dead-fading {
+  opacity: 0 !important;
+  transition: opacity 700ms ease !important;
+}
+
