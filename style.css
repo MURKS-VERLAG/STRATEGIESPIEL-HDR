@@ -1068,3 +1068,151 @@ button {
   cursor: default;
 }
 
+/* V28 – Zahlentasten und einfache Marschsteuerung am Kastelberg. */
+.unit-key-layer,
+.march-unit-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.unit-key-layer {
+  z-index: 64;
+}
+
+.unit-key {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(235, 230, 215, 0.82);
+  background: rgba(10, 10, 10, 0.93);
+  color: #fff;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.48);
+  user-select: none;
+}
+
+.unit-key--1 { left: 8.1%; top: 7.2%; }
+.unit-key--2 { left: 8.1%; top: 16.4%; }
+.unit-key--3 { left: 9.3%; top: 26.1%; }
+.unit-key--4 { left: 8.1%; top: 35.9%; }
+.unit-key--5 { left: 8.1%; top: 45.2%; }
+.unit-key--6 { left: 8.1%; top: 54.5%; }
+.unit-key--7 { left: 8.1%; top: 63.8%; }
+
+.march-unit-layer {
+  z-index: 65;
+}
+
+.march-unit {
+  position: absolute;
+  left: 14.5%;
+  top: 84%;
+  display: none;
+  width: auto;
+  height: auto;
+  opacity: 0;
+  transform: translate(-50%, -100%) scale(0.92);
+  transform-origin: 50% 100%;
+  pointer-events: none;
+  user-select: none;
+  will-change: left, opacity, transform;
+  filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.34));
+}
+
+.march-unit.is-spawning {
+  display: block;
+  transition:
+    opacity 300ms ease,
+    transform 300ms ease;
+}
+
+.march-unit.is-visible {
+  display: block;
+  opacity: 1;
+  transform: translate(-50%, -100%) scale(1);
+}
+
+.march-unit.is-walking {
+  display: block;
+  opacity: 1;
+  animation: unitWalkBob 420ms ease-in-out infinite alternate;
+}
+
+@keyframes unitWalkBob {
+  from {
+    transform: translate(-50%, -100%) translateY(0) rotate(-0.6deg);
+  }
+  to {
+    transform: translate(-50%, -100%) translateY(-4px) rotate(0.6deg);
+  }
+}
+
+.march-unit.is-impacting {
+  animation: unitArrivalShake 420ms ease;
+}
+
+@keyframes unitArrivalShake {
+  0%   { transform: translate(-50%, -100%) translateX(0) rotate(0); }
+  20%  { transform: translate(-50%, -100%) translateX(-5px) rotate(-1deg); }
+  40%  { transform: translate(-50%, -100%) translateX(5px) rotate(1deg); }
+  60%  { transform: translate(-50%, -100%) translateX(-3px) rotate(-0.7deg); }
+  80%  { transform: translate(-50%, -100%) translateX(3px) rotate(0.7deg); }
+  100% { transform: translate(-50%, -100%) translateX(0) rotate(0); }
+}
+
+.march-dust {
+  position: absolute;
+  left: 78.5%;
+  top: 84%;
+  z-index: 66;
+  width: 70px;
+  height: 30px;
+  opacity: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      ellipse at 25% 60%,
+      rgba(190, 165, 120, 0.65),
+      transparent 65%
+    ),
+    radial-gradient(
+      ellipse at 55% 45%,
+      rgba(175, 150, 105, 0.55),
+      transparent 68%
+    ),
+    radial-gradient(
+      ellipse at 80% 65%,
+      rgba(205, 185, 145, 0.55),
+      transparent 68%
+    );
+  filter: blur(3px);
+}
+
+.march-dust.is-active {
+  animation: dustBurst 700ms ease-out;
+}
+
+@keyframes dustBurst {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -20%) scale(0.55);
+  }
+  25% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -75%) scale(1.45);
+  }
+}
+
+.surrender-button {
+  z-index: 70 !important;
+}
+

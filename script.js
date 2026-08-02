@@ -39,6 +39,9 @@ const battleSwordsman = document.querySelector("#battleSwordsman");
 const battleArcherTwo = document.querySelector("#battleArcherTwo");
 const archerAppearSound = document.querySelector("#archerAppearSound");
 const swordsmanAppearSound = document.querySelector("#swordsmanAppearSound");
+const unitKeyLayer = document.querySelector("#unitKeyLayer");
+const marchUnit = document.querySelector("#marchUnit");
+const marchDust = document.querySelector("#marchDust");
 const ringelnatzFarmer = document.querySelector("#ringelnatzFarmer");
 const ringelnatzSpearman = document.querySelector("#ringelnatzSpearman");
 const ringelnatzCavalry = document.querySelector("#ringelnatzCavalry");
@@ -65,6 +68,13 @@ let battleScreenOpen = false;
 let battleUnitTimers = [];
 let battleUnitSequenceStarted = false;
 let ringelnatzUnitTimers = [];
+let activeMarchingUnit = null;
+let unitMarchInProgress = false;
+let marchAnimationFrame = null;
+let marchStartTime = 0;
+let marchStartX = 14.5;
+let marchTargetX = 78.5;
+let marchDuration = 0;
 
 const ringelnatzUnits = [
   ringelnatzFarmer,
@@ -1007,6 +1017,184 @@ function hidePortraitTransition() {
 }
 
 
+
+const marchUnitDefinitions = {
+  farmer: {
+    src: "assets/ringelnatz-marsch-bauer.png?v=28",
+    width: 6.4,
+    duration: 6500
+  },
+  spearman: {
+    src: "assets/ringelnatz-marsch-lanzentraeger.png?v=28",
+    width: 6.2,
+    duration: 5800
+  },
+  cavalry: {
+    src: "assets/ringelnatz-marsch-lanzenreiter.png?v=28",
+    width: 9.2,
+    duration: 4400
+  },
+  crossbow: {
+    src: "assets/ringelnatz-marsch-armbrustschuetze.png?v=28",
+    width: 6.4,
+    duration: 1000,
+    shortMove: true
+  },
+  builder: {
+    src: "assets/ringelnatz-marsch-baumeister.png?v=28",
+    width: 6.2,
+    duration: 6500
+  },
+  assassin: {
+    src: "assets/ringelnatz-marsch-assassine.png?v=28",
+    width: 6.6,
+    duration: 5000
+  },
+  mercenary: {
+    src: "assets/ringelnatz-marsch-soeldner.png?v=28",
+    width: 5.6,
+    duration: 5600
+  }
+};
+
+const unitKeyMap = {
+  "1": "farmer",
+  "2": "spearman",
+  "3": "cavalry",
+  "4": "crossbow",
+  "5": "builder",
+  "6": "assassin",
+  "7": "mercenary",
+  "Numpad1": "farmer",
+  "Numpad2": "spearman",
+  "Numpad3": "cavalry",
+  "Numpad4": "crossbow",
+  "Numpad5": "builder",
+  "Numpad6": "assassin",
+  "Numpad7": "mercenary"
+};
+
+function stopMarchAnimation() {
+  if (marchAnimationFrame !== null) {
+    window.cancelAnimationFrame(marchAnimationFrame);
+    marchAnimationFrame = null;
+  }
+}
+
+function resetMarchingUnit() {
+  stopMarchAnimation();
+
+  unitMarchInProgress = false;
+  activeMarchingUnit = null;
+  marchStartTime = 0;
+  marchDuration = 0;
+
+  marchUnit.className = "march-unit";
+  marchUnit.removeAttribute("src");
+  marchUnit.style.removeProperty("left");
+  marchUnit.style.removeProperty("top");
+  marchUnit.style.removeProperty("width");
+
+  marchDust.classList.remove("is-active");
+}
+
+function triggerMarchDust() {
+  marchDust.classList.remove("is-active");
+  void marchDust.offsetWidth;
+  marchDust.classList.add("is-active");
+}
+
+function finishMarchingUnit(definition) {
+  stopMarchAnimation();
+  marchUnit.classList.remove("is-walking");
+
+  if (!definition.shortMove) {
+    marchUnit.classList.add("is-impacting");
+    triggerMarchDust();
+
+    window.setTimeout(() => {
+      marchUnit.classList.remove("is-impacting");
+      marchUnit.classList.add("is-visible");
+    }, 430);
+  } else {
+    marchUnit.classList.add("is-visible");
+  }
+
+  unitMarchInProgress = false;
+}
+
+function animateMarch(timestamp) {
+  if (!unitMarchInProgress || !activeMarchingUnit) {
+    return;
+  }
+
+  if (!marchStartTime) {
+    marchStartTime = timestamp;
+  }
+
+  const definition = marchUnitDefinitions[activeMarchingUnit];
+  const elapsed = timestamp - marchStartTime;
+  const progress = Math.min(elapsed / marchDuration, 1);
+  const currentX =
+    marchStartX + (marchTargetX - marchStartX) * progress;
+
+  marchUnit.style.left = `${currentX}%`;
+
+  if (progress < 1) {
+    marchAnimationFrame = window.requestAnimationFrame(animateMarch);
+    return;
+  }
+
+  finishMarchingUnit(definition);
+}
+
+function spawnAndMarchUnit(unitType) {
+  if (
+    !battleScreenOpen ||
+    feudSequenceInProgress ||
+    unitMarchInProgress ||
+    activeMarchingUnit
+  ) {
+    return;
+  }
+
+  const definition = marchUnitDefinitions[unitType];
+
+  if (!definition) {
+    return;
+  }
+
+  activeMarchingUnit = unitType;
+  unitMarchInProgress = true;
+  marchStartTime = 0;
+  marchStartX = 14.5;
+  marchTargetX = definition.shortMove ? 20.5 : 78.5;
+  marchDuration = definition.duration;
+
+  marchUnit.className = "march-unit is-spawning";
+  marchUnit.src = definition.src;
+  marchUnit.style.left = `${marchStartX}%`;
+  marchUnit.style.top = "84%";
+  marchUnit.style.width = `${definition.width}%`;
+
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
+      marchUnit.classList.add("is-visible");
+
+      window.setTimeout(() => {
+        if (!unitMarchInProgress) {
+          return;
+        }
+
+        marchUnit.classList.remove("is-spawning");
+        marchUnit.classList.add("is-walking");
+        marchAnimationFrame = window.requestAnimationFrame(animateMarch);
+      }, 320);
+    });
+  });
+}
+
+
 function clearRingelnatzUnitTimers() {
   ringelnatzUnitTimers.forEach((timer) => {
     window.clearTimeout(timer);
@@ -1064,6 +1252,7 @@ function playBattleUnitSound(audio) {
 function resetBattleUnits() {
   clearBattleUnitTimers();
   resetRingelnatzUnits();
+  resetMarchingUnit();
   battleUnitSequenceStarted = false;
 
   battleArcherOne.classList.remove("is-visible");
@@ -1202,5 +1391,31 @@ window.addEventListener("keydown", (event) => {
     event.preventDefault();
     closeFeudConfirmation();
   }
+});
+
+
+window.addEventListener("keydown", (event) => {
+  const key =
+    event.code && event.code.startsWith("Numpad")
+      ? event.code
+      : event.key;
+
+  const unitType = unitKeyMap[key];
+
+  if (!unitType) {
+    return;
+  }
+
+  if (
+    !battleScreenOpen ||
+    feudSequenceInProgress ||
+    unitMarchInProgress ||
+    activeMarchingUnit
+  ) {
+    return;
+  }
+
+  event.preventDefault();
+  spawnAndMarchUnit(unitType);
 });
 
