@@ -1946,3 +1946,19 @@ button {
   transition: opacity 700ms ease !important;
 }
 
+/* V52 – Armbrustschütze: Schuss- und Nachladebild auf Standbildgröße. */
+.march-unit-instance:has(.march-unit-pose--reload)
+  .march-unit-pose--attack,
+.march-unit-instance:has(.march-unit-pose--reload)
+  .march-unit-pose--reload {
+  width: 126% !important;
+  max-width: none !important;
+  height: auto !important;
+  max-height: none !important;
+  left: 50% !important;
+  bottom: 0 !important;
+  transform: translateX(-50%) !important;
+  object-fit: contain !important;
+  object-position: center bottom !important;
+}
+
