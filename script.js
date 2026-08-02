@@ -1402,6 +1402,21 @@ const MELEE_HIT_SOUNDS = [
   "assets/melee-hit-05.mp3?v=47"
 ];
 
+
+const ARCHER_MISS_SOUND =
+  "assets/archer-miss.mp3?v=48";
+
+const ARCHER_HIT_SOUNDS = [
+  "assets/archer-hit-01.mp3?v=48",
+  "assets/archer-hit-02.mp3?v=48"
+];
+
+function playArcherMissSound() {
+  playRandomBattleSound([
+    ARCHER_MISS_SOUND
+  ]);
+}
+
 const RANGED_HIT_SOUNDS = [
   "assets/ranged-hit-01.mp3?v=47",
   "assets/ranged-hit-02.mp3?v=47"
@@ -1416,21 +1431,31 @@ function playHitSound(attacker) {
     return;
   }
 
-  if (
-    attackerType === "archer" ||
-    attackerType === "crossbow"
-  ) {
-    playRandomBattleSound(RANGED_HIT_SOUNDS);
+  if (attackerType === "archer") {
+    playRandomBattleSound(
+      ARCHER_HIT_SOUNDS
+    );
     return;
   }
 
-  playRandomBattleSound(MELEE_HIT_SOUNDS);
+  if (attackerType === "crossbow") {
+    playRandomBattleSound(
+      RANGED_HIT_SOUNDS
+    );
+    return;
+  }
+
+  playRandomBattleSound(
+    MELEE_HIT_SOUNDS
+  );
 }
 
 function preloadHitSounds() {
   [
     ...MELEE_HIT_SOUNDS,
-    ...RANGED_HIT_SOUNDS
+    ...RANGED_HIT_SOUNDS,
+    ...ARCHER_HIT_SOUNDS,
+    ARCHER_MISS_SOUND
   ].forEach((src) => {
     const sound = new Audio();
     sound.preload = "auto";
@@ -2743,6 +2768,10 @@ function scheduleNeuensteinArcherCycle(unit, delay) {
     const hit =
       Math.random() <
       NEUENSTEIN_ARCHER_HIT_CHANCE;
+
+    if (!hit) {
+      playArcherMissSound();
+    }
 
     launchNeuensteinArrow(
       unit,
