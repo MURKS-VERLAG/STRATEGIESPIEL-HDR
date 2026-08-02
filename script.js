@@ -1606,7 +1606,7 @@ function preloadKillSounds() {
 
 preloadKillSounds();
 
-const TENT_DAMAGE_PER_HIT = 10;
+const TENT_DAMAGE_PER_HIT = 5;
 
 const ringelnatzTent = {
   faction: "ringelnatz",
@@ -3272,9 +3272,17 @@ function getRingelnatzCollisionStopX(
 
   const stopX = nearest.x - 4.3;
 
-  if (proposedX >= stopX) {
+  const collisionTolerance = 0.35;
+
+  if (
+    proposedX + collisionTolerance >=
+    stopX
+  ) {
     return {
-      stopX,
+      stopX: Math.min(
+        stopX,
+        proposedX
+      ),
       target: nearest
     };
   }
@@ -3541,6 +3549,28 @@ function finishMarchInstance(instance) {
 
   if (isLivingCombatUnit(instance.combatTarget)) {
     connectCombatants(instance, instance.combatTarget);
+    return;
+  }
+
+  const nearbyEnemyBeforeTent =
+    neuensteinUnits
+      .filter((unit) =>
+        !unit.cancelled &&
+        !unit.isDead &&
+        unit.health > 0 &&
+        unit.x >= getMarchInstanceX(instance) &&
+        unit.x - getMarchInstanceX(instance) <= 5.2
+      )
+      .sort((a, b) => a.x - b.x)[0] || null;
+
+  if (nearbyEnemyBeforeTent) {
+    instance.combatTarget =
+      nearbyEnemyBeforeTent;
+
+    connectCombatants(
+      instance,
+      nearbyEnemyBeforeTent
+    );
     return;
   }
 
