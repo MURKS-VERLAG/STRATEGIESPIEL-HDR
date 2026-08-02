@@ -19,6 +19,14 @@ const zoomDisplay = document.querySelector("#zoomDisplay");
 const mapHint = document.querySelector("#mapHint");
 const barracksModal = document.querySelector("#barracksModal");
 const diplomacyModal = document.querySelector("#diplomacyModal");
+const diplomacyStage = document.querySelector("#diplomacyStage");
+const diplomacyCharacterRed = document.querySelector("#diplomacyCharacterRed");
+const diplomacyCharacterOrange = document.querySelector("#diplomacyCharacterOrange");
+const diplomacyCharacterYellow = document.querySelector("#diplomacyCharacterYellow");
+const diplomacyCharacterBlue = document.querySelector("#diplomacyCharacterBlue");
+const diplomacyCharacterPurple = document.querySelector("#diplomacyCharacterPurple");
+const diplomacyCharacterGreen = document.querySelector("#diplomacyCharacterGreen");
+const diplomacyCharacterBlack = document.querySelector("#diplomacyCharacterBlack");
 const feudHoverIcon = document.querySelector("#feudHoverIcon");
 const feudConfirmation = document.querySelector("#feudConfirmation");
 const feudConfirmYes = document.querySelector("#feudConfirmYes");
@@ -49,6 +57,8 @@ let barracksOpen = false;
 let barracksClosing = false;
 let diplomacyOpen = false;
 let diplomacyClosing = false;
+let diplomacyHoveredCharacter = null;
+let diplomacyPinnedCharacter = null;
 let feudConfirmationOpen = false;
 let feudSequenceInProgress = false;
 let battleScreenOpen = false;
@@ -697,6 +707,174 @@ barracksModal.addEventListener("contextmenu", (event) => {
 
 
 /* V26: Diplomatieansicht über die Schriftrolle öffnen und schließen. */
+
+const diplomacyCharacterEntries = [
+  {
+    id: "red",
+    element: diplomacyCharacterRed,
+    minX: 0.455,
+    maxX: 0.548,
+    minY: 0.030,
+    maxY: 0.150
+  },
+  {
+    id: "orange",
+    element: diplomacyCharacterOrange,
+    minX: 0.452,
+    maxX: 0.550,
+    minY: 0.145,
+    maxY: 0.270
+  },
+  {
+    id: "yellow",
+    element: diplomacyCharacterYellow,
+    minX: 0.447,
+    maxX: 0.553,
+    minY: 0.260,
+    maxY: 0.405
+  },
+  {
+    id: "blue",
+    element: diplomacyCharacterBlue,
+    minX: 0.452,
+    maxX: 0.550,
+    minY: 0.550,
+    maxY: 0.675
+  },
+  {
+    id: "purple",
+    element: diplomacyCharacterPurple,
+    minX: 0.462,
+    maxX: 0.535,
+    minY: 0.685,
+    maxY: 0.795
+  },
+  {
+    id: "green",
+    element: diplomacyCharacterGreen,
+    minX: 0.465,
+    maxX: 0.535,
+    minY: 0.790,
+    maxY: 0.885
+  },
+  {
+    id: "black",
+    element: diplomacyCharacterBlack,
+    minX: 0.458,
+    maxX: 0.540,
+    minY: 0.875,
+    maxY: 0.970
+  }
+];
+
+function getDiplomacyNormalizedPosition(event) {
+  if (!diplomacyStage) {
+    return null;
+  }
+
+  const rect = diplomacyStage.getBoundingClientRect();
+
+  if (rect.width <= 0 || rect.height <= 0) {
+    return null;
+  }
+
+  return {
+    x: (event.clientX - rect.left) / rect.width,
+    y: (event.clientY - rect.top) / rect.height
+  };
+}
+
+function findDiplomacyCharacter(position) {
+  if (!position) {
+    return null;
+  }
+
+  return diplomacyCharacterEntries.find((entry) =>
+    position.x >= entry.minX &&
+    position.x <= entry.maxX &&
+    position.y >= entry.minY &&
+    position.y <= entry.maxY
+  ) || null;
+}
+
+function hideAllDiplomacyCharacters() {
+  diplomacyCharacterEntries.forEach((entry) => {
+    entry.element.classList.remove("is-visible");
+  });
+}
+
+function showDiplomacyCharacter(entry) {
+  hideAllDiplomacyCharacters();
+
+  if (entry) {
+    entry.element.classList.add("is-visible");
+  }
+}
+
+function resetDiplomacyCharacterSelection() {
+  diplomacyHoveredCharacter = null;
+  diplomacyPinnedCharacter = null;
+  diplomacyStage?.classList.remove("is-character-pinned");
+  hideAllDiplomacyCharacters();
+
+  if (diplomacyStage) {
+    diplomacyStage.style.cursor = "default";
+  }
+}
+
+diplomacyStage.addEventListener("pointermove", (event) => {
+  if (
+    !diplomacyOpen ||
+    diplomacyClosing ||
+    diplomacyPinnedCharacter
+  ) {
+    return;
+  }
+
+  const entry = findDiplomacyCharacter(
+    getDiplomacyNormalizedPosition(event)
+  );
+
+  diplomacyHoveredCharacter = entry;
+  diplomacyStage.style.cursor = entry ? "pointer" : "default";
+  showDiplomacyCharacter(entry);
+});
+
+diplomacyStage.addEventListener("pointerleave", () => {
+  if (diplomacyPinnedCharacter) {
+    return;
+  }
+
+  diplomacyHoveredCharacter = null;
+  diplomacyStage.style.cursor = "default";
+  hideAllDiplomacyCharacters();
+});
+
+diplomacyStage.addEventListener("click", (event) => {
+  if (
+    !diplomacyOpen ||
+    diplomacyClosing ||
+    diplomacyPinnedCharacter
+  ) {
+    return;
+  }
+
+  const entry = findDiplomacyCharacter(
+    getDiplomacyNormalizedPosition(event)
+  );
+
+  if (!entry) {
+    return;
+  }
+
+  diplomacyPinnedCharacter = entry;
+  diplomacyHoveredCharacter = entry;
+  diplomacyStage.classList.add("is-character-pinned");
+  diplomacyStage.style.cursor = "default";
+  showDiplomacyCharacter(entry);
+});
+
+
 function openDiplomacyModal() {
   if (
     diplomacyOpen ||
@@ -712,6 +890,7 @@ function openDiplomacyModal() {
   }
 
   diplomacyOpen = true;
+  resetDiplomacyCharacterSelection();
   activeSoundRegion = null;
   pressedKeys.clear();
   feudHoverIcon.classList.remove("is-visible");
@@ -737,6 +916,7 @@ function closeDiplomacyModal() {
     diplomacyModal.hidden = true;
     diplomacyOpen = false;
     diplomacyClosing = false;
+    resetDiplomacyCharacterSelection();
   }, 560);
 }
 
@@ -750,9 +930,16 @@ window.addEventListener("keydown", (event) => {
 diplomacyModal.addEventListener("contextmenu", (event) => {
   event.preventDefault();
 
-  if (diplomacyOpen) {
-    closeDiplomacyModal();
+  if (!diplomacyOpen) {
+    return;
   }
+
+  if (diplomacyPinnedCharacter) {
+    resetDiplomacyCharacterSelection();
+    return;
+  }
+
+  closeDiplomacyModal();
 });
 
 
