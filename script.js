@@ -40,8 +40,8 @@ const battleArcherTwo = document.querySelector("#battleArcherTwo");
 const archerAppearSound = document.querySelector("#archerAppearSound");
 const swordsmanAppearSound = document.querySelector("#swordsmanAppearSound");
 const unitKeyLayer = document.querySelector("#unitKeyLayer");
-const marchUnit = document.querySelector("#marchUnit");
-const marchDust = document.querySelector("#marchDust");
+const unitKeyElements = Array.from(document.querySelectorAll(".unit-key"));
+const marchUnitLayer = document.querySelector("#marchUnitLayer");
 const ringelnatzFarmer = document.querySelector("#ringelnatzFarmer");
 const ringelnatzSpearman = document.querySelector("#ringelnatzSpearman");
 const ringelnatzCavalry = document.querySelector("#ringelnatzCavalry");
@@ -68,13 +68,9 @@ let battleScreenOpen = false;
 let battleUnitTimers = [];
 let battleUnitSequenceStarted = false;
 let ringelnatzUnitTimers = [];
-let activeMarchingUnit = null;
-let unitMarchInProgress = false;
-let marchAnimationFrame = null;
-let marchStartTime = 0;
-let marchStartX = 14.5;
-let marchTargetX = 78.5;
-let marchDuration = 0;
+let marchingUnitInstances = [];
+let productionCooldownUntil = 0;
+let marchInstanceCounter = 0;
 
 const ringelnatzUnits = [
   ringelnatzFarmer,
@@ -1074,86 +1070,96 @@ const unitKeyMap = {
   "Numpad7": "mercenary"
 };
 
-function stopMarchAnimation() {
-  if (marchAnimationFrame !== null) {
-    window.cancelAnimationFrame(marchAnimationFrame);
-    marchAnimationFrame = null;
+function syncUnitKeysWithSelectionUnits() {
+  ringelnatzUnits.forEach((unit, index) => {
+    const key = unitKeyElements[index];
+
+    if (!key) {
+      return;
+    }
+
+    key.classList.toggle(
+      "is-visible",
+      unit.classList.contains("is-visible")
+    );
+  });
+}
+
+function createDustAt(x) {
+  const dust = document.createElement("div");
+  dust.className = "march-dust-instance";
+  dust.style.left = `${x}%`;
+  dust.style.top = "calc(84% + 3cm)";
+  marchUnitLayer.appendChild(dust);
+
+  window.setTimeout(() => {
+    dust.remove();
+  }, 760);
+}
+
+function calculateQueuedTargetX(definition) {
+  if (definition.shortMove) {
+    return 20.5;
   }
+
+  const parkedNormalUnits = marchingUnitInstances.filter((instance) =>
+    instance.parked &&
+    !instance.definition.shortMove
+  );
+
+  const spacing = 5.4;
+  return Math.max(28, 78.5 - parkedNormalUnits.length * spacing);
 }
 
-function resetMarchingUnit() {
-  stopMarchAnimation();
+function finishMarchInstance(instance) {
+  instance.animationFrame = null;
+  instance.element.classList.remove("is-walking");
+  instance.parked = true;
 
-  unitMarchInProgress = false;
-  activeMarchingUnit = null;
-  marchStartTime = 0;
-  marchDuration = 0;
-
-  marchUnit.className = "march-unit";
-  marchUnit.removeAttribute("src");
-  marchUnit.style.removeProperty("left");
-  marchUnit.style.removeProperty("top");
-  marchUnit.style.removeProperty("width");
-
-  marchDust.classList.remove("is-active");
-}
-
-function triggerMarchDust() {
-  marchDust.classList.remove("is-active");
-  void marchDust.offsetWidth;
-  marchDust.classList.add("is-active");
-}
-
-function finishMarchingUnit(definition) {
-  stopMarchAnimation();
-  marchUnit.classList.remove("is-walking");
-
-  if (!definition.shortMove) {
-    marchUnit.classList.add("is-impacting");
-    triggerMarchDust();
+  if (!instance.definition.shortMove) {
+    instance.element.classList.add("is-impacting");
+    createDustAt(instance.targetX);
 
     window.setTimeout(() => {
-      marchUnit.classList.remove("is-impacting");
-      marchUnit.classList.add("is-visible");
+      instance.element.classList.remove("is-impacting");
+      instance.element.classList.add("is-visible");
     }, 430);
   } else {
-    marchUnit.classList.add("is-visible");
+    instance.element.classList.add("is-visible");
   }
-
-  unitMarchInProgress = false;
 }
 
-function animateMarch(timestamp) {
-  if (!unitMarchInProgress || !activeMarchingUnit) {
+function animateMarchInstance(instance, timestamp) {
+  if (!battleScreenOpen || instance.cancelled) {
     return;
   }
 
-  if (!marchStartTime) {
-    marchStartTime = timestamp;
+  if (!instance.startTime) {
+    instance.startTime = timestamp;
   }
 
-  const definition = marchUnitDefinitions[activeMarchingUnit];
-  const elapsed = timestamp - marchStartTime;
-  const progress = Math.min(elapsed / marchDuration, 1);
+  const elapsed = timestamp - instance.startTime;
+  const progress = Math.min(elapsed / instance.duration, 1);
   const currentX =
-    marchStartX + (marchTargetX - marchStartX) * progress;
+    instance.startX + (instance.targetX - instance.startX) * progress;
 
-  marchUnit.style.left = `${currentX}%`;
+  instance.element.style.left = `${currentX}%`;
 
   if (progress < 1) {
-    marchAnimationFrame = window.requestAnimationFrame(animateMarch);
+    instance.animationFrame = window.requestAnimationFrame((nextTimestamp) => {
+      animateMarchInstance(instance, nextTimestamp);
+    });
     return;
   }
 
-  finishMarchingUnit(definition);
+  finishMarchInstance(instance);
 }
 
 function spawnAndMarchUnit(unitType) {
   if (
     !battleScreenOpen ||
     feudSequenceInProgress ||
-    unitMarchInProgress ||
-    activeMarchingUnit
+    Date.now() < productionCooldownUntil
   ) {
     return;
   }
@@ -1164,36 +1170,72 @@ function spawnAndMarchUnit(unitType) {
     return;
   }
 
-  activeMarchingUnit = unitType;
-  unitMarchInProgress = true;
-  marchStartTime = 0;
-  marchStartX = 14.5;
-  marchTargetX = definition.shortMove ? 20.5 : 78.5;
-  marchDuration = definition.duration;
+  productionCooldownUntil = Date.now() + 3000;
 
-  marchUnit.className = "march-unit is-spawning";
-  marchUnit.src = definition.src;
-  marchUnit.style.left = `${marchStartX}%`;
-  marchUnit.style.top = "84%";
-  marchUnit.style.width = `${definition.width}%`;
+  const image = document.createElement("img");
+  image.className = "march-unit-instance";
+  image.src = definition.src;
+  image.alt = "";
+  image.draggable = false;
+  image.style.left = "14.5%";
+  image.style.top = "calc(84% + 3cm)";
+  image.style.width = `${definition.width}%`;
+  image.dataset.marchId = String(++marchInstanceCounter);
+
+  marchUnitLayer.appendChild(image);
+
+  const instance = {
+    id: marchInstanceCounter,
+    element: image,
+    definition,
+    startX: 14.5,
+    targetX: calculateQueuedTargetX(definition),
+    duration: definition.duration,
+    startTime: 0,
+    animationFrame: null,
+    parked: false,
+    cancelled: false
+  };
+
+  marchingUnitInstances.push(instance);
 
   window.requestAnimationFrame(() => {
     window.requestAnimationFrame(() => {
-      marchUnit.classList.add("is-visible");
+      image.classList.add("is-visible");
 
       window.setTimeout(() => {
-        if (!unitMarchInProgress) {
+        if (!battleScreenOpen || instance.cancelled) {
           return;
         }
 
-        marchUnit.classList.remove("is-spawning");
-        marchUnit.classList.add("is-walking");
-        marchAnimationFrame = window.requestAnimationFrame(animateMarch);
+        image.classList.add("is-walking");
+        instance.animationFrame = window.requestAnimationFrame((timestamp) => {
+          animateMarchInstance(instance, timestamp);
+        });
       }, 320);
     });
   });
 }
 
+function resetMarchingUnits() {
+  marchingUnitInstances.forEach((instance) => {
+    instance.cancelled = true;
+
+    if (instance.animationFrame !== null) {
+      window.cancelAnimationFrame(instance.animationFrame);
+    }
+
+    instance.element.remove();
+  });
+
+  marchingUnitInstances = [];
+  productionCooldownUntil = 0;
+  marchInstanceCounter = 0;
+
+  marchUnitLayer
+    .querySelectorAll(".march-dust-instance")
+    .forEach((dust) => dust.remove());
+}
 
 function clearRingelnatzUnitTimers() {
   ringelnatzUnitTimers.forEach((timer) => {
@@ -1209,6 +1251,8 @@ function resetRingelnatzUnits() {
   ringelnatzUnits.forEach((unit) => {
     unit.classList.remove("is-visible");
   });
+
+  syncUnitKeysWithSelectionUnits();
 }
 
 function startRingelnatzUnitSequence() {
@@ -1222,6 +1266,7 @@ function startRingelnatzUnitSequence() {
         }
 
         unit.classList.add("is-visible");
+        syncUnitKeysWithSelectionUnits();
       }, index * 200)
     );
   });
@@ -1252,7 +1297,7 @@ function playBattleUnitSound(audio) {
 function resetBattleUnits() {
   clearBattleUnitTimers();
   resetRingelnatzUnits();
-  resetMarchingUnit();
+  resetMarchingUnits();
   battleUnitSequenceStarted = false;
 
   battleArcherOne.classList.remove("is-visible");
@@ -1409,8 +1454,7 @@ window.addEventListener("keydown", (event) => {
   if (
     !battleScreenOpen ||
     feudSequenceInProgress ||
-    unitMarchInProgress ||
-    activeMarchingUnit
+    Date.now() < productionCooldownUntil
   ) {
     return;
   }

@@ -1068,7 +1068,7 @@ button {
   cursor: default;
 }
 
-/* V28 – Zahlentasten und einfache Marschsteuerung am Kastelberg. */
+/* V29 – Tasten erscheinen mit Einheiten, Mehrfachproduktion, 3-Sekunden-Cooldown. */
 .unit-key-layer,
 .march-unit-layer {
   position: absolute;
@@ -1095,6 +1095,23 @@ button {
   line-height: 1;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.48);
   user-select: none;
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(0.88);
+  transition:
+    opacity 300ms ease,
+    transform 300ms ease,
+    visibility 0s linear 300ms;
+}
+
+.unit-key.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: scale(1);
+  transition:
+    opacity 300ms ease,
+    transform 300ms ease,
+    visibility 0s linear 0s;
 }
 
 .unit-key--1 { left: 8.1%; top: 7.2%; }
@@ -1109,11 +1126,11 @@ button {
   z-index: 65;
 }
 
-.march-unit {
+.march-unit-instance {
   position: absolute;
   left: 14.5%;
-  top: 84%;
-  display: none;
+  top: calc(84% + 3cm);
+  display: block;
   width: auto;
   height: auto;
   opacity: 0;
@@ -1123,23 +1140,17 @@ button {
   user-select: none;
   will-change: left, opacity, transform;
   filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.34));
-}
-
-.march-unit.is-spawning {
-  display: block;
   transition:
     opacity 300ms ease,
     transform 300ms ease;
 }
 
-.march-unit.is-visible {
-  display: block;
+.march-unit-instance.is-visible {
   opacity: 1;
   transform: translate(-50%, -100%) scale(1);
 }
 
-.march-unit.is-walking {
-  display: block;
+.march-unit-instance.is-walking {
   opacity: 1;
   animation: unitWalkBob 420ms ease-in-out infinite alternate;
 }
@@ -1153,7 +1164,7 @@ button {
   }
 }
 
-.march-unit.is-impacting {
+.march-unit-instance.is-impacting {
   animation: unitArrivalShake 420ms ease;
 }
 
@@ -1166,10 +1177,8 @@ button {
   100% { transform: translate(-50%, -100%) translateX(0) rotate(0); }
 }
 
-.march-dust {
+.march-dust-instance {
   position: absolute;
-  left: 78.5%;
-  top: 84%;
   z-index: 66;
   width: 70px;
   height: 30px;
@@ -1192,9 +1201,6 @@ button {
       transparent 68%
     );
   filter: blur(3px);
-}
-
-.march-dust.is-active {
   animation: dustBurst 700ms ease-out;
 }
 
