@@ -48,6 +48,8 @@ const swordsmanAppearSound = document.querySelector("#swordsmanAppearSound");
 const unitKeyLayer = document.querySelector("#unitKeyLayer");
 const unitKeyElements = Array.from(document.querySelectorAll(".unit-key"));
 const marchUnitLayer = document.querySelector("#marchUnitLayer");
+const neuensteinMarchUnitLayer =
+  document.querySelector("#neuensteinMarchUnitLayer");
 const unitKeySound1 = document.querySelector("#unitKeySound1");
 const unitKeySound2 = document.querySelector("#unitKeySound2");
 const unitKeySound3 = document.querySelector("#unitKeySound3");
@@ -92,6 +94,14 @@ let ringelnatzUnitTimers = [];
 let marchingUnitInstances = [];
 let productionCooldownUntil = 0;
 let marchInstanceCounter = 0;
+
+let neuensteinSpawnTimer = null;
+let neuensteinSpawnQueue = [];
+let neuensteinUnits = [];
+let neuensteinUnitCounter = 0;
+let neuensteinProductionStarted = false;
+let neuensteinProductionFinished = false;
+let neuensteinBattleLoop = null;
 
 const ringelnatzUnits = [
   ringelnatzFarmer,
@@ -1336,6 +1346,633 @@ function preloadCombatImages() {
 preloadCombatImages();
 
 
+
+const NEUENSTEIN_SPAWN_INTERVAL = 4000;
+const NEUENSTEIN_SPAWN_X = 88.0;
+const NEUENSTEIN_TENT_STOP_X = 15.8;
+const NEUENSTEIN_BATTLE_LINE_TOP = "calc(84% + 3cm)";
+const NEUENSTEIN_MELEE_SPACING = 4.8;
+const NEUENSTEIN_ARCHER_ATTACK_DURATION = 1000;
+const NEUENSTEIN_ARCHER_IDLE_DURATION = 3000;
+
+const neuensteinUnitDefinitions = {
+  archer: {
+    idleSrc: "assets/neuenstein-bogenschuetze-idle.png?v=37",
+    attackSrc: "assets/neuenstein-bogenschuetze-angriff.png?v=37",
+    width: 6.4,
+    height: 21.0,
+    speed: 5.4,
+    ranged: true,
+    attackScale: 1.16,
+    attackOffsetX: -6,
+    attackOffsetY: 0
+  },
+  halberdier: {
+    idleSrc: "assets/neuenstein-hellebardier-idle.png?v=37",
+    attackSrc: "assets/neuenstein-hellebardier-angriff.png?v=37",
+    width: 6.5,
+    height: 22.0,
+    speed: 5.7,
+    ranged: false,
+    attackScale: 1.15,
+    attackOffsetX: -7,
+    attackOffsetY: 0
+  },
+  flail: {
+    idleSrc: "assets/neuenstein-flegel-idle.png?v=37",
+    attackSrc: "assets/neuenstein-flegel-angriff.png?v=37",
+    width: 6.3,
+    height: 22.0,
+    speed: 5.6,
+    ranged: false,
+    attackScale: 1.15,
+    attackOffsetX: -6,
+    attackOffsetY: 0
+  },
+  swordsman: {
+    idleSrc: "assets/neuenstein-schwertkaempfer-idle.png?v=37",
+    attackSrc: "assets/neuenstein-schwertkaempfer-angriff.png?v=37",
+    width: 6.4,
+    height: 22.0,
+    speed: 5.9,
+    ranged: false,
+    attackScale: 1.15,
+    attackOffsetX: -5,
+    attackOffsetY: 0
+  }
+};
+
+function preloadNeuensteinUnitImages() {
+  Object.values(neuensteinUnitDefinitions).forEach((definition) => {
+    [definition.idleSrc, definition.attackSrc].forEach((src) => {
+      const image = new Image();
+      image.src = src;
+    });
+  });
+}
+
+preloadNeuensteinUnitImages();
+
+function shuffleNeuensteinQueue(items) {
+  const queue = [...items];
+
+  for (let index = queue.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1));
+    [queue[index], queue[randomIndex]] =
+      [queue[randomIndex], queue[index]];
+  }
+
+  return queue;
+}
+
+function createShuffledNeuensteinQueue() {
+  return shuffleNeuensteinQueue([
+    "archer",
+    "archer",
+    "halberdier",
+    "halberdier",
+    "halberdier",
+    "halberdier",
+    "halberdier",
+    "flail",
+    "flail",
+    "flail",
+    "flail",
+    "flail",
+    "swordsman",
+    "swordsman",
+    "swordsman"
+  ]);
+}
+
+function getMarchInstanceX(instance) {
+  if (Number.isFinite(instance.currentX)) {
+    return instance.currentX;
+  }
+
+  const parsed = Number.parseFloat(instance.element.style.left);
+  return Number.isFinite(parsed) ? parsed : instance.startX;
+}
+
+function getActiveRingelnatzTargets() {
+  return marchingUnitInstances
+    .filter((instance) => !instance.cancelled)
+    .map((instance) => ({
+      instance,
+      x: getMarchInstanceX(instance)
+    }))
+    .filter((entry) => Number.isFinite(entry.x));
+}
+
+function setNeuensteinPose(unit, pose) {
+  const attack = pose === "attack";
+
+  unit.attackPoseVisible = attack;
+  unit.idleImage.classList.toggle("is-active", !attack);
+  unit.attackImage.classList.toggle("is-active", attack);
+}
+
+function createNeuensteinDustAt(x) {
+  const dust = document.createElement("div");
+  dust.className = "neuenstein-dust-instance";
+  dust.style.left = `${x}%`;
+  dust.style.top = NEUENSTEIN_BATTLE_LINE_TOP;
+  neuensteinMarchUnitLayer.appendChild(dust);
+
+  window.setTimeout(() => {
+    dust.remove();
+  }, 760);
+}
+
+function triggerNeuensteinImpact(unit) {
+  if (unit.cancelled) {
+    return;
+  }
+
+  unit.element.classList.remove("is-impacting");
+  void unit.element.offsetWidth;
+  unit.element.classList.add("is-impacting");
+  createNeuensteinDustAt(unit.x);
+
+  window.setTimeout(() => {
+    if (!unit.cancelled) {
+      unit.element.classList.remove("is-impacting");
+    }
+  }, 430);
+}
+
+function stopNeuensteinAttackCycle(unit) {
+  if (unit.attackTimer) {
+    window.clearTimeout(unit.attackTimer);
+    window.clearInterval(unit.attackTimer);
+    unit.attackTimer = null;
+  }
+
+  unit.combatActive = false;
+  setNeuensteinPose(unit, "idle");
+}
+
+function startNeuensteinMeleeCycle(unit) {
+  if (unit.cancelled || unit.attackTimer || unit.definition.ranged) {
+    return;
+  }
+
+  unit.combatActive = true;
+  setNeuensteinPose(unit, "attack");
+  triggerNeuensteinImpact(unit);
+
+  unit.attackTimer = window.setInterval(() => {
+    if (!battleScreenOpen || unit.cancelled) {
+      stopNeuensteinAttackCycle(unit);
+      return;
+    }
+
+    if (unit.attackPoseVisible) {
+      setNeuensteinPose(unit, "idle");
+    } else {
+      setNeuensteinPose(unit, "attack");
+      triggerNeuensteinImpact(unit);
+    }
+  }, 1000);
+}
+
+function findNearestRingelnatzTargetForArcher(unit) {
+  const targets = getActiveRingelnatzTargets()
+    .filter((entry) => entry.x < unit.x)
+    .sort((a, b) => b.x - a.x);
+
+  return targets[0] || null;
+}
+
+function launchNeuensteinArrow(unit, target) {
+  if (!target || unit.cancelled || !battleScreenOpen) {
+    return;
+  }
+
+  const arrow = document.createElement("span");
+  arrow.className = "neuenstein-arrow";
+
+  const startX = unit.x - 1.4;
+  const targetX = target.x + 1.2;
+  const startY = 75.4;
+  const targetY = 78.0;
+  const deltaX = targetX - startX;
+  const deltaY = targetY - startY;
+  const angle = Math.atan2(deltaY, deltaX) * 180 / Math.PI;
+
+  arrow.style.left = `${startX}%`;
+  arrow.style.top = `${startY}%`;
+  arrow.style.transform = `rotate(${angle}deg)`;
+  arrow.style.transition =
+    "left 560ms linear, top 560ms ease-in";
+
+  neuensteinMarchUnitLayer.appendChild(arrow);
+
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
+      arrow.style.left = `${targetX}%`;
+      arrow.style.top = `${targetY}%`;
+    });
+  });
+
+  window.setTimeout(() => {
+    arrow.remove();
+  }, 640);
+}
+
+function scheduleNeuensteinArcherCycle(unit, delay) {
+  if (unit.cancelled) {
+    return;
+  }
+
+  unit.attackTimer = window.setTimeout(() => {
+    unit.attackTimer = null;
+
+    if (!battleScreenOpen || unit.cancelled) {
+      stopNeuensteinAttackCycle(unit);
+      return;
+    }
+
+    const target = findNearestRingelnatzTargetForArcher(unit);
+
+    if (!target) {
+      unit.combatActive = false;
+      setNeuensteinPose(unit, "idle");
+      scheduleNeuensteinArcherCycle(unit, 500);
+      return;
+    }
+
+    unit.combatActive = true;
+    setNeuensteinPose(unit, "attack");
+    launchNeuensteinArrow(unit, target);
+
+    unit.attackTimer = window.setTimeout(() => {
+      unit.attackTimer = null;
+
+      if (!battleScreenOpen || unit.cancelled) {
+        return;
+      }
+
+      setNeuensteinPose(unit, "idle");
+      scheduleNeuensteinArcherCycle(
+        unit,
+        NEUENSTEIN_ARCHER_IDLE_DURATION
+      );
+    }, NEUENSTEIN_ARCHER_ATTACK_DURATION);
+  }, delay);
+}
+
+function startNeuensteinArcherCycle(unit) {
+  if (unit.attackTimer || unit.cancelled) {
+    return;
+  }
+
+  scheduleNeuensteinArcherCycle(unit, 250);
+}
+
+function calculateNeuensteinArcherSlot() {
+  const parkedArchers = neuensteinUnits.filter((unit) =>
+    !unit.cancelled &&
+    unit.type === "archer"
+  );
+
+  return Math.max(69.5, 83.0 - parkedArchers.length * 6.2);
+}
+
+function createNeuensteinUnitElement(type, definition) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "neuenstein-unit-instance";
+  wrapper.style.left = `${NEUENSTEIN_SPAWN_X}%`;
+  wrapper.style.top = NEUENSTEIN_BATTLE_LINE_TOP;
+  wrapper.style.width = `${definition.width}%`;
+  wrapper.style.height = `${definition.height}%`;
+  wrapper.style.setProperty(
+    "--enemy-attack-scale",
+    String(definition.attackScale || 1)
+  );
+  wrapper.style.setProperty(
+    "--enemy-attack-offset-x",
+    `${definition.attackOffsetX || 0}px`
+  );
+  wrapper.style.setProperty(
+    "--enemy-attack-offset-y",
+    `${definition.attackOffsetY || 0}px`
+  );
+
+  const idleImage = document.createElement("img");
+  idleImage.className =
+    "neuenstein-unit-pose neuenstein-unit-pose--idle is-active";
+  idleImage.src = definition.idleSrc;
+  idleImage.alt = "";
+  idleImage.draggable = false;
+  wrapper.appendChild(idleImage);
+
+  const attackImage = document.createElement("img");
+  attackImage.className =
+    "neuenstein-unit-pose neuenstein-unit-pose--attack";
+  attackImage.src = definition.attackSrc;
+  attackImage.alt = "";
+  attackImage.draggable = false;
+  wrapper.appendChild(attackImage);
+
+  neuensteinMarchUnitLayer.appendChild(wrapper);
+
+  return { wrapper, idleImage, attackImage };
+}
+
+function spawnNeuensteinUnit(type, options = {}) {
+  if (!battleScreenOpen || !neuensteinUnitDefinitions[type]) {
+    return null;
+  }
+
+  const definition = neuensteinUnitDefinitions[type];
+  const { wrapper, idleImage, attackImage } =
+    createNeuensteinUnitElement(type, definition);
+
+  const unit = {
+    id: ++neuensteinUnitCounter,
+    type,
+    definition,
+    element: wrapper,
+    idleImage,
+    attackImage,
+    x: NEUENSTEIN_SPAWN_X,
+    targetX:
+      type === "archer"
+        ? calculateNeuensteinArcherSlot()
+        : NEUENSTEIN_TENT_STOP_X,
+    currentSpeed: definition.speed,
+    walking: type !== "archer" || !options.firstArcher,
+    parked: false,
+    combatActive: false,
+    attackPoseVisible: false,
+    attackTimer: null,
+    cancelled: false,
+    firstArcher: Boolean(options.firstArcher)
+  };
+
+  neuensteinUnits.push(unit);
+
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
+      wrapper.classList.add("is-visible");
+    });
+  });
+
+  return unit;
+}
+
+function spawnFirstNeuensteinArcher() {
+  const archer = spawnNeuensteinUnit("archer", {
+    firstArcher: true
+  });
+
+  if (!archer) {
+    return;
+  }
+
+  archer.walking = true;
+}
+
+function getEnemyAheadStopX(unit) {
+  if (unit.type === "archer") {
+    return unit.targetX;
+  }
+
+  const meleeAhead = neuensteinUnits
+    .filter((other) =>
+      other !== unit &&
+      !other.cancelled &&
+      other.type !== "archer" &&
+      other.x < unit.x
+    )
+    .sort((a, b) => b.x - a.x)[0];
+
+  if (!meleeAhead) {
+    return NEUENSTEIN_TENT_STOP_X;
+  }
+
+  return meleeAhead.x + NEUENSTEIN_MELEE_SPACING;
+}
+
+function getRingelnatzCollisionForEnemy(unit) {
+  const targets = getActiveRingelnatzTargets()
+    .filter((entry) => entry.x < unit.x)
+    .sort((a, b) => b.x - a.x);
+
+  const nearest = targets[0];
+
+  if (!nearest) {
+    return null;
+  }
+
+  const stopX = nearest.x + 4.3;
+
+  return {
+    target: nearest.instance,
+    stopX
+  };
+}
+
+function updateNeuensteinUnit(unit, deltaSeconds) {
+  if (unit.cancelled || !unit.walking) {
+    return;
+  }
+
+  if (unit.type === "archer") {
+    const desiredX = unit.targetX;
+
+    if (unit.x <= desiredX + 0.08) {
+      unit.x = desiredX;
+      unit.walking = false;
+      unit.parked = true;
+      unit.element.style.left = `${unit.x}%`;
+      startNeuensteinArcherCycle(unit);
+      return;
+    }
+
+    unit.x = Math.max(
+      desiredX,
+      unit.x - unit.currentSpeed * deltaSeconds
+    );
+    unit.element.style.left = `${unit.x}%`;
+    return;
+  }
+
+  const queueStopX = getEnemyAheadStopX(unit);
+  const collision = getRingelnatzCollisionForEnemy(unit);
+  let desiredStopX = Math.max(
+    NEUENSTEIN_TENT_STOP_X,
+    queueStopX
+  );
+
+  if (collision) {
+    desiredStopX = Math.max(desiredStopX, collision.stopX);
+  }
+
+  const nextX = Math.max(
+    desiredStopX,
+    unit.x - unit.currentSpeed * deltaSeconds
+  );
+
+  unit.x = nextX;
+  unit.element.style.left = `${unit.x}%`;
+
+  if (unit.x <= desiredStopX + 0.08) {
+    unit.x = desiredStopX;
+    unit.walking = false;
+    unit.parked = true;
+    unit.element.style.left = `${unit.x}%`;
+
+    if (collision || desiredStopX <= NEUENSTEIN_TENT_STOP_X + 0.2) {
+      startNeuensteinMeleeCycle(unit);
+    }
+  }
+}
+
+function runNeuensteinBattleLoop(timestamp) {
+  if (!battleScreenOpen) {
+    neuensteinBattleLoop = null;
+    return;
+  }
+
+  if (!runNeuensteinBattleLoop.previousTimestamp) {
+    runNeuensteinBattleLoop.previousTimestamp = timestamp;
+  }
+
+  const deltaMilliseconds = Math.min(
+    45,
+    timestamp - runNeuensteinBattleLoop.previousTimestamp
+  );
+  runNeuensteinBattleLoop.previousTimestamp = timestamp;
+  const deltaSeconds = deltaMilliseconds / 1000;
+
+  neuensteinUnits.forEach((unit) => {
+    updateNeuensteinUnit(unit, deltaSeconds);
+  });
+
+  const nearestEnemyX = neuensteinUnits
+    .filter((unit) => !unit.cancelled)
+    .reduce(
+      (minimum, unit) => Math.min(minimum, unit.x),
+      Number.POSITIVE_INFINITY
+    );
+
+  if (Number.isFinite(nearestEnemyX)) {
+    updateCrossbowEnemyRange(nearestEnemyX);
+  }
+
+  neuensteinBattleLoop =
+    window.requestAnimationFrame(runNeuensteinBattleLoop);
+}
+
+function startNeuensteinBattleLoop() {
+  if (neuensteinBattleLoop !== null) {
+    return;
+  }
+
+  runNeuensteinBattleLoop.previousTimestamp = 0;
+  neuensteinBattleLoop =
+    window.requestAnimationFrame(runNeuensteinBattleLoop);
+}
+
+function stopNeuensteinProduction() {
+  if (neuensteinSpawnTimer) {
+    window.clearInterval(neuensteinSpawnTimer);
+    neuensteinSpawnTimer = null;
+  }
+}
+
+function startNeuensteinProduction() {
+  if (
+    neuensteinProductionStarted ||
+    !battleScreenOpen
+  ) {
+    return;
+  }
+
+  neuensteinProductionStarted = true;
+  neuensteinProductionFinished = false;
+  neuensteinSpawnQueue = createShuffledNeuensteinQueue();
+
+  spawnFirstNeuensteinArcher();
+  startNeuensteinBattleLoop();
+
+  neuensteinSpawnTimer = window.setInterval(() => {
+    if (!battleScreenOpen) {
+      stopNeuensteinProduction();
+      return;
+    }
+
+    if (neuensteinSpawnQueue.length === 0) {
+      stopNeuensteinProduction();
+      neuensteinProductionFinished = true;
+      return;
+    }
+
+    const nextType = neuensteinSpawnQueue.shift();
+    spawnNeuensteinUnit(nextType);
+
+    if (neuensteinSpawnQueue.length === 0) {
+      stopNeuensteinProduction();
+      neuensteinProductionFinished = true;
+    }
+  }, NEUENSTEIN_SPAWN_INTERVAL);
+}
+
+function resetNeuensteinBattleSystem() {
+  stopNeuensteinProduction();
+
+  if (neuensteinBattleLoop !== null) {
+    window.cancelAnimationFrame(neuensteinBattleLoop);
+    neuensteinBattleLoop = null;
+  }
+
+  runNeuensteinBattleLoop.previousTimestamp = 0;
+
+  neuensteinUnits.forEach((unit) => {
+    unit.cancelled = true;
+    stopNeuensteinAttackCycle(unit);
+    unit.element.remove();
+  });
+
+  neuensteinUnits = [];
+  neuensteinSpawnQueue = [];
+  neuensteinUnitCounter = 0;
+  neuensteinProductionStarted = false;
+  neuensteinProductionFinished = false;
+
+  neuensteinMarchUnitLayer
+    .querySelectorAll(
+      ".neuenstein-arrow, .neuenstein-dust-instance"
+    )
+    .forEach((element) => element.remove());
+}
+
+function getRingelnatzCollisionStopX(instance, proposedX) {
+  const enemiesAhead = neuensteinUnits
+    .filter((unit) =>
+      !unit.cancelled &&
+      unit.x > proposedX
+    )
+    .sort((a, b) => a.x - b.x);
+
+  const nearest = enemiesAhead[0];
+
+  if (!nearest) {
+    return null;
+  }
+
+  const stopX = nearest.x - 4.3;
+
+  if (proposedX >= stopX) {
+    return stopX;
+  }
+
+  return null;
+}
+
+
 const unitKeyMap = {
   "1": "farmer",
   "2": "spearman",
@@ -1573,9 +2210,25 @@ function animateMarchInstance(instance, timestamp) {
 
   const elapsed = timestamp - instance.startTime;
   const progress = Math.min(elapsed / instance.duration, 1);
-  const currentX =
+  let currentX =
     instance.startX + (instance.targetX - instance.startX) * progress;
 
+  const enemyCollisionStopX =
+    getRingelnatzCollisionStopX(instance, currentX);
+
+  if (
+    enemyCollisionStopX !== null &&
+    !instance.definition.shortMove
+  ) {
+    currentX = enemyCollisionStopX;
+    instance.targetX = enemyCollisionStopX;
+    instance.currentX = currentX;
+    instance.element.style.left = `${currentX}%`;
+    finishMarchInstance(instance);
+    return;
+  }
+
+  instance.currentX = currentX;
   instance.element.style.left = `${currentX}%`;
 
   if (progress < 1) {
@@ -1657,6 +2310,7 @@ function spawnAndMarchUnit(unitType) {
     attackImage,
     definition,
     startX: 14.5,
+    currentX: 14.5,
     targetX: calculateQueuedTargetX(definition),
     duration: definition.duration,
     startTime: 0,
@@ -1778,6 +2432,7 @@ function playBattleUnitSound(audio) {
 
 function resetBattleUnits() {
   clearBattleUnitTimers();
+  resetNeuensteinBattleSystem();
   resetRingelnatzUnits();
   resetMarchingUnits();
   battleUnitSequenceStarted = false;
@@ -1841,6 +2496,16 @@ function startBattleUnitSequence() {
 
       startRingelnatzUnitSequence();
     }, 6800)
+  );
+
+  battleUnitTimers.push(
+    window.setTimeout(() => {
+      if (!battleScreenOpen) {
+        return;
+      }
+
+      startNeuensteinProduction();
+    }, 8000)
   );
 }
 

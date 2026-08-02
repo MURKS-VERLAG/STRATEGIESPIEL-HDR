@@ -1483,3 +1483,120 @@ button {
   top: 34.5%;
 }
 
+/* V37 – automatische Neuenstein-Gegnerwellen am Kastelberg. */
+.neuenstein-march-unit-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 65;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.neuenstein-unit-instance {
+  position: absolute;
+  z-index: 65;
+  opacity: 0;
+  transform: translate(-50%, -100%) scale(0.92);
+  transform-origin: 50% 100%;
+  transition:
+    opacity 300ms ease,
+    transform 300ms ease;
+  pointer-events: none;
+  will-change: left, transform, opacity;
+}
+
+.neuenstein-unit-instance.is-visible {
+  opacity: 1;
+  transform: translate(-50%, -100%) scale(1);
+}
+
+.neuenstein-unit-instance.is-impacting {
+  animation: neuensteinImpactShake 420ms ease-in-out;
+}
+
+.neuenstein-unit-pose {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  opacity: 0;
+  transform: translateX(-50%);
+  transform-origin: 50% 100%;
+  transition: opacity 260ms ease;
+  pointer-events: none;
+  user-select: none;
+}
+
+.neuenstein-unit-pose.is-active {
+  opacity: 1;
+}
+
+.neuenstein-unit-pose--attack {
+  transform:
+    translateX(calc(-50% + var(--enemy-attack-offset-x, 0px)))
+    translateY(var(--enemy-attack-offset-y, 0px))
+    scale(var(--enemy-attack-scale, 1));
+}
+
+.neuenstein-dust-instance {
+  position: absolute;
+  z-index: 66;
+  width: 70px;
+  height: 30px;
+  opacity: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 25% 60%, rgba(190, 165, 120, 0.65), transparent 65%),
+    radial-gradient(ellipse at 55% 45%, rgba(175, 150, 105, 0.55), transparent 68%),
+    radial-gradient(ellipse at 80% 65%, rgba(205, 185, 145, 0.55), transparent 68%);
+  filter: blur(3px);
+  animation: dustBurst 700ms ease-out;
+}
+
+.neuenstein-arrow {
+  position: absolute;
+  z-index: 68;
+  width: 42px;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #4c351d 0 82%, #b8b8b8 82% 100%);
+  transform-origin: 0 50%;
+  pointer-events: none;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.65));
+}
+
+.neuenstein-arrow::before,
+.neuenstein-arrow::after {
+  content: "";
+  position: absolute;
+  left: -8px;
+  width: 12px;
+  height: 2px;
+  background: #8f6b3a;
+  transform-origin: right center;
+}
+
+.neuenstein-arrow::before {
+  top: -2px;
+  transform: rotate(24deg);
+}
+
+.neuenstein-arrow::after {
+  bottom: -2px;
+  transform: rotate(-24deg);
+}
+
+@keyframes neuensteinImpactShake {
+  0%   { transform: translate(-50%, -100%) translateX(0) rotate(0); }
+  20%  { transform: translate(-50%, -100%) translateX(-5px) rotate(-1deg); }
+  40%  { transform: translate(-50%, -100%) translateX(5px) rotate(1deg); }
+  60%  { transform: translate(-50%, -100%) translateX(-3px) rotate(-0.7deg); }
+  80%  { transform: translate(-50%, -100%) translateX(3px) rotate(0.7deg); }
+  100% { transform: translate(-50%, -100%) translateX(0) rotate(0); }
+}
+
