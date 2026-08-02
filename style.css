@@ -925,3 +925,60 @@ button {
   z-index: 64 !important;
 }
 
+/* V26 – Diplomatiefenster über der Kampagnenkarte.
+   Größe, Abdunklung und Übergänge entsprechen exakt der Kaserne. */
+.diplomacy-modal[hidden] {
+  display: none;
+}
+
+.diplomacy-modal {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  pointer-events: auto;
+  transition: opacity 540ms ease;
+}
+
+.diplomacy-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(20, 17, 13, 0.38);
+  backdrop-filter: blur(1px);
+}
+
+.diplomacy-window {
+  position: relative;
+  z-index: 31;
+  width: min(84vw, 1180px);
+  max-height: 84vh;
+  transform: scale(0.965);
+  opacity: 0;
+  transition:
+    transform 540ms ease,
+    opacity 540ms ease;
+  box-shadow:
+    0 14px 42px rgba(0, 0, 0, 0.48),
+    0 0 0 1px rgba(230, 225, 210, 0.28);
+}
+
+.diplomacy-image {
+  display: block;
+  width: 100%;
+  max-height: 84vh;
+  object-fit: contain;
+  user-select: none;
+  pointer-events: none;
+}
+
+.diplomacy-modal.is-open {
+  opacity: 1;
+}
+
+.diplomacy-modal.is-open .diplomacy-window {
+  transform: scale(1);
+  opacity: 1;
+}
+

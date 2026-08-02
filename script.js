@@ -18,6 +18,7 @@ const yearDisplay = document.querySelector("#yearDisplay");
 const zoomDisplay = document.querySelector("#zoomDisplay");
 const mapHint = document.querySelector("#mapHint");
 const barracksModal = document.querySelector("#barracksModal");
+const diplomacyModal = document.querySelector("#diplomacyModal");
 const feudHoverIcon = document.querySelector("#feudHoverIcon");
 const feudConfirmation = document.querySelector("#feudConfirmation");
 const feudConfirmYes = document.querySelector("#feudConfirmYes");
@@ -46,6 +47,8 @@ let crawlAnimation = null;
 let mapReady = false;
 let barracksOpen = false;
 let barracksClosing = false;
+let diplomacyOpen = false;
+let diplomacyClosing = false;
 let feudConfirmationOpen = false;
 let feudSequenceInProgress = false;
 let battleScreenOpen = false;
@@ -247,7 +250,7 @@ function renderMap() {
 mapViewport.addEventListener("wheel", (event) => {
   event.preventDefault();
 
-  if (barracksOpen || barracksClosing || feudConfirmationOpen || feudSequenceInProgress || battleScreenOpen) {
+  if (barracksOpen || barracksClosing || diplomacyOpen || diplomacyClosing || feudConfirmationOpen || feudSequenceInProgress || battleScreenOpen) {
     return;
   }
 
@@ -278,7 +281,7 @@ mapViewport.addEventListener("wheel", (event) => {
 }, { passive: false });
 
 mapViewport.addEventListener("dblclick", () => {
-  if (barracksOpen || barracksClosing || feudConfirmationOpen || feudSequenceInProgress || battleScreenOpen) {
+  if (barracksOpen || barracksClosing || diplomacyOpen || diplomacyClosing || feudConfirmationOpen || feudSequenceInProgress || battleScreenOpen) {
     return;
   }
 
@@ -294,7 +297,7 @@ let lastFrameTime = performance.now();
 window.addEventListener("keydown", (event) => {
   const key = event.key.toLowerCase();
 
-  if (barracksOpen || barracksClosing || feudConfirmationOpen || feudSequenceInProgress || battleScreenOpen) {
+  if (barracksOpen || barracksClosing || diplomacyOpen || diplomacyClosing || feudConfirmationOpen || feudSequenceInProgress || battleScreenOpen) {
     return;
   }
 
@@ -600,6 +603,9 @@ mapViewport.addEventListener("click", (event) => {
   const blackShieldRegion = soundRegions.find(
     (region) => region.id === "blackShield"
   );
+  const scrollRegion = soundRegions.find(
+    (region) => region.id === "scroll"
+  );
 
   if (!position) {
     return;
@@ -615,6 +621,14 @@ mapViewport.addEventListener("click", (event) => {
     isInsideRegion(position, blackShieldRegion)
   ) {
     openBarracks();
+    return;
+  }
+
+  if (
+    scrollRegion &&
+    isInsideRegion(position, scrollRegion)
+  ) {
+    openDiplomacyModal();
     return;
   }
 
@@ -650,7 +664,7 @@ function openBarracks() {
 }
 
 function closeBarracks() {
-  if (!barracksOpen || barracksClosing) {
+  if (!barracksOpen || barracksClosing || diplomacyOpen || diplomacyClosing) {
     return;
   }
 
@@ -676,6 +690,68 @@ barracksModal.addEventListener("contextmenu", (event) => {
 
   if (barracksOpen) {
     closeBarracks();
+  }
+});
+
+
+
+
+/* V26: Diplomatieansicht über die Schriftrolle öffnen und schließen. */
+function openDiplomacyModal() {
+  if (
+    diplomacyOpen ||
+    diplomacyClosing ||
+    barracksOpen ||
+    barracksClosing ||
+    feudConfirmationOpen ||
+    feudSequenceInProgress ||
+    battleScreenOpen ||
+    yearChangeInProgress
+  ) {
+    return;
+  }
+
+  diplomacyOpen = true;
+  activeSoundRegion = null;
+  pressedKeys.clear();
+  feudHoverIcon.classList.remove("is-visible");
+  mapViewport.style.cursor = "default";
+  diplomacyModal.hidden = false;
+
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
+      diplomacyModal.classList.add("is-open");
+    });
+  });
+}
+
+function closeDiplomacyModal() {
+  if (!diplomacyOpen || diplomacyClosing) {
+    return;
+  }
+
+  diplomacyClosing = true;
+  diplomacyModal.classList.remove("is-open");
+
+  window.setTimeout(() => {
+    diplomacyModal.hidden = true;
+    diplomacyOpen = false;
+    diplomacyClosing = false;
+  }, 560);
+}
+
+window.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && diplomacyOpen) {
+    event.preventDefault();
+    closeDiplomacyModal();
+  }
+});
+
+diplomacyModal.addEventListener("contextmenu", (event) => {
+  event.preventDefault();
+
+  if (diplomacyOpen) {
+    closeDiplomacyModal();
   }
 });
 
