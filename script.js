@@ -1365,7 +1365,7 @@ const marchUnitDefinitions = {
     attackSrc: null,
     width: 6.0,
     height: 20,
-    duration: 11200,
+    duration: 16000,
     switchesPoseOnCollision: false
   }
 };
@@ -1939,9 +1939,16 @@ function resumeRingelnatzMarch(instance) {
   instance.currentX = instance.startX;
   instance.targetX = 78.5;
   instance.startTime = 0;
+  const resumeDurationMultiplier =
+    instance.type === "mercenary"
+      ? (1 / 0.70)
+      : 1;
+
   instance.duration = Math.max(
     700,
-    Math.abs(instance.targetX - instance.startX) * 95
+    Math.abs(instance.targetX - instance.startX) *
+      95 *
+      resumeDurationMultiplier
   );
 
   instance.element.classList.add("is-walking");
@@ -2533,7 +2540,7 @@ const neuensteinUnitDefinitions = {
     attackSrc: "assets/neuenstein-hellebardier-angriff.png?v=37",
     width: 7.15,
     height: 23.5,
-    speed: 5.7,
+    speed: 3.99,
     ranged: false,
     attackScale: 1.15,
     attackOffsetX: -7,
@@ -2559,7 +2566,7 @@ const neuensteinUnitDefinitions = {
     attackSrc: "assets/neuenstein-schwertkaempfer-angriff.png?v=37",
     width: 6.4,
     height: 22.0,
-    speed: 5.9,
+    speed: 4.13,
     ranged: false,
     attackScale: 1.15,
     attackOffsetX: -5,
