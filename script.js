@@ -3747,7 +3747,10 @@ function spawnAndMarchUnit(unitType) {
   playUnitProductionSound(unitType);
 
   const wrapper = document.createElement("div");
-  wrapper.className = "march-unit-instance";
+  wrapper.className =
+    definition.type === "crossbow"
+      ? "march-unit-instance march-unit-instance--crossbow"
+      : "march-unit-instance";
   wrapper.style.left = "14.5%";
   wrapper.style.top = BATTLE_LINE_TOP;
   wrapper.style.width = `${definition.width}%`;

@@ -1946,19 +1946,30 @@ button {
   transition: opacity 700ms ease !important;
 }
 
-/* V52 – Armbrustschütze: Schuss- und Nachladebild auf Standbildgröße. */
-.march-unit-instance:has(.march-unit-pose--reload)
-  .march-unit-pose--attack,
-.march-unit-instance:has(.march-unit-pose--reload)
-  .march-unit-pose--reload {
-  width: 126% !important;
-  max-width: none !important;
-  height: auto !important;
-  max-height: none !important;
+/* V53 – Armbrustschütze: Schuss und Nachladen exakt auf Ruhebildhöhe. */
+.march-unit-instance--crossbow .march-unit-pose--attack,
+.march-unit-instance--crossbow .march-unit-pose--reload {
   left: 50% !important;
   bottom: 0 !important;
+
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+
+  height: 100% !important;
+  min-height: 100% !important;
+  max-height: 100% !important;
+
   transform: translateX(-50%) !important;
+  transform-origin: 50% 100% !important;
+
   object-fit: contain !important;
   object-position: center bottom !important;
+}
+
+/* Keine zusätzliche Skalierung oder Schrägstellung im Schusszustand. */
+.march-unit-instance--crossbow .march-unit-pose--attack {
+  scale: 1 !important;
+  rotate: 0deg !important;
 }
 
