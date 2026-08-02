@@ -2036,3 +2036,10 @@ button {
   letter-spacing: 0.08em;
 }
 
+/* V58 – Nur der untere Burgbogenschütze ist nach dem Countdown aktiv. */
+.battle-unit--archer-two.is-castle-archer-attacking {
+  filter:
+    drop-shadow(0 3px 3px rgba(0, 0, 0, 0.34))
+    brightness(1.08);
+}
+

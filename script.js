@@ -1753,6 +1753,20 @@ const NEUENSTEIN_DAMAGE_TABLE = {
 };
 
 const NEUENSTEIN_ARCHER_HIT_CHANCE = 0.70;
+
+const castleArcher = {
+  type: "archer",
+  faction: "neuenstein",
+  element: battleArcherTwo,
+  x: 61.7,
+  health: 1,
+  isDead: false,
+  cancelled: false,
+  active: false,
+  combatActive: false,
+  combatTarget: null,
+  attackTimer: null
+};
 const NEUENSTEIN_ARROW_FLIGHT_DURATION = 560;
 
 const ASSASSIN_INSTANT_KILL_CHANCE = 0.30;
@@ -2089,6 +2103,9 @@ function applyDamageToUnit(
   damageAmount,
   options = {}
 ) {
+  if (target === castleArcher) {
+    return false;
+  }
   if (
     !target ||
     target.cancelled ||
@@ -2736,6 +2753,141 @@ function startNeuensteinMeleeCycle(unit) {
       executeNeuensteinMeleeHit(unit);
     }
   }, 1000);
+}
+
+function findCastleArcherTarget() {
+  const livingTargets =
+    getActiveRingelnatzTargets()
+      .filter((entry) =>
+        !entry.instance.cancelled &&
+        !entry.instance.isDead &&
+        entry.instance.health > 0
+      )
+      .sort((a, b) => b.x - a.x);
+
+  if (livingTargets.length > 0) {
+    return livingTargets[0];
+  }
+
+  return !ringelnatzTent.isDead
+    ? {
+        instance: ringelnatzTent,
+        x: 7.5
+      }
+    : null;
+}
+
+function stopCastleArcher() {
+  castleArcher.active = false;
+  castleArcher.combatActive = false;
+  castleArcher.combatTarget = null;
+
+  if (castleArcher.attackTimer !== null) {
+    window.clearTimeout(
+      castleArcher.attackTimer
+    );
+    castleArcher.attackTimer = null;
+  }
+
+  if (battleArcherTwo) {
+    battleArcherTwo.classList.remove(
+      "is-castle-archer-attacking"
+    );
+  }
+}
+
+function scheduleCastleArcherCycle(delay = 250) {
+  if (
+    !castleArcher.active ||
+    !battleScreenOpen
+  ) {
+    return;
+  }
+
+  castleArcher.attackTimer =
+    window.setTimeout(() => {
+      castleArcher.attackTimer = null;
+
+      if (
+        !castleArcher.active ||
+        !battleScreenOpen
+      ) {
+        stopCastleArcher();
+        return;
+      }
+
+      const target =
+        findCastleArcherTarget();
+
+      if (!target) {
+        castleArcher.combatActive = false;
+        castleArcher.combatTarget = null;
+        scheduleCastleArcherCycle(500);
+        return;
+      }
+
+      castleArcher.combatActive = true;
+      castleArcher.combatTarget =
+        target.instance;
+
+      battleArcherTwo.classList.add(
+        "is-castle-archer-attacking"
+      );
+
+      const hit =
+        Math.random() <
+        NEUENSTEIN_ARCHER_HIT_CHANCE;
+
+      if (!hit) {
+        playArcherMissSound();
+      }
+
+      launchNeuensteinArrow(
+        castleArcher,
+        target.instance,
+        hit
+      );
+
+      castleArcher.attackTimer =
+        window.setTimeout(() => {
+          castleArcher.attackTimer = null;
+
+          if (
+            !castleArcher.active ||
+            !battleScreenOpen
+          ) {
+            return;
+          }
+
+          battleArcherTwo.classList.remove(
+            "is-castle-archer-attacking"
+          );
+
+          scheduleCastleArcherCycle(
+            NEUENSTEIN_ARCHER_IDLE_DURATION
+          );
+        }, NEUENSTEIN_ARCHER_ATTACK_DURATION);
+    }, delay);
+}
+
+function startCastleArcher() {
+  stopCastleArcher();
+
+  if (
+    !battleScreenOpen ||
+    !battleArcherTwo.classList.contains(
+      "is-visible"
+    )
+  ) {
+    return;
+  }
+
+  castleArcher.cancelled = false;
+  castleArcher.isDead = false;
+  castleArcher.health = 1;
+  castleArcher.active = true;
+
+  scheduleCastleArcherCycle(250);
 }
 
 function findNearestRingelnatzTargetForArcher(unit) {
@@ -4110,7 +4262,8 @@ function startBattleCountdown() {
       battleStartHorn.volume = 0.9;
       battleStartHorn.play().catch(() => {});
 
-      // Erst nach dem vollständigen Countdown beginnt die Produktion.
+      // Erst nach dem vollständigen Countdown beginnt der eigentliche Kampf.
+      startCastleArcher();
       startNeuensteinProduction();
     }, 3000)
   );
@@ -4157,6 +4310,7 @@ function playBattleUnitSound(audio) {
 
 function resetBattleUnits() {
   clearBattleUnitTimers();
+  stopCastleArcher();
   clearBattleCountdown();
   clearBattleTitle();
   resetTentHealthSystem();
