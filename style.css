@@ -1781,3 +1781,71 @@ button {
   }
 }
 
+/* V43 – Zeltlebensleisten und Zeltziele. */
+.battle-tent-target {
+  position: absolute;
+  z-index: 58;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.battle-tent-target--ringelnatz {
+  left: 1.4%;
+  top: 69%;
+  width: 15.5%;
+  height: 25%;
+}
+
+.battle-tent-target--neuenstein {
+  right: 0.8%;
+  top: 67%;
+  width: 17.5%;
+  height: 27%;
+}
+
+.battle-tent-health {
+  position: absolute;
+  left: 50%;
+  top: -13px;
+  width: 82%;
+  height: 8px;
+  transform: translateX(-50%);
+  z-index: 130;
+}
+
+.battle-tent-health .unit-health-bar {
+  position: relative;
+  left: 0;
+  bottom: auto;
+  width: 100%;
+  min-width: 0;
+  height: 7px;
+  transform: none;
+}
+
+.battle-tent-target.is-hit {
+  animation: tentHitShake 220ms ease-out;
+}
+
+.battle-tent-target.is-defeated {
+  pointer-events: none;
+}
+
+@keyframes tentHitShake {
+  0% {
+    transform: translateX(0);
+  }
+
+  30% {
+    transform: translateX(-4px);
+  }
+
+  60% {
+    transform: translateX(4px);
+  }
+
+  100% {
+    transform: translateX(0);
+  }
+}
+

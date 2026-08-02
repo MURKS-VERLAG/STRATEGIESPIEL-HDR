@@ -50,6 +50,14 @@ const unitKeyElements = Array.from(document.querySelectorAll(".unit-key"));
 const marchUnitLayer = document.querySelector("#marchUnitLayer");
 const neuensteinMarchUnitLayer =
   document.querySelector("#neuensteinMarchUnitLayer");
+const ringelnatzTentTarget =
+  document.querySelector("#ringelnatzTentTarget");
+const neuensteinTentTarget =
+  document.querySelector("#neuensteinTentTarget");
+const ringelnatzTentHealthFill =
+  document.querySelector("#ringelnatzTentHealthFill");
+const neuensteinTentHealthFill =
+  document.querySelector("#neuensteinTentHealthFill");
 const unitKeySound1 = document.querySelector("#unitKeySound1");
 const unitKeySound2 = document.querySelector("#unitKeySound2");
 const unitKeySound3 = document.querySelector("#unitKeySound3");
@@ -1362,6 +1370,81 @@ preloadCombatImages();
 
 
 
+
+const TENT_DAMAGE_PER_HIT = 10;
+
+const ringelnatzTent = {
+  faction: "ringelnatz",
+  type: "tent",
+  maxHealth: 100,
+  health: 100,
+  isDead: false,
+  cancelled: false,
+  element: ringelnatzTentTarget,
+  healthFill: ringelnatzTentHealthFill
+};
+
+const neuensteinTent = {
+  faction: "neuenstein",
+  type: "tent",
+  maxHealth: 100,
+  health: 100,
+  isDead: false,
+  cancelled: false,
+  element: neuensteinTentTarget,
+  healthFill: neuensteinTentHealthFill
+};
+
+function resetTentHealthSystem() {
+  [ringelnatzTent, neuensteinTent].forEach((tent) => {
+    tent.health = 100;
+    tent.isDead = false;
+    tent.cancelled = false;
+    tent.element.classList.remove("is-hit", "is-defeated");
+    updateUnitHealthBar(tent);
+  });
+}
+
+function triggerTentHitReaction(tent) {
+  if (!tent || tent.isDead) {
+    return;
+  }
+
+  tent.element.classList.remove("is-hit");
+  void tent.element.offsetWidth;
+  tent.element.classList.add("is-hit");
+
+  window.setTimeout(() => {
+    tent.element.classList.remove("is-hit");
+  }, 230);
+}
+
+function defeatTent(tent) {
+  if (!tent || tent.isDead) {
+    return;
+  }
+
+  tent.isDead = true;
+  tent.health = 0;
+  updateUnitHealthBar(tent);
+  tent.element.classList.add("is-defeated");
+
+  if (tent.faction === "neuenstein") {
+    stopNeuensteinProduction();
+    neuensteinProductionFinished = true;
+    return;
+  }
+
+  stopNeuensteinProduction();
+
+  window.setTimeout(() => {
+    if (battleScreenOpen) {
+      returnToCampaignMap();
+    }
+  }, 650);
+}
+
+
 const RINGELNATZ_DAMAGE_TABLE = {
   farmer: {
     light: 20,
@@ -1741,6 +1824,22 @@ function applyDamageToUnit(
     attacker = null
   } = options;
 
+  if (target.type === "tent") {
+    target.health = Math.max(
+      0,
+      target.health - TENT_DAMAGE_PER_HIT
+    );
+
+    updateUnitHealthBar(target);
+    triggerTentHitReaction(target);
+
+    if (target.health <= 0) {
+      defeatTent(target);
+    }
+
+    return true;
+  }
+
   target.health = instantKill
     ? 0
     : Math.max(
@@ -1783,6 +1882,15 @@ function executeRingelnatzMeleeHit(attacker) {
     return;
   }
 
+  if (target.type === "tent") {
+    applyDamageToUnit(
+      target,
+      TENT_DAMAGE_PER_HIT,
+      { attacker }
+    );
+    return;
+  }
+
   const result =
     getRingelnatzDamage(
       attacker,
@@ -1804,15 +1912,23 @@ function executeRingelnatzMeleeHit(attacker) {
 }
 
 function findCrossbowTarget(instance) {
-  return neuensteinUnits
-    .filter((unit) =>
-      !unit.cancelled &&
-      !unit.isDead &&
-      unit.health > 0 &&
-      unit.x <= CROSSBOW_TRIGGER_X &&
-      unit.x > getMarchInstanceX(instance)
-    )
-    .sort((a, b) => a.x - b.x)[0] || null;
+  const livingEnemy =
+    neuensteinUnits
+      .filter((unit) =>
+        !unit.cancelled &&
+        !unit.isDead &&
+        unit.health > 0 &&
+        unit.x > getMarchInstanceX(instance)
+      )
+      .sort((a, b) => a.x - b.x)[0];
+
+  if (livingEnemy) {
+    return livingEnemy;
+  }
+
+  return !neuensteinTent.isDead
+    ? neuensteinTent
+    : null;
 }
 
 
@@ -1938,6 +2054,15 @@ function launchRingelnatzCrossbowBolt(
     sourceXRatio: 0.78,
     sourceYRatio: 0.48,
     onArrival: () => {
+      if (target.type === "tent") {
+        applyDamageToUnit(
+          target,
+          TENT_DAMAGE_PER_HIT,
+          { attacker }
+        );
+        return;
+      }
+
       const result =
         getRingelnatzDamage(
           attacker,
@@ -2236,6 +2361,15 @@ function executeNeuensteinMeleeHit(attacker) {
     return;
   }
 
+  if (target.type === "tent") {
+    applyDamageToUnit(
+      target,
+      TENT_DAMAGE_PER_HIT,
+      { attacker }
+    );
+    return;
+  }
+
   const result =
     getNeuensteinDamage(
       attacker,
@@ -2300,7 +2434,18 @@ function findNearestRingelnatzTargetForArcher(unit) {
     )
     .sort((a, b) => b.x - a.x);
 
-  return targets[0] || null;
+  if (targets[0]) {
+    return targets[0];
+  }
+
+  if (!ringelnatzTent.isDead) {
+    return {
+      instance: ringelnatzTent,
+      x: 7.5
+    };
+  }
+
+  return null;
 }
 
 function launchNeuensteinArrow(
@@ -2325,6 +2470,15 @@ function launchNeuensteinArrow(
     sourceXRatio: 0.26,
     sourceYRatio: 0.42,
     onArrival: () => {
+      if (target.type === "tent") {
+        applyDamageToUnit(
+          target,
+          TENT_DAMAGE_PER_HIT,
+          { attacker: unit }
+        );
+        return;
+      }
+
       const result =
         getNeuensteinDamage(
           unit,
@@ -2709,7 +2863,12 @@ function updateNeuensteinUnit(unit, deltaSeconds) {
       return;
     }
 
-    // Ohne echten Gegner bleibt die Einheit nur stehen.
+    if (!ringelnatzTent.isDead) {
+      unit.combatTarget = ringelnatzTent;
+      startNeuensteinMeleeCycle(unit);
+      return;
+    }
+
     unit.combatTarget = null;
     unit.combatActive = false;
     setNeuensteinPose(unit, "idle");
@@ -3119,20 +3278,40 @@ function finishMarchInstance(instance) {
   instance.element.classList.add("is-visible");
 
   if (instance.definition.shortMove) {
-    // Armbrustschützen warten an ihrer individuell gestaffelten Position.
     activateCrossbowCombatState(instance);
     return;
   }
 
-  if (!isLivingCombatUnit(instance.combatTarget)) {
-    // Parkplatz oder Zelt erreicht: kein Gegner, also keine Kampfanimation.
-    instance.combatTarget = null;
-    instance.combatActive = false;
-    setUnitPose(instance, "idle");
+  if (isLivingCombatUnit(instance.combatTarget)) {
+    connectCombatants(instance, instance.combatTarget);
     return;
   }
 
-  connectCombatants(instance, instance.combatTarget);
+  if (!neuensteinTent.isDead) {
+    instance.combatTarget = neuensteinTent;
+
+    if (instance.definition.switchesPoseOnCollision) {
+      activateUnitCombatState(instance);
+    } else {
+      triggerImpactPulse(instance);
+      executeRingelnatzMeleeHit(instance);
+
+      window.setTimeout(() => {
+        if (
+          isLivingCombatUnit(instance) &&
+          isLivingCombatUnit(instance.combatTarget)
+        ) {
+          startImpactPulseCycle(instance);
+        }
+      }, 1000);
+    }
+
+    return;
+  }
+
+  instance.combatTarget = null;
+  instance.combatActive = false;
+  setUnitPose(instance, "idle");
 }
 
 function animateMarchInstance(instance, timestamp) {
@@ -3395,6 +3574,7 @@ function playBattleUnitSound(audio) {
 
 function resetBattleUnits() {
   clearBattleUnitTimers();
+  resetTentHealthSystem();
   resetNeuensteinBattleSystem();
   resetRingelnatzUnits();
   resetMarchingUnits();
