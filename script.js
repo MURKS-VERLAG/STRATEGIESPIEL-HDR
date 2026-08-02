@@ -1108,15 +1108,15 @@ const marchUnitDefinitions = {
     height: 20,
     duration: 5000,
     switchesPoseOnCollision: true,
-    attackScale: 1.10,
+    attackScale: 1.24,
     attackOffsetX: 4,
-    attackOffsetY: 0
+    attackOffsetY: "-2cm"
   },
   mercenary: {
     idleSrc: "assets/ringelnatz-marsch-soeldner.png?v=28",
     attackSrc: null,
-    width: 5.6,
-    height: 19,
+    width: 6.0,
+    height: 20,
     duration: 5600,
     switchesPoseOnCollision: false
   }
@@ -1255,6 +1255,40 @@ function startCombatPoseCycle(instance) {
   }, 1000);
 }
 
+function triggerImpactPulse(instance) {
+  if (instance.cancelled || !battleScreenOpen) {
+    return;
+  }
+
+  instance.element.classList.remove("is-impacting");
+  void instance.element.offsetWidth;
+  instance.element.classList.add("is-impacting");
+  createDustAt(instance.targetX);
+
+  window.setTimeout(() => {
+    if (!instance.cancelled) {
+      instance.element.classList.remove("is-impacting");
+      instance.element.classList.add("is-visible");
+    }
+  }, 430);
+}
+
+function startImpactPulseCycle(instance) {
+  if (instance.poseTimer || instance.cancelled) {
+    return;
+  }
+
+  instance.combatActive = true;
+  instance.poseTimer = window.setInterval(() => {
+    if (instance.cancelled || !battleScreenOpen) {
+      stopCombatPoseCycle(instance);
+      return;
+    }
+
+    triggerImpactPulse(instance);
+  }, 1000);
+}
+
 function activateUnitCombatState(instance) {
   if (
     instance.combatActive ||
@@ -1320,18 +1354,14 @@ function finishMarchInstance(instance) {
     return;
   }
 
-  // Units 3, 5 and 7 keep their old single-image arrival behaviour.
-  instance.element.classList.add("is-impacting");
-  createDustAt(instance.targetX);
+  // Units 3, 5 and 7 keep the same image, but repeat collision shake and dust every second.
+  triggerImpactPulse(instance);
 
   window.setTimeout(() => {
-    if (instance.cancelled) {
-      return;
+    if (!instance.cancelled) {
+      startImpactPulseCycle(instance);
     }
-
-    instance.element.classList.remove("is-impacting");
-    instance.element.classList.add("is-visible");
-  }, 430);
+  }, 1000);
 }
 
 function animateMarchInstance(instance, timestamp) {
@@ -1394,7 +1424,9 @@ function spawnAndMarchUnit(unitType) {
   );
   wrapper.style.setProperty(
     "--attack-offset-y",
-    `${definition.attackOffsetY || 0}px`
+    typeof definition.attackOffsetY === "string"
+      ? definition.attackOffsetY
+      : `${definition.attackOffsetY || 0}px`
   );
   wrapper.dataset.marchId = String(++marchInstanceCounter);
 
