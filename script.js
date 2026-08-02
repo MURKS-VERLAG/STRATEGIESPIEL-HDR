@@ -42,6 +42,13 @@ const swordsmanAppearSound = document.querySelector("#swordsmanAppearSound");
 const unitKeyLayer = document.querySelector("#unitKeyLayer");
 const unitKeyElements = Array.from(document.querySelectorAll(".unit-key"));
 const marchUnitLayer = document.querySelector("#marchUnitLayer");
+const unitKeySound1 = document.querySelector("#unitKeySound1");
+const unitKeySound2 = document.querySelector("#unitKeySound2");
+const unitKeySound3 = document.querySelector("#unitKeySound3");
+const unitKeySound4 = document.querySelector("#unitKeySound4");
+const unitKeySound5 = document.querySelector("#unitKeySound5");
+const unitKeySound6 = document.querySelector("#unitKeySound6");
+const unitKeySound7 = document.querySelector("#unitKeySound7");
 const ringelnatzFarmer = document.querySelector("#ringelnatzFarmer");
 const ringelnatzSpearman = document.querySelector("#ringelnatzSpearman");
 const ringelnatzCavalry = document.querySelector("#ringelnatzCavalry");
@@ -1014,6 +1021,33 @@ function hidePortraitTransition() {
 
 
 
+
+const unitProductionSounds = {
+  farmer: unitKeySound1,
+  spearman: unitKeySound2,
+  cavalry: unitKeySound3,
+  crossbow: unitKeySound4,
+  builder: unitKeySound5,
+  assassin: unitKeySound6,
+  mercenary: unitKeySound7
+};
+
+function playUnitProductionSound(unitType) {
+  const audio = unitProductionSounds[unitType];
+
+  if (!audio) {
+    return;
+  }
+
+  audio.pause();
+  audio.currentTime = 0;
+  audio.volume = 0.78;
+
+  audio.play().catch((error) => {
+    console.error("Einheitensound konnte nicht abgespielt werden:", error);
+  });
+}
+
 const marchUnitDefinitions = {
   farmer: {
     src: "assets/ringelnatz-marsch-bauer.png?v=28",
@@ -1171,6 +1205,7 @@ function spawnAndMarchUnit(unitType) {
   }
 
   productionCooldownUntil = Date.now() + 3000;
+  playUnitProductionSound(unitType);
 
   const image = document.createElement("img");
   image.className = "march-unit-instance";
@@ -1235,6 +1270,15 @@ function resetMarchingUnits() {
   marchUnitLayer
     .querySelectorAll(".march-dust-instance")
     .forEach((dust) => dust.remove());
+
+  Object.values(unitProductionSounds).forEach((audio) => {
+    if (!audio) {
+      return;
+    }
+
+    audio.pause();
+    audio.currentTime = 0;
+  });
 }
 
 function clearRingelnatzUnitTimers() {
