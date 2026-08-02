@@ -1316,7 +1316,7 @@ button {
 .troop-count {
   position: absolute;
   z-index: 4;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, calc(-50% + 2cm));
   color: #ffd62a;
   font-family: Georgia, "Times New Roman", serif;
   font-size: clamp(25px, 3vw, 45px);
@@ -1335,36 +1335,36 @@ button {
 
 .troop-count--farmer {
   left: 14.4%;
-  top: 18.5%;
+  top: 14.5%;
 }
 
 .troop-count--spearman {
   left: 35.3%;
-  top: 18.2%;
+  top: 14.2%;
 }
 
 .troop-count--cavalry {
   left: 57.3%;
-  top: 16.3%;
+  top: 12.3%;
 }
 
 .troop-count--crossbow {
   left: 84.0%;
-  top: 19.0%;
+  top: 15.0%;
 }
 
 .troop-count--builder {
   left: 15.7%;
-  top: 65.0%;
+  top: 61.0%;
 }
 
 .troop-count--mercenary {
   left: 52.0%;
-  top: 67.0%;
+  top: 63.0%;
 }
 
 .troop-count--assassin {
   left: 84.0%;
-  top: 66.5%;
+  top: 62.5%;
 }
 
