@@ -1372,6 +1372,119 @@ preloadCombatImages();
 
 
 
+
+/* V45 – Todesgeräusche ausschließlich bei einem tatsächlichen Kill. */
+const RANGED_KILL_SOUNDS = [
+  "assets/arrow-death-01.mp3?v=45",
+  "assets/arrow-death-02.mp3?v=45",
+  "assets/arrow-death-03.mp3?v=45",
+  "assets/arrow-death-04.mp3?v=45",
+  "assets/arrow-death-05.mp3?v=45"
+];
+
+const CLUB_KILL_SOUNDS = [
+  "assets/club-death-01.mp3?v=45",
+  "assets/club-death-02.mp3?v=45"
+];
+
+const HORSE_DEATH_SOUNDS = [
+  "assets/horse-death-01.mp3?v=45",
+  "assets/horse-death-02.mp3?v=45"
+];
+
+function playRandomBattleSound(soundPaths) {
+  if (
+    !Array.isArray(soundPaths) ||
+    soundPaths.length === 0 ||
+    !battleScreenOpen
+  ) {
+    return;
+  }
+
+  const selectedPath =
+    soundPaths[
+      Math.floor(Math.random() * soundPaths.length)
+    ];
+
+  const sound = new Audio(selectedPath);
+  sound.preload = "auto";
+  sound.volume = 1;
+
+  const cleanup = () => {
+    sound.removeEventListener("ended", cleanup);
+    sound.removeEventListener("error", cleanup);
+  };
+
+  sound.addEventListener("ended", cleanup);
+  sound.addEventListener("error", cleanup);
+
+  sound.play().catch(() => {
+    cleanup();
+  });
+}
+
+function playKillSound(victim, attacker) {
+  if (
+    !victim ||
+    victim.type === "tent"
+  ) {
+    return;
+  }
+
+  const victimType =
+    victim.type ||
+    victim.definition?.type;
+
+  const attackerType =
+    attacker?.type ||
+    attacker?.definition?.type;
+
+  /*
+   * Priorität:
+   * 1. Stirbt Ringelnatz' Reiter, erklingt immer ein Pferdetod.
+   * 2. Kill durch Neuenstein-Flegel oder Ringelnatz-Baumeister:
+   *    einer der beiden Wuchtwaffen-Sounds.
+   * 3. Kill durch Bogen oder Armbrust:
+   *    einer der fünf Fernkampf-Todessounds.
+   */
+  if (
+    victim.faction === "ringelnatz" &&
+    victimType === "cavalry"
+  ) {
+    playRandomBattleSound(HORSE_DEATH_SOUNDS);
+    return;
+  }
+
+  if (
+    attackerType === "flail" ||
+    attackerType === "builder"
+  ) {
+    playRandomBattleSound(CLUB_KILL_SOUNDS);
+    return;
+  }
+
+  if (
+    attackerType === "archer" ||
+    attackerType === "crossbow"
+  ) {
+    playRandomBattleSound(RANGED_KILL_SOUNDS);
+  }
+}
+
+function preloadKillSounds() {
+  [
+    ...RANGED_KILL_SOUNDS,
+    ...CLUB_KILL_SOUNDS,
+    ...HORSE_DEATH_SOUNDS
+  ].forEach((src) => {
+    const sound = new Audio();
+    sound.preload = "auto";
+    sound.src = src;
+  });
+}
+
+preloadKillSounds();
+
 const TENT_DAMAGE_PER_HIT = 10;
 
 const ringelnatzTent = {
@@ -1718,6 +1831,7 @@ function defeatNeuensteinUnit(unit, attacker = null) {
   }
 
   unit.isDead = true;
+  playKillSound(unit, attacker);
   unit.health = 0;
   updateUnitHealthBar(unit);
   unit.walking = false;
@@ -1763,6 +1877,7 @@ function defeatRingelnatzUnit(unit, attacker = null) {
   }
 
   unit.isDead = true;
+  playKillSound(unit, attacker);
   unit.health = 0;
   updateUnitHealthBar(unit);
   unit.parked = true;
