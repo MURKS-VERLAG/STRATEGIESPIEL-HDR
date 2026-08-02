@@ -318,18 +318,6 @@ const PAN_SPEED = 520;
 let lastFrameTime = performance.now();
 
 
-function preloadCombatImages() {
-  Object.values(marchUnitDefinitions).forEach((definition) => {
-    if (!definition.attackSrc) {
-      return;
-    }
-
-    const image = new Image();
-    image.src = definition.attackSrc;
-  });
-}
-
-preloadCombatImages();
 
 window.addEventListener("keydown", (event) => {
   const key = event.key.toLowerCase();
@@ -1135,6 +1123,20 @@ const marchUnitDefinitions = {
 };
 
 const CROSSBOW_TRIGGER_X = 50;
+
+function preloadCombatImages() {
+  Object.values(marchUnitDefinitions).forEach((definition) => {
+    if (!definition.attackSrc) {
+      return;
+    }
+
+    const image = new Image();
+    image.src = definition.attackSrc;
+  });
+}
+
+preloadCombatImages();
+
 
 const unitKeyMap = {
   "1": "farmer",
