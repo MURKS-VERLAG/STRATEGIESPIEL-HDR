@@ -1368,3 +1368,118 @@ button {
   top: 62.5%;
 }
 
+/* V35 – Hover-Truppenwahl Haus Neuenstein auf der Hauptkarte. */
+.neuenstein-troop-selection-modal {
+  position: absolute;
+  inset: 0;
+  z-index: 38;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 420ms ease,
+    visibility 0s linear 420ms;
+}
+
+.neuenstein-troop-selection-modal.is-open {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 420ms ease,
+    visibility 0s linear 0s;
+}
+
+.neuenstein-troop-selection-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(20, 17, 12, 0.28);
+  pointer-events: none;
+}
+
+.neuenstein-troop-selection-window {
+  position: relative;
+  z-index: 39;
+  width: min(66vw, 880px);
+  max-height: 78vh;
+  opacity: 0;
+  transform: scale(0.97);
+  transform-origin: 50% 50%;
+  transition:
+    opacity 420ms ease,
+    transform 420ms ease;
+  pointer-events: auto;
+  box-shadow:
+    0 16px 42px rgba(0, 0, 0, 0.46),
+    0 0 0 1px rgba(220, 250, 255, 0.30);
+}
+
+.neuenstein-troop-selection-modal.is-open
+.neuenstein-troop-selection-window {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.neuenstein-troop-selection-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 980 / 687;
+  overflow: hidden;
+  background: #f2efe7;
+}
+
+.neuenstein-troop-selection-image {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+  pointer-events: none;
+}
+
+.neuenstein-troop-count {
+  position: absolute;
+  z-index: 4;
+  transform: translate(-50%, -50%);
+  color: #65f7ff;
+  -webkit-text-stroke: 1px #e8ffff;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(25px, 3vw, 45px);
+  font-weight: 900;
+  line-height: 1;
+  text-shadow:
+    -2px -2px 0 #00383d,
+     2px -2px 0 #00383d,
+    -2px  2px 0 #00383d,
+     2px  2px 0 #00383d,
+     0 0 7px rgba(101, 247, 255, 1),
+     0 0 15px rgba(66, 235, 255, 0.95),
+     0 0 26px rgba(40, 210, 235, 0.72);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Zahlen bewusst auf Brust/Oberkörper, niemals im Gesicht. */
+.neuenstein-troop-count--archer {
+  left: 17.0%;
+  top: 25.5%;
+}
+
+.neuenstein-troop-count--halberdier {
+  left: 82.5%;
+  top: 26.0%;
+}
+
+.neuenstein-troop-count--flail {
+  left: 17.0%;
+  top: 69.0%;
+}
+
+.neuenstein-troop-count--lord {
+  left: 50.0%;
+  top: 34.5%;
+}
+

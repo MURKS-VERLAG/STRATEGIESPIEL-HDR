@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#050505">
   <title>Die Herren der Rench</title>
-  <link rel="stylesheet" href="style.css?v=34">
+  <link rel="stylesheet" href="style.css?v=35">
 </head>
 <body>
   <main class="game">
@@ -150,6 +150,37 @@
             <div class="troop-count troop-count--builder">0</div>
             <div class="troop-count troop-count--mercenary">1</div>
             <div class="troop-count troop-count--assassin">0</div>
+          </div>
+        </div>
+      </div>
+
+
+      <div
+        class="neuenstein-troop-selection-modal"
+        id="neuensteinTroopSelectionModal"
+        aria-hidden="true"
+      >
+        <div
+          class="neuenstein-troop-selection-backdrop"
+          aria-hidden="true"
+        ></div>
+
+        <div
+          class="neuenstein-troop-selection-window"
+          id="neuensteinTroopSelectionWindow"
+        >
+          <div class="neuenstein-troop-selection-stage">
+            <img
+              class="neuenstein-troop-selection-image"
+              src="assets/truppenwahl-neuenstein.png?v=35"
+              alt="Truppenwahl Haus Neuenstein"
+              draggable="false"
+            >
+
+            <div class="neuenstein-troop-count neuenstein-troop-count--archer">3</div>
+            <div class="neuenstein-troop-count neuenstein-troop-count--halberdier">5</div>
+            <div class="neuenstein-troop-count neuenstein-troop-count--flail">3</div>
+            <div class="neuenstein-troop-count neuenstein-troop-count--lord">1</div>
           </div>
         </div>
       </div>
@@ -452,6 +483,6 @@
     </section>
   </main>
 
-  <script src="script.js?v=33"></script>
+  <script src="script.js?v=35"></script>
 </body>
 </html>

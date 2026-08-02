@@ -29,6 +29,10 @@ const diplomacyCharacterGreen = document.querySelector("#diplomacyCharacterGreen
 const diplomacyCharacterBlack = document.querySelector("#diplomacyCharacterBlack");
 const troopSelectionModal = document.querySelector("#troopSelectionModal");
 const troopSelectionWindow = document.querySelector("#troopSelectionWindow");
+const neuensteinTroopSelectionModal =
+  document.querySelector("#neuensteinTroopSelectionModal");
+const neuensteinTroopSelectionWindow =
+  document.querySelector("#neuensteinTroopSelectionWindow");
 const feudHoverIcon = document.querySelector("#feudHoverIcon");
 const feudConfirmation = document.querySelector("#feudConfirmation");
 const feudConfirmYes = document.querySelector("#feudConfirmYes");
@@ -75,6 +79,10 @@ let troopSelectionOpen = false;
 let troopSelectionCloseTimer = null;
 let mapCharacterHovered = false;
 let troopSelectionHovered = false;
+let neuensteinTroopSelectionOpen = false;
+let neuensteinTroopSelectionCloseTimer = null;
+let neuensteinMapCharacterHovered = false;
+let neuensteinTroopSelectionHovered = false;
 let feudConfirmationOpen = false;
 let feudSequenceInProgress = false;
 let battleScreenOpen = false;
@@ -488,8 +496,17 @@ const troopSelectionTargetRegion = {
   maxY: 0.445
 };
 
+const neuensteinTroopSelectionTargetRegion = {
+  id: "neuensteinTroops",
+  minX: 0.438,
+  maxX: 0.495,
+  minY: 0.245,
+  maxY: 0.405
+};
+
 
 function openTroopSelection() {
+  closeNeuensteinTroopSelection();
   if (
     troopSelectionOpen ||
     barracksOpen ||
@@ -542,6 +559,71 @@ troopSelectionWindow.addEventListener("pointerleave", () => {
   scheduleTroopSelectionClose();
 });
 
+
+
+function openNeuensteinTroopSelection() {
+  if (
+    neuensteinTroopSelectionOpen ||
+    barracksOpen ||
+    barracksClosing ||
+    diplomacyOpen ||
+    diplomacyClosing ||
+    feudConfirmationOpen ||
+    feudSequenceInProgress ||
+    battleScreenOpen ||
+    yearChangeInProgress
+  ) {
+    return;
+  }
+
+  closeTroopSelection();
+  window.clearTimeout(neuensteinTroopSelectionCloseTimer);
+
+  neuensteinTroopSelectionOpen = true;
+  neuensteinTroopSelectionModal.classList.add("is-open");
+  neuensteinTroopSelectionModal.setAttribute("aria-hidden", "false");
+}
+
+function closeNeuensteinTroopSelection() {
+  window.clearTimeout(neuensteinTroopSelectionCloseTimer);
+  neuensteinTroopSelectionCloseTimer = null;
+  neuensteinTroopSelectionOpen = false;
+  neuensteinMapCharacterHovered = false;
+  neuensteinTroopSelectionHovered = false;
+  neuensteinTroopSelectionModal.classList.remove("is-open");
+  neuensteinTroopSelectionModal.setAttribute("aria-hidden", "true");
+}
+
+function scheduleNeuensteinTroopSelectionClose() {
+  window.clearTimeout(neuensteinTroopSelectionCloseTimer);
+
+  neuensteinTroopSelectionCloseTimer = window.setTimeout(() => {
+    if (
+      neuensteinMapCharacterHovered ||
+      neuensteinTroopSelectionHovered
+    ) {
+      return;
+    }
+
+    closeNeuensteinTroopSelection();
+  }, 260);
+}
+
+neuensteinTroopSelectionWindow.addEventListener(
+  "pointerenter",
+  () => {
+    neuensteinTroopSelectionHovered = true;
+    window.clearTimeout(neuensteinTroopSelectionCloseTimer);
+  }
+);
+
+neuensteinTroopSelectionWindow.addEventListener(
+  "pointerleave",
+  () => {
+    neuensteinTroopSelectionHovered = false;
+    scheduleNeuensteinTroopSelectionClose();
+  }
+);
 
 let activeSoundRegion = null;
 
@@ -600,19 +682,37 @@ mapViewport.addEventListener("pointermove", (event) => {
   const overFeudTarget = isInsideRegion(position, feudTargetRegion);
   const overTroopSelectionTarget =
     isInsideRegion(position, troopSelectionTargetRegion);
+  const overNeuensteinTroopSelectionTarget =
+    isInsideRegion(position, neuensteinTroopSelectionTargetRegion);
 
   if (overTroopSelectionTarget) {
     mapCharacterHovered = true;
     window.clearTimeout(troopSelectionCloseTimer);
+    closeNeuensteinTroopSelection();
     openTroopSelection();
   } else if (mapCharacterHovered) {
     mapCharacterHovered = false;
     scheduleTroopSelectionClose();
   }
 
+  if (overNeuensteinTroopSelectionTarget) {
+    neuensteinMapCharacterHovered = true;
+    window.clearTimeout(neuensteinTroopSelectionCloseTimer);
+    closeTroopSelection();
+    openNeuensteinTroopSelection();
+  } else if (neuensteinMapCharacterHovered) {
+    neuensteinMapCharacterHovered = false;
+    scheduleNeuensteinTroopSelectionClose();
+  }
+
   feudHoverIcon.classList.toggle("is-visible", overFeudTarget);
   mapViewport.style.cursor =
-    (region || overFeudTarget || overTroopSelectionTarget)
+    (
+      region ||
+      overFeudTarget ||
+      overTroopSelectionTarget ||
+      overNeuensteinTroopSelectionTarget
+    )
       ? "pointer"
       : "default";
 
@@ -627,8 +727,13 @@ mapViewport.addEventListener("pointermove", (event) => {
 
 mapViewport.addEventListener("pointerleave", () => {
   activeSoundRegion = null;
+
   mapCharacterHovered = false;
   scheduleTroopSelectionClose();
+
+  neuensteinMapCharacterHovered = false;
+  scheduleNeuensteinTroopSelectionClose();
+
   feudHoverIcon.classList.remove("is-visible");
   mapViewport.style.cursor = "default";
 });
@@ -672,6 +777,7 @@ function isInsideRegion(position, region) {
 }
 
 function advanceYear() {
+  closeNeuensteinTroopSelection();
   closeTroopSelection();
   if (yearChangeInProgress) {
     return;
@@ -753,6 +859,7 @@ updateYearDisplay();
 
 /* V20: Kasernenansicht öffnen und schließen. */
 function openBarracks() {
+  closeNeuensteinTroopSelection();
   closeTroopSelection();
   if (
     barracksOpen ||
@@ -978,6 +1085,7 @@ diplomacyStage.addEventListener("click", (event) => {
 
 
 function openDiplomacyModal() {
+  closeNeuensteinTroopSelection();
   closeTroopSelection();
   if (
     diplomacyOpen ||
@@ -1048,6 +1156,7 @@ diplomacyModal.addEventListener("contextmenu", (event) => {
 
 /* V21: Fehde-Erklärung und Übergang zum Kastelberg. */
 function openFeudConfirmation() {
+  closeNeuensteinTroopSelection();
   closeTroopSelection();
   if (
     feudConfirmationOpen ||
@@ -1755,6 +1864,7 @@ function showBattleScreen() {
 }
 
 async function beginFeudSequence() {
+  closeNeuensteinTroopSelection();
   closeTroopSelection();
   if (
     !feudConfirmationOpen ||
