@@ -1350,7 +1350,7 @@ preloadCombatImages();
 const NEUENSTEIN_SPAWN_INTERVAL = 4000;
 const NEUENSTEIN_SPAWN_X = 88.0;
 const NEUENSTEIN_TENT_STOP_X = 15.8;
-const NEUENSTEIN_BATTLE_LINE_TOP = "calc(84% + 3cm)";
+const NEUENSTEIN_BATTLE_LINE_TOP = "calc(84% + 5cm)";
 const NEUENSTEIN_MELEE_SPACING = 4.8;
 const NEUENSTEIN_ARCHER_ATTACK_DURATION = 1000;
 const NEUENSTEIN_ARCHER_IDLE_DURATION = 3000;
@@ -1370,8 +1370,8 @@ const neuensteinUnitDefinitions = {
   halberdier: {
     idleSrc: "assets/neuenstein-hellebardier-idle.png?v=37",
     attackSrc: "assets/neuenstein-hellebardier-angriff.png?v=37",
-    width: 6.5,
-    height: 22.0,
+    width: 7.15,
+    height: 23.5,
     speed: 5.7,
     ranged: false,
     attackScale: 1.15,
@@ -2009,7 +2009,7 @@ function createDustAt(x) {
   const dust = document.createElement("div");
   dust.className = "march-dust-instance";
   dust.style.left = `${x}%`;
-  dust.style.top = "calc(84% + 3cm)";
+  dust.style.top = "calc(84% + 5cm)";
   marchUnitLayer.appendChild(dust);
 
   window.setTimeout(() => {
@@ -2262,7 +2262,7 @@ function spawnAndMarchUnit(unitType) {
   const wrapper = document.createElement("div");
   wrapper.className = "march-unit-instance";
   wrapper.style.left = "14.5%";
-  wrapper.style.top = "calc(84% + 3cm)";
+  wrapper.style.top = "calc(84% + 5cm)";
   wrapper.style.width = `${definition.width}%`;
   wrapper.style.height = `${definition.height}%`;
   wrapper.style.setProperty(

@@ -1600,3 +1600,11 @@ button {
   100% { transform: translate(-50%, -100%) translateX(0) rotate(0); }
 }
 
+/* V38 – Mini-Fix: gesamte dynamische Kampflinie 2 cm tiefer. */
+.march-unit-instance,
+.march-dust-instance,
+.neuenstein-unit-instance,
+.neuenstein-dust-instance {
+  margin-top: 2cm;
+}
+
