@@ -1393,6 +1393,53 @@ const HORSE_DEATH_SOUNDS = [
 ];
 
 
+
+const MELEE_HIT_SOUNDS = [
+  "assets/melee-hit-01.mp3?v=47",
+  "assets/melee-hit-02.mp3?v=47",
+  "assets/melee-hit-03.mp3?v=47",
+  "assets/melee-hit-04.mp3?v=47",
+  "assets/melee-hit-05.mp3?v=47"
+];
+
+const RANGED_HIT_SOUNDS = [
+  "assets/ranged-hit-01.mp3?v=47",
+  "assets/ranged-hit-02.mp3?v=47"
+];
+
+function playHitSound(attacker) {
+  const attackerType =
+    attacker?.type ||
+    attacker?.definition?.type;
+
+  if (!attackerType) {
+    return;
+  }
+
+  if (
+    attackerType === "archer" ||
+    attackerType === "crossbow"
+  ) {
+    playRandomBattleSound(RANGED_HIT_SOUNDS);
+    return;
+  }
+
+  playRandomBattleSound(MELEE_HIT_SOUNDS);
+}
+
+function preloadHitSounds() {
+  [
+    ...MELEE_HIT_SOUNDS,
+    ...RANGED_HIT_SOUNDS
+  ].forEach((src) => {
+    const sound = new Audio();
+    sound.preload = "auto";
+    sound.src = src;
+  });
+}
+
+preloadHitSounds();
+
 const SPEAR_KILL_SOUNDS = [
   "assets/spear-death-01.mp3?v=46",
   "assets/spear-death-02.mp3?v=46"
@@ -2014,7 +2061,13 @@ function applyDamageToUnit(
     } else {
       defeatNeuensteinUnit(target, attacker);
     }
+
+    return true;
   }
+
+  // Nur ein nicht tödlicher Treffer erhält einen Hit-Sound.
+  // Der bestehende Kill-Sound bleibt beim Tod allein bestehen.
+  playHitSound(attacker);
 
   return true;
 }
