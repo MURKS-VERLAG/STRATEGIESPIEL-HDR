@@ -1809,7 +1809,9 @@ button {
   top: -13px;
   width: 82%;
   height: 8px;
-  transform: translateX(-50%);
+  transform:
+    translateX(-50%)
+    translateY(1cm);
   z-index: 130;
 }
 

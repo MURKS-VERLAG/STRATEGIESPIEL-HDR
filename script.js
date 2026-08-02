@@ -101,6 +101,7 @@ let battleUnitSequenceStarted = false;
 let ringelnatzUnitTimers = [];
 let marchingUnitInstances = [];
 let productionCooldownUntil = 0;
+let ringelnatzProductionUnlocked = false;
 let marchInstanceCounter = 0;
 
 let neuensteinSpawnTimer = null;
@@ -1310,7 +1311,7 @@ const marchUnitDefinitions = {
     attackSrc: "assets/ringelnatz-angriff-armbrustschuetze.png?v=31",
     width: 6.4,
     height: 20,
-    duration: 1000,
+    duration: 2000,
     shortMove: true,
     rangedUnit: true,
     attackScale: 1.12,
@@ -1324,7 +1325,7 @@ const marchUnitDefinitions = {
     attackSrc: null,
     width: 6.2,
     height: 22,
-    duration: 6500,
+    duration: 13000,
     switchesPoseOnCollision: false
   },
   assassin: {
@@ -1334,7 +1335,7 @@ const marchUnitDefinitions = {
     attackSrc: "assets/ringelnatz-angriff-assassine.png?v=31",
     width: 6.6,
     height: 20,
-    duration: 5000,
+    duration: 10000,
     switchesPoseOnCollision: true,
     attackScale: 1.24,
     attackOffsetX: 4,
@@ -1347,7 +1348,7 @@ const marchUnitDefinitions = {
     attackSrc: null,
     width: 6.0,
     height: 20,
-    duration: 5600,
+    duration: 11200,
     switchesPoseOnCollision: false
   }
 };
@@ -1432,9 +1433,11 @@ function defeatTent(tent) {
   if (tent.faction === "neuenstein") {
     stopNeuensteinProduction();
     neuensteinProductionFinished = true;
+    ringelnatzProductionUnlocked = false;
     return;
   }
 
+  ringelnatzProductionUnlocked = false;
   stopNeuensteinProduction();
 
   window.setTimeout(() => {
@@ -1912,18 +1915,19 @@ function executeRingelnatzMeleeHit(attacker) {
 }
 
 function findCrossbowTarget(instance) {
-  const livingEnemy =
-    neuensteinUnits
+  const livingEnemies =
+    neuensteinUnits.filter((unit) =>
+      !unit.cancelled &&
+      !unit.isDead &&
+      unit.health > 0
+    );
+
+  if (livingEnemies.length > 0) {
+    return livingEnemies
       .filter((unit) =>
-        !unit.cancelled &&
-        !unit.isDead &&
-        unit.health > 0 &&
         unit.x > getMarchInstanceX(instance)
       )
-      .sort((a, b) => a.x - b.x)[0];
-
-  if (livingEnemy) {
-    return livingEnemy;
+      .sort((a, b) => a.x - b.x)[0] || null;
   }
 
   return !neuensteinTent.isDead
@@ -2173,7 +2177,7 @@ function startRingelnatzCrossbowCycle(instance) {
 }
 
 
-const NEUENSTEIN_SPAWN_INTERVAL = 4000;
+const NEUENSTEIN_SPAWN_INTERVAL = 7000;
 const NEUENSTEIN_SPAWN_X = 88.0;
 const NEUENSTEIN_TENT_STOP_X = 15.8;
 const BATTLE_LINE_TOP = "calc(94% + 0.5cm)";
@@ -2426,26 +2430,28 @@ function startNeuensteinMeleeCycle(unit) {
 }
 
 function findNearestRingelnatzTargetForArcher(unit) {
-  const targets = getActiveRingelnatzTargets()
-    .filter((entry) =>
-      !entry.instance.isDead &&
-      entry.instance.health > 0 &&
-      entry.x < unit.x
-    )
-    .sort((a, b) => b.x - a.x);
+  const livingTargets =
+    getActiveRingelnatzTargets()
+      .filter((entry) =>
+        !entry.instance.cancelled &&
+        !entry.instance.isDead &&
+        entry.instance.health > 0
+      );
 
-  if (targets[0]) {
-    return targets[0];
+  if (livingTargets.length > 0) {
+    return livingTargets
+      .filter((entry) =>
+        entry.x < unit.x
+      )
+      .sort((a, b) => b.x - a.x)[0] || null;
   }
 
-  if (!ringelnatzTent.isDead) {
-    return {
-      instance: ringelnatzTent,
-      x: 7.5
-    };
-  }
-
-  return null;
+  return !ringelnatzTent.isDead
+    ? {
+        instance: ringelnatzTent,
+        x: 7.5
+      }
+    : null;
 }
 
 function launchNeuensteinArrow(
@@ -2938,6 +2944,7 @@ function startNeuensteinProduction() {
 
   neuensteinProductionStarted = true;
   neuensteinProductionFinished = false;
+  ringelnatzProductionUnlocked = true;
   neuensteinSpawnQueue = createShuffledNeuensteinQueue();
 
   spawnFirstNeuensteinArcher();
@@ -3366,6 +3373,8 @@ function spawnAndMarchUnit(unitType) {
   if (
     !battleScreenOpen ||
     feudSequenceInProgress ||
+    !ringelnatzProductionUnlocked ||
+    ringelnatzTent.isDead ||
     Date.now() < productionCooldownUntil
   ) {
     return;
@@ -3377,7 +3386,7 @@ function spawnAndMarchUnit(unitType) {
     return;
   }
 
-  productionCooldownUntil = Date.now() + 3000;
+  productionCooldownUntil = Date.now() + 7000;
   playUnitProductionSound(unitType);
 
   const wrapper = document.createElement("div");
@@ -3497,6 +3506,7 @@ function resetMarchingUnits() {
 
   marchingUnitInstances = [];
   productionCooldownUntil = 0;
+  ringelnatzProductionUnlocked = false;
   marchInstanceCounter = 0;
 
   marchUnitLayer
@@ -3746,6 +3756,8 @@ window.addEventListener("keydown", (event) => {
   if (
     !battleScreenOpen ||
     feudSequenceInProgress ||
+    !ringelnatzProductionUnlocked ||
+    ringelnatzTent.isDead ||
     Date.now() < productionCooldownUntil
   ) {
     return;
