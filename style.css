@@ -1743,3 +1743,41 @@ button {
   display: block;
 }
 
+/* V42 – Gegenschaden, Tod und präzise Geschosse. */
+.march-unit-instance.is-hit {
+  animation: ringelnatzHitReaction 220ms ease-out;
+}
+
+.march-unit-instance.is-defeated {
+  opacity: 0 !important;
+  transform:
+    translate(-50%, -100%)
+    scale(0.88) !important;
+  transition:
+    opacity 420ms ease,
+    transform 420ms ease !important;
+  pointer-events: none;
+}
+
+.ringelnatz-crossbow-bolt,
+.neuenstein-arrow {
+  position: absolute;
+  pointer-events: none;
+}
+
+@keyframes ringelnatzHitReaction {
+  0% {
+    filter: brightness(1);
+  }
+
+  35% {
+    filter:
+      brightness(1.28)
+      contrast(1.08);
+  }
+
+  100% {
+    filter: brightness(1);
+  }
+}
+
