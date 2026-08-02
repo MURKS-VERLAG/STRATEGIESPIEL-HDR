@@ -1946,7 +1946,7 @@ button {
   transition: opacity 700ms ease !important;
 }
 
-/* V53 – Armbrustschütze: Schuss und Nachladen exakt auf Ruhebildhöhe. */
+/* V54 – Armbrustschütze: Schuss und Nachladen optisch auf Ruhebildgröße. */
 .march-unit-instance--crossbow .march-unit-pose--attack,
 .march-unit-instance--crossbow .march-unit-pose--reload {
   left: 50% !important;
@@ -1956,9 +1956,9 @@ button {
   min-width: 0 !important;
   max-width: none !important;
 
-  height: 100% !important;
-  min-height: 100% !important;
-  max-height: 100% !important;
+  height: 84% !important;
+  min-height: 84% !important;
+  max-height: 84% !important;
 
   transform: translateX(-50%) !important;
   transform-origin: 50% 100% !important;
@@ -1967,8 +1967,9 @@ button {
   object-position: center bottom !important;
 }
 
-/* Keine zusätzliche Skalierung oder Schrägstellung im Schusszustand. */
-.march-unit-instance--crossbow .march-unit-pose--attack {
+/* Keine zusätzliche Vergrößerung, Rotation oder Schrägstellung. */
+.march-unit-instance--crossbow .march-unit-pose--attack,
+.march-unit-instance--crossbow .march-unit-pose--reload {
   scale: 1 !important;
   rotate: 0deg !important;
 }
