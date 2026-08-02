@@ -1954,19 +1954,19 @@ button {
   rotate: 0deg !important;
 }
 
-/* V55 – Armbrustschütze: Schuss und Nachladen nach Ruhebildbreite skalieren. */
+/* V56 – Armbrustschütze: Schuss- und Nachladepose optisch wie Ruhebild. */
 .march-unit-instance--crossbow .march-unit-pose--attack,
 .march-unit-instance--crossbow .march-unit-pose--reload {
   left: 50% !important;
   bottom: 0 !important;
 
-  width: 100% !important;
-  min-width: 100% !important;
-  max-width: 100% !important;
+  width: 155% !important;
+  min-width: 155% !important;
+  max-width: 155% !important;
 
   height: auto !important;
   min-height: 0 !important;
-  max-height: 100% !important;
+  max-height: none !important;
 
   transform: translateX(-50%) !important;
   transform-origin: 50% 100% !important;
