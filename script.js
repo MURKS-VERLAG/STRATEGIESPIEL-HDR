@@ -498,10 +498,10 @@ const troopSelectionTargetRegion = {
 
 const neuensteinTroopSelectionTargetRegion = {
   id: "neuensteinTroops",
-  minX: 0.438,
-  maxX: 0.495,
-  minY: 0.245,
-  maxY: 0.405
+  minX: 0.392,
+  maxX: 0.468,
+  minY: 0.118,
+  maxY: 0.266
 };
 
 
