@@ -18,6 +18,7 @@ const yearDisplay = document.querySelector("#yearDisplay");
 const zoomDisplay = document.querySelector("#zoomDisplay");
 const mapHint = document.querySelector("#mapHint");
 const campaignResourceBar = document.querySelector("#campaignResourceBar");
+const campaignRightLogos = document.querySelector("#campaignRightLogos");
 const barracksModal = document.querySelector("#barracksModal");
 const diplomacyModal = document.querySelector("#diplomacyModal");
 const diplomacyStage = document.querySelector("#diplomacyStage");
@@ -375,15 +376,31 @@ function updateOverviewZoomUi() {
   }
 
   const viewportWidth = mapViewport.clientWidth;
+  const displayedMapWidth = campaignMap.offsetWidth * mapState.zoom;
   const leftMapEdge = Math.max(0, mapState.x);
+  const rightMapEdge = mapState.x + displayedMapWidth;
   const outerPadding = 8;
-  const availableBorderWidth = Math.max(
+
+  const availableLeftBorderWidth = Math.max(
     0,
     Math.min(leftMapEdge - outerPadding * 2, viewportWidth * 0.32)
   );
+
+  const availableRightBorderWidth = Math.max(
+    0,
+    Math.min(
+      viewportWidth - rightMapEdge - outerPadding * 2,
+      viewportWidth * 0.32
+    )
+  );
+
   const resourceBarVisible =
     mapState.zoom <= 1 &&
-    availableBorderWidth >= 42;
+    availableLeftBorderWidth >= 42;
+
+  const rightLogosVisible =
+    mapState.zoom <= 1 &&
+    availableRightBorderWidth >= 42;
 
   mapScreen.classList.toggle(
     "is-overview-zoom",
@@ -396,12 +413,27 @@ function updateOverviewZoomUi() {
   );
   campaignResourceBar.style.setProperty(
     "--resource-bar-width",
-    `${availableBorderWidth}px`
+    `${availableLeftBorderWidth}px`
   );
   campaignResourceBar.classList.toggle(
     "is-visible",
     resourceBarVisible
   );
+
+  if (campaignRightLogos) {
+    campaignRightLogos.style.setProperty(
+      "--right-logo-offset",
+      `${outerPadding}px`
+    );
+    campaignRightLogos.style.setProperty(
+      "--right-logo-width",
+      `${availableRightBorderWidth}px`
+    );
+    campaignRightLogos.classList.toggle(
+      "is-visible",
+      rightLogosVisible
+    );
+  }
 }
 
 function renderMap() {

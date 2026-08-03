@@ -2372,3 +2372,57 @@ button {
   filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.42));
 }
 
+
+
+/* V72 – MURKS und Firefly ausschließlich im rechten hellbraunen Außenrand. */
+.campaign-right-logos {
+  position: absolute;
+  z-index: 14;
+  right: var(--right-logo-offset, 8px);
+  bottom: 8px;
+  width: var(--right-logo-width, 0px);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(8px) scale(0.97);
+  transform-origin: right bottom;
+  pointer-events: none;
+  user-select: none;
+  overflow: hidden;
+  transition:
+    width 220ms ease,
+    opacity 220ms ease,
+    transform 220ms ease,
+    visibility 0s linear 220ms;
+}
+
+.campaign-right-logos.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(0) scale(1);
+  transition:
+    width 220ms ease,
+    opacity 220ms ease,
+    transform 220ms ease,
+    visibility 0s linear 0s;
+}
+
+.campaign-right-logo {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  object-position: center;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.42));
+}
+
+.campaign-right-logo--murks {
+  order: 1;
+}
+
+.campaign-right-logo--firefly {
+  order: 2;
+}
