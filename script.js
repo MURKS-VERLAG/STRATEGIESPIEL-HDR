@@ -842,6 +842,59 @@ function closeAllMainMapPanels() {
   closeMapLocationModals();
 }
 
+
+function isAnyMainMapPanelOpen() {
+  return (
+    troopSelectionOpen ||
+    neuensteinTroopSelectionOpen ||
+    lachersgutModalOpen ||
+    meierhofModalOpen
+  );
+}
+
+function closeMainMapViewFromUserInput(event) {
+  if (!isAnyMainMapPanelOpen()) {
+    return false;
+  }
+
+  event?.preventDefault?.();
+  event?.stopPropagation?.();
+
+  closeAllMainMapPanels();
+  hideMapHotspotHighlight();
+  feudHoverIcon.classList.remove("is-visible");
+  mapViewport.classList.remove("is-hotspot-hovered");
+  mapViewport.style.cursor = "default";
+
+  return true;
+}
+
+mapScreen.addEventListener("contextmenu", (event) => {
+  closeMainMapViewFromUserInput(event);
+});
+
+window.addEventListener("keydown", (event) => {
+  if (event.key !== "Escape") {
+    return;
+  }
+
+  closeMainMapViewFromUserInput(event);
+});
+
+neuensteinPanelFeudButton?.addEventListener("click", (event) => {
+  event.stopPropagation();
+  pendingFeudTarget = "neuenstein";
+  closeAllMainMapPanels();
+  openFeudConfirmation();
+});
+
+lachersgutPanelFeudButton?.addEventListener("click", (event) => {
+  event.stopPropagation();
+  pendingFeudTarget = "lachersgut";
+  closeAllMainMapPanels();
+  openFeudConfirmation();
+});
+
 let activeSoundRegion = null;
 
 function findSoundRegion(x, y) {
@@ -1000,34 +1053,7 @@ function advanceYear() {
   window.setTimeout(() => {
     gameState.year += 1;
     
-mapScreen.addEventListener("contextmenu", (event) => {
-  if (
-    troopSelectionOpen ||
-    neuensteinTroopSelectionOpen ||
-    lachersgutModalOpen ||
-    meierhofModalOpen
-  ) {
-    event.preventDefault();
-    closeAllMainMapPanels();
-    mapViewport.focus?.();
-  }
-});
-
-neuensteinPanelFeudButton?.addEventListener("click", (event) => {
-  event.stopPropagation();
-  pendingFeudTarget = "neuenstein";
-  closeAllMainMapPanels();
-  openFeudConfirmation();
-});
-
-lachersgutPanelFeudButton?.addEventListener("click", (event) => {
-  event.stopPropagation();
-  pendingFeudTarget = "lachersgut";
-  closeAllMainMapPanels();
-  openFeudConfirmation();
-});
-
-updateYearDisplay();
+    updateYearDisplay();
 
     mapState.zoom = 1;
     initializeMap();
