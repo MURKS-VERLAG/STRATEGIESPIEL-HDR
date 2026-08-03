@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#050505">
   <title>Die Herren der Rench</title>
-  <link rel="stylesheet" href="style.css?v=59">
+  <link rel="stylesheet" href="style.css?v=60">
 </head>
 <body>
   <main class="game">
@@ -104,6 +104,14 @@
             <span class="feud-swords">⚔︎</span>
             <span class="feud-question">?</span>
           </div>
+          <img
+            class="map-cow"
+            id="mapCow"
+            src="assets/kuh-lachersgut.png?v=60"
+            alt=""
+            draggable="false"
+            aria-hidden="true"
+          >
         </div>
 </div>
 
@@ -184,6 +192,39 @@
           </div>
         </div>
       </div>
+
+      <div
+        class="map-location-modal"
+        id="lachersgutModal"
+        aria-hidden="true"
+      >
+        <div class="map-location-backdrop" aria-hidden="true"></div>
+        <div class="map-location-window">
+          <img
+            class="map-location-image"
+            src="assets/lachersgut-einblendung.jpg?v=60"
+            alt="Lachers Gut am Lächersberg"
+            draggable="false"
+          >
+        </div>
+      </div>
+
+      <div
+        class="map-location-modal"
+        id="meierhofModal"
+        aria-hidden="true"
+      >
+        <div class="map-location-backdrop" aria-hidden="true"></div>
+        <div class="map-location-window">
+          <img
+            class="map-location-image"
+            src="assets/meierhof-ringelbach.jpg?v=60"
+            alt="Meierhof zu Ringelbach"
+            draggable="false"
+          >
+        </div>
+      </div>
+
 
       <div
         class="feud-confirmation"
@@ -534,6 +575,6 @@
     </section>
   </main>
 
-  <script src="script.js?v=59"></script>
+  <script src="script.js?v=60"></script>
 </body>
 </html>

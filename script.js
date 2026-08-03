@@ -33,6 +33,10 @@ const neuensteinTroopSelectionModal =
   document.querySelector("#neuensteinTroopSelectionModal");
 const neuensteinTroopSelectionWindow =
   document.querySelector("#neuensteinTroopSelectionWindow");
+const lachersgutModal =
+  document.querySelector("#lachersgutModal");
+const meierhofModal =
+  document.querySelector("#meierhofModal");
 const feudHoverIcon = document.querySelector("#feudHoverIcon");
 const feudConfirmation = document.querySelector("#feudConfirmation");
 const feudConfirmYes = document.querySelector("#feudConfirmYes");
@@ -101,6 +105,8 @@ let neuensteinTroopSelectionOpen = false;
 let neuensteinTroopSelectionCloseTimer = null;
 let neuensteinMapCharacterHovered = false;
 let neuensteinTroopSelectionHovered = false;
+let lachersgutModalOpen = false;
+let meierhofModalOpen = false;
 let feudConfirmationOpen = false;
 let feudSequenceInProgress = false;
 let battleScreenOpen = false;
@@ -526,8 +532,24 @@ const troopSelectionTargetRegion = {
   id: "ringelnatzTroops",
   minX: 0.548,
   maxX: 0.590,
-  minY: 0.285,
-  maxY: 0.445
+  minY: 0.268,
+  maxY: 0.428
+};
+
+const cowTargetRegion = {
+  id: "lachersgutCow",
+  minX: 0.438,
+  maxX: 0.478,
+  minY: 0.115,
+  maxY: 0.175
+};
+
+const ringelnatzEstateTargetRegion = {
+  id: "ringelnatzEstate",
+  minX: 0.510,
+  maxX: 0.548,
+  minY: 0.145,
+  maxY: 0.292
 };
 
 const neuensteinTroopSelectionTargetRegion = {
@@ -539,7 +561,75 @@ const neuensteinTroopSelectionTargetRegion = {
 };
 
 
+function closeMapLocationModals() {
+  lachersgutModalOpen = false;
+  meierhofModalOpen = false;
+
+  if (lachersgutModal) {
+    lachersgutModal.classList.remove("is-open");
+    lachersgutModal.setAttribute("aria-hidden", "true");
+  }
+
+  if (meierhofModal) {
+    meierhofModal.classList.remove("is-open");
+    meierhofModal.setAttribute("aria-hidden", "true");
+  }
+}
+
+function openLachersgutModal() {
+  if (
+    barracksOpen ||
+    barracksClosing ||
+    diplomacyOpen ||
+    diplomacyClosing ||
+    feudConfirmationOpen ||
+    feudSequenceInProgress ||
+    battleScreenOpen ||
+    yearChangeInProgress
+  ) {
+    return;
+  }
+
+  closeTroopSelection();
+  closeNeuensteinTroopSelection();
+
+  meierhofModalOpen = false;
+  meierhofModal.classList.remove("is-open");
+  meierhofModal.setAttribute("aria-hidden", "true");
+
+  lachersgutModalOpen = true;
+  lachersgutModal.classList.add("is-open");
+  lachersgutModal.setAttribute("aria-hidden", "false");
+}
+
+function openMeierhofModal() {
+  if (
+    barracksOpen ||
+    barracksClosing ||
+    diplomacyOpen ||
+    diplomacyClosing ||
+    feudConfirmationOpen ||
+    feudSequenceInProgress ||
+    battleScreenOpen ||
+    yearChangeInProgress
+  ) {
+    return;
+  }
+
+  closeTroopSelection();
+  closeNeuensteinTroopSelection();
+
+  lachersgutModalOpen = false;
+  lachersgutModal.classList.remove("is-open");
+  lachersgutModal.setAttribute("aria-hidden", "true");
+
+  meierhofModalOpen = true;
+  meierhofModal.classList.add("is-open");
+  meierhofModal.setAttribute("aria-hidden", "false");
+}
+
 function openTroopSelection() {
+  closeMapLocationModals();
   closeNeuensteinTroopSelection();
   if (
     troopSelectionOpen ||
@@ -596,6 +686,8 @@ troopSelectionWindow.addEventListener("pointerleave", () => {
 
 
 function openNeuensteinTroopSelection() {
+  closeMapLocationModals();
+
   if (
     neuensteinTroopSelectionOpen ||
     barracksOpen ||
@@ -718,6 +810,10 @@ mapViewport.addEventListener("pointermove", (event) => {
     isInsideRegion(position, troopSelectionTargetRegion);
   const overNeuensteinTroopSelectionTarget =
     isInsideRegion(position, neuensteinTroopSelectionTargetRegion);
+  const overCowTarget =
+    isInsideRegion(position, cowTargetRegion);
+  const overRingelnatzEstateTarget =
+    isInsideRegion(position, ringelnatzEstateTargetRegion);
 
   if (overTroopSelectionTarget) {
     mapCharacterHovered = true;
@@ -739,13 +835,27 @@ mapViewport.addEventListener("pointermove", (event) => {
     scheduleNeuensteinTroopSelectionClose();
   }
 
+  if (overCowTarget) {
+    if (!lachersgutModalOpen) {
+      openLachersgutModal();
+    }
+  } else if (overRingelnatzEstateTarget) {
+    if (!meierhofModalOpen) {
+      openMeierhofModal();
+    }
+  } else if (lachersgutModalOpen || meierhofModalOpen) {
+    closeMapLocationModals();
+  }
+
   feudHoverIcon.classList.toggle("is-visible", overFeudTarget);
   mapViewport.style.cursor =
     (
       region ||
       overFeudTarget ||
       overTroopSelectionTarget ||
-      overNeuensteinTroopSelectionTarget
+      overNeuensteinTroopSelectionTarget ||
+      overCowTarget ||
+      overRingelnatzEstateTarget
     )
       ? "pointer"
       : "default";
@@ -767,6 +877,8 @@ mapViewport.addEventListener("pointerleave", () => {
 
   neuensteinMapCharacterHovered = false;
   scheduleNeuensteinTroopSelectionClose();
+
+  closeMapLocationModals();
 
   feudHoverIcon.classList.remove("is-visible");
   mapViewport.style.cursor = "default";
@@ -893,6 +1005,7 @@ updateYearDisplay();
 
 /* V20: Kasernenansicht öffnen und schließen. */
 function openBarracks() {
+  closeMapLocationModals();
   closeNeuensteinTroopSelection();
   closeTroopSelection();
   if (
@@ -1190,6 +1303,7 @@ diplomacyModal.addEventListener("contextmenu", (event) => {
 
 /* V21: Fehde-Erklärung und Übergang zum Kastelberg. */
 function openFeudConfirmation() {
+  closeMapLocationModals();
   closeNeuensteinTroopSelection();
   closeTroopSelection();
   if (

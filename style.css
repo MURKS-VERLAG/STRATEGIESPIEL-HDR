@@ -2043,3 +2043,82 @@ button {
     brightness(1.08);
 }
 
+/* V60 – kleine Kuh auf der transformierten Diplomatiekarte. */
+.map-cow {
+  position: absolute;
+  z-index: 8;
+  left: 44.2%;
+  top: 12.9%;
+  width: 3.2%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  transform-origin: 50% 50%;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.34));
+}
+
+/* V60 – Lachers Gut und Meierhof als identische zentrale Hover-Einblendungen. */
+.map-location-modal {
+  position: absolute;
+  inset: 0;
+  z-index: 38;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 420ms ease,
+    visibility 0s linear 420ms;
+}
+
+.map-location-modal.is-open {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 420ms ease,
+    visibility 0s linear 0s;
+}
+
+.map-location-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(20, 17, 12, 0.28);
+  pointer-events: none;
+}
+
+.map-location-window {
+  position: relative;
+  z-index: 39;
+  width: min(66vw, 880px);
+  max-width: calc(100vw - 80px);
+  max-height: 78vh;
+  opacity: 0;
+  transform: scale(0.97);
+  transform-origin: 50% 50%;
+  transition:
+    opacity 420ms ease,
+    transform 420ms ease;
+  pointer-events: none;
+  box-shadow:
+    0 16px 42px rgba(0, 0, 0, 0.46),
+    0 0 0 1px rgba(235, 230, 215, 0.24);
+}
+
+.map-location-modal.is-open .map-location-window {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.map-location-image {
+  display: block;
+  width: 100%;
+  max-height: 78vh;
+  height: auto;
+  object-fit: contain;
+  user-select: none;
+  pointer-events: none;
+}
+
