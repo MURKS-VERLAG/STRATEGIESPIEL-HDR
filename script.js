@@ -17,6 +17,7 @@ const mapFogLayer = document.querySelector("#mapFogLayer");
 const yearDisplay = document.querySelector("#yearDisplay");
 const zoomDisplay = document.querySelector("#zoomDisplay");
 const mapHint = document.querySelector("#mapHint");
+const campaignResourceBar = document.querySelector("#campaignResourceBar");
 const barracksModal = document.querySelector("#barracksModal");
 const diplomacyModal = document.querySelector("#diplomacyModal");
 const diplomacyStage = document.querySelector("#diplomacyStage");
@@ -185,6 +186,8 @@ const ringelnatzUnits = [
   ringelnatzMercenary
 ];
 
+const MAP_ZOOM_LEVELS = [0.77, 0.88, 1, 1.14, 1.30, 1.36];
+
 const mapState = {
   fitScale: 1,
   zoom: 1,
@@ -351,6 +354,27 @@ function clampMapPosition() {
   }
 }
 
+function getNearestZoomLevelIndex(zoom) {
+  let nearestIndex = 0;
+  let nearestDistance = Number.POSITIVE_INFINITY;
+
+  MAP_ZOOM_LEVELS.forEach((level, index) => {
+    const distance = Math.abs(level - zoom);
+    if (distance < nearestDistance) {
+      nearestDistance = distance;
+      nearestIndex = index;
+    }
+  });
+
+  return nearestIndex;
+}
+
+function updateOverviewZoomUi() {
+  const overviewZoomActive = mapState.zoom < 1;
+  mapScreen.classList.toggle("is-overview-zoom", overviewZoomActive);
+  campaignResourceBar?.classList.toggle("is-visible", overviewZoomActive);
+}
+
 function renderMap() {
   clampMapPosition();
 
@@ -364,6 +388,7 @@ function renderMap() {
     `translate(${mapState.x}px, ${mapState.y}px) scale(${mapState.zoom})`;
 
   zoomDisplay.textContent = `${Math.round(mapState.zoom * 100)} %`;
+  updateOverviewZoomUi();
 }
 
 mapViewport.addEventListener("wheel", (event) => {
@@ -378,11 +403,13 @@ mapViewport.addEventListener("wheel", (event) => {
   const cursorY = event.clientY - rect.top;
 
   const previousZoom = mapState.zoom;
-  const zoomFactor = event.deltaY < 0 ? 1.14 : 1 / 1.14;
-  const nextZoom = Math.min(
-    mapState.maxZoom,
-    Math.max(1, previousZoom * zoomFactor)
+  const currentZoomIndex = getNearestZoomLevelIndex(previousZoom);
+  const direction = event.deltaY < 0 ? 1 : -1;
+  const nextZoomIndex = Math.min(
+    MAP_ZOOM_LEVELS.length - 1,
+    Math.max(0, currentZoomIndex + direction)
   );
+  const nextZoom = MAP_ZOOM_LEVELS[nextZoomIndex];
 
   if (nextZoom === previousZoom) {
     return;
