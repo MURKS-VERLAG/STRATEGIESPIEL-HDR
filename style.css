@@ -2426,3 +2426,9 @@ button {
 .campaign-right-logo--firefly {
   order: 2;
 }
+
+
+/* V73 – ausschließlich Hover-Erkennung für die beiden Logos rechts. */
+.campaign-right-logo {
+  pointer-events: auto;
+}

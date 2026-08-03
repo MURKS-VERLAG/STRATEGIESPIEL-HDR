@@ -19,6 +19,29 @@ const zoomDisplay = document.querySelector("#zoomDisplay");
 const mapHint = document.querySelector("#mapHint");
 const campaignResourceBar = document.querySelector("#campaignResourceBar");
 const campaignRightLogos = document.querySelector("#campaignRightLogos");
+const campaignMurksLogo = document.querySelector("#campaignMurksLogo");
+const campaignFireflyLogo = document.querySelector("#campaignFireflyLogo");
+
+const fireflyHoverSoundIds = [
+  "hoverFirefly1",
+  "hoverFirefly2",
+  "hoverFirefly3",
+  "hoverFirefly4",
+  "hoverFirefly5",
+  "hoverFirefly6",
+  "hoverFirefly7",
+  "hoverFirefly8"
+];
+
+const murksHoverSoundIds = [
+  "hoverMurks1",
+  "hoverMurks2",
+  "hoverMurks3",
+  "hoverMurks4",
+  "hoverMurks5",
+  "hoverMurks6",
+  "hoverMurks7"
+];
 const barracksModal = document.querySelector("#barracksModal");
 const diplomacyModal = document.querySelector("#diplomacyModal");
 const diplomacyStage = document.querySelector("#diplomacyStage");
@@ -996,6 +1019,25 @@ function getNextShuffledHoverAudio(poolKey, soundIds) {
   return audioId;
 }
 
+function playLogoHoverSound(soundIds) {
+  if (!Array.isArray(soundIds) || soundIds.length === 0) {
+    return;
+  }
+
+  const audioId =
+    soundIds[Math.floor(Math.random() * soundIds.length)];
+  const audio = document.querySelector(`#${audioId}`);
+
+  if (!audio) {
+    return;
+  }
+
+  audio.pause();
+  audio.currentTime = 0;
+  audio.volume = 0.62;
+  audio.play().catch(() => {});
+}
+
 function playRandomHoverAudio(soundIds, poolKey = null) {
   if (!Array.isArray(soundIds) || soundIds.length === 0) {
     return;
@@ -1141,6 +1183,14 @@ function closeMainMapViewFromUserInput(event) {
 
   return true;
 }
+
+campaignFireflyLogo?.addEventListener("mouseenter", () => {
+  playLogoHoverSound(fireflyHoverSoundIds);
+});
+
+campaignMurksLogo?.addEventListener("mouseenter", () => {
+  playLogoHoverSound(murksHoverSoundIds);
+});
 
 mapScreen.addEventListener("contextmenu", (event) => {
   closeMainMapViewFromUserInput(event);
