@@ -613,7 +613,7 @@ const schauenburgBannerTargetRegion = {
   maxX: 0.376,
   minY: 0.432,
   maxY: 0.523,
-  soundIds: ["hoverSchauenburgRitter"],
+  soundIds: ["hoverKastelberg"],
   attackable: true
 };
 
@@ -623,7 +623,7 @@ const schauenburgCastleTargetRegion = {
   maxX: 0.570,
   minY: 0.354,
   maxY: 0.474,
-  soundIds: ["hoverSchauenburgRitter"],
+  soundIds: ["hoverKastelberg"],
   attackable: true
 };
 
@@ -643,7 +643,7 @@ const brownArmyTargetRegion = {
   maxX: 0.540,
   minY: 0.516,
   maxY: 0.668,
-  soundIds: [],
+  soundIds: ["hoverBrownArmy1", "hoverBrownArmy2", "hoverBrownArmy3", "hoverBrownArmy4", "hoverBrownArmy5", "hoverBrownArmy6", "hoverBrownArmy7"],
   attackable: true
 };
 
@@ -861,13 +861,42 @@ function findMainMapHotspot(position) {
   ) || null;
 }
 
-function playRandomHoverAudio(soundIds) {
+const hoverShufflePools = new Map();
+
+function shuffleAudioIds(soundIds) {
+  const shuffled = [...soundIds];
+
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[randomIndex]] =
+      [shuffled[randomIndex], shuffled[index]];
+  }
+
+  return shuffled;
+}
+
+function getNextShuffledHoverAudio(poolKey, soundIds) {
+  let pool = hoverShufflePools.get(poolKey);
+
+  if (!Array.isArray(pool) || pool.length === 0) {
+    pool = shuffleAudioIds(soundIds);
+  }
+
+  const audioId = pool.shift();
+  hoverShufflePools.set(poolKey, pool);
+
+  return audioId;
+}
+
+function playRandomHoverAudio(soundIds, poolKey = null) {
   if (!Array.isArray(soundIds) || soundIds.length === 0) {
     return;
   }
 
-  const audioId =
-    soundIds[Math.floor(Math.random() * soundIds.length)];
+  const audioId = poolKey
+    ? getNextShuffledHoverAudio(poolKey, soundIds)
+    : soundIds[Math.floor(Math.random() * soundIds.length)];
+
   const audio = document.querySelector(`#${audioId}`);
 
   if (!audio) {
@@ -1056,7 +1085,10 @@ mapViewport.addEventListener("pointermove", (event) => {
 
     if (hotspotId !== activeMainMapHotspot) {
       activeMainMapHotspot = hotspotId;
-      playRandomHoverAudio(hotspot.soundIds);
+      playRandomHoverAudio(
+        hotspot.soundIds,
+        hotspot.id === "brownArmy" ? "brownArmy" : null
+      );
     }
 
     /* V65: Fehde-Schwerter erscheinen nur noch innerhalb der Übersicht. */
