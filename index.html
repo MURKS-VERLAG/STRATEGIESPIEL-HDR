@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#050505">
   <title>Die Herren der Rench</title>
-  <link rel="stylesheet" href="style.css?v=60">
+  <link rel="stylesheet" href="style.css?v=61">
 </head>
 <body>
   <main class="game">
@@ -112,6 +112,11 @@
             draggable="false"
             aria-hidden="true"
           >
+          <div
+            class="map-hotspot-highlight"
+            id="mapHotspotHighlight"
+            aria-hidden="true"
+          ></div>
         </div>
 </div>
 
@@ -129,6 +134,14 @@
       <audio id="familyTreeSound" preload="auto"><source src="assets/cheer2(1).mp3?v=17" type="audio/mpeg"></audio>
       <audio id="scrollSound" preload="auto"><source src="assets/drawbridge_lowering(1).mp3?v=17" type="audio/mpeg"></audio>
       <audio id="handbookSound" preload="auto"><source src="assets/opencldrn_01(1).mp3?v=17" type="audio/mpeg"></audio>
+
+      <audio id="hoverNeuenstein1" preload="auto"><source src="assets/hover-neuenstein-1.mp3?v=61" type="audio/mpeg"></audio>
+      <audio id="hoverNeuenstein2" preload="auto"><source src="assets/hover-neuenstein-2.mp3?v=61" type="audio/mpeg"></audio>
+      <audio id="hoverRingelnatzGeneral1" preload="auto"><source src="assets/hover-ringelnatz-general-1.mp3?v=61" type="audio/mpeg"></audio>
+      <audio id="hoverRingelnatzGeneral2" preload="auto"><source src="assets/hover-ringelnatz-general-2.mp3?v=61" type="audio/mpeg"></audio>
+      <audio id="hoverKastelberg" preload="auto"><source src="assets/hover-kastelberg.mp3?v=61" type="audio/mpeg"></audio>
+      <audio id="hoverRingelnatz" preload="auto"><source src="assets/hover-ringelnatz.mp3?v=61" type="audio/mpeg"></audio>
+      <audio id="hoverSchauenburgRitter" preload="auto"><source src="assets/hover-schauenburg-ritter.mp3?v=61" type="audio/mpeg"></audio>
 
 
 
@@ -190,6 +203,16 @@
             <div class="neuenstein-troop-count neuenstein-troop-count--flail">3</div>
             <div class="neuenstein-troop-count neuenstein-troop-count--lord">1</div>
           </div>
+
+          <button
+            class="panel-feud-button"
+            id="neuensteinPanelFeudButton"
+            type="button"
+            aria-label="Fehde gegen Haus Neuenstein beginnen"
+          >
+            <span class="panel-feud-swords" aria-hidden="true">⚔︎</span>
+            <span>FEHDE BEGINNEN?</span>
+          </button>
         </div>
       </div>
 
@@ -206,6 +229,16 @@
             alt="Lachers Gut am Lächersberg"
             draggable="false"
           >
+
+          <button
+            class="panel-feud-button"
+            id="lachersgutPanelFeudButton"
+            type="button"
+            aria-label="Fehde gegen Lachers Gut beginnen"
+          >
+            <span class="panel-feud-swords" aria-hidden="true">⚔︎</span>
+            <span>FEHDE BEGINNEN?</span>
+          </button>
         </div>
       </div>
 
@@ -575,6 +608,6 @@
     </section>
   </main>
 
-  <script src="script.js?v=60"></script>
+  <script src="script.js?v=61"></script>
 </body>
 </html>

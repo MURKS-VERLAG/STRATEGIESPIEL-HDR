@@ -33,6 +33,27 @@ const neuensteinTroopSelectionModal =
   document.querySelector("#neuensteinTroopSelectionModal");
 const neuensteinTroopSelectionWindow =
   document.querySelector("#neuensteinTroopSelectionWindow");
+const mapHotspotHighlight =
+  document.querySelector("#mapHotspotHighlight");
+const neuensteinPanelFeudButton =
+  document.querySelector("#neuensteinPanelFeudButton");
+const lachersgutPanelFeudButton =
+  document.querySelector("#lachersgutPanelFeudButton");
+
+const hoverNeuenstein1 =
+  document.querySelector("#hoverNeuenstein1");
+const hoverNeuenstein2 =
+  document.querySelector("#hoverNeuenstein2");
+const hoverRingelnatzGeneral1 =
+  document.querySelector("#hoverRingelnatzGeneral1");
+const hoverRingelnatzGeneral2 =
+  document.querySelector("#hoverRingelnatzGeneral2");
+const hoverKastelberg =
+  document.querySelector("#hoverKastelberg");
+const hoverRingelnatz =
+  document.querySelector("#hoverRingelnatz");
+const hoverSchauenburgRitter =
+  document.querySelector("#hoverSchauenburgRitter");
 const lachersgutModal =
   document.querySelector("#lachersgutModal");
 const meierhofModal =
@@ -520,45 +541,79 @@ const soundRegions = [
 ];
 
 
-const feudTargetRegion = {
-  id: "feudTarget",
-  minX: 0.445,
-  maxX: 0.500,
-  minY: 0.035,
-  maxY: 0.145
+const kastelbergTargetRegion = {
+  id: "kastelberg",
+  minX: 0.468,
+  maxX: 0.506,
+  minY: 0.064,
+  maxY: 0.153,
+  soundIds: ["hoverKastelberg"],
+  attackable: true
+};
+
+const neuensteinTroopSelectionTargetRegion = {
+  id: "neuensteinTroops",
+  minX: 0.410,
+  maxX: 0.454,
+  minY: 0.135,
+  maxY: 0.252,
+  soundIds: ["hoverNeuenstein1", "hoverNeuenstein2"],
+  attackable: true
+};
+
+const ringelnatzEstateTargetRegion = {
+  id: "ringelnatzEstate",
+  minX: 0.514,
+  maxX: 0.544,
+  minY: 0.129,
+  maxY: 0.286,
+  soundIds: ["hoverRingelnatz"],
+  attackable: false
 };
 
 const troopSelectionTargetRegion = {
   id: "ringelnatzTroops",
-  minX: 0.548,
-  maxX: 0.590,
-  minY: 0.268,
-  maxY: 0.428
+  minX: 0.566,
+  maxX: 0.606,
+  minY: 0.232,
+  maxY: 0.355,
+  soundIds: [
+    "hoverRingelnatzGeneral1",
+    "hoverRingelnatzGeneral2"
+  ],
+  attackable: false
 };
 
+const schauenburgKnightTargetRegion = {
+  id: "schauenburgKnight",
+  minX: 0.466,
+  maxX: 0.507,
+  minY: 0.252,
+  maxY: 0.391,
+  soundIds: ["hoverSchauenburgRitter"],
+  attackable: true
+};
+
+/* Die Kuh bleibt als einzige Hitbox exakt unverändert. */
 const cowTargetRegion = {
   id: "lachersgutCow",
   minX: 0.438,
   maxX: 0.478,
   minY: 0.115,
-  maxY: 0.175
+  maxY: 0.175,
+  soundIds: [],
+  attackable: true
 };
 
-const ringelnatzEstateTargetRegion = {
-  id: "ringelnatzEstate",
-  minX: 0.510,
-  maxX: 0.548,
-  minY: 0.145,
-  maxY: 0.292
-};
+const mainMapHotspotRegions = [
+  neuensteinTroopSelectionTargetRegion,
+  troopSelectionTargetRegion,
+  kastelbergTargetRegion,
+  ringelnatzEstateTargetRegion,
+  schauenburgKnightTargetRegion,
+  cowTargetRegion
+];
 
-const neuensteinTroopSelectionTargetRegion = {
-  id: "neuensteinTroops",
-  minX: 0.392,
-  maxX: 0.468,
-  minY: 0.118,
-  maxY: 0.266
-};
 
 
 function closeMapLocationModals() {
@@ -662,15 +717,7 @@ function closeTroopSelection() {
 }
 
 function scheduleTroopSelectionClose() {
-  window.clearTimeout(troopSelectionCloseTimer);
-
-  troopSelectionCloseTimer = window.setTimeout(() => {
-    if (mapCharacterHovered || troopSelectionHovered) {
-      return;
-    }
-
-    closeTroopSelection();
-  }, 260);
+  // V61: Klickfenster bleiben bis zum Rechtsklick geöffnet.
 }
 
 troopSelectionWindow.addEventListener("pointerenter", () => {
@@ -721,18 +768,7 @@ function closeNeuensteinTroopSelection() {
 }
 
 function scheduleNeuensteinTroopSelectionClose() {
-  window.clearTimeout(neuensteinTroopSelectionCloseTimer);
-
-  neuensteinTroopSelectionCloseTimer = window.setTimeout(() => {
-    if (
-      neuensteinMapCharacterHovered ||
-      neuensteinTroopSelectionHovered
-    ) {
-      return;
-    }
-
-    closeNeuensteinTroopSelection();
-  }, 260);
+  // V61: Klickfenster bleiben bis zum Rechtsklick geöffnet.
 }
 
 neuensteinTroopSelectionWindow.addEventListener(
@@ -750,6 +786,61 @@ neuensteinTroopSelectionWindow.addEventListener(
     scheduleNeuensteinTroopSelectionClose();
   }
 );
+
+let activeMainMapHotspot = null;
+let pendingFeudTarget = "kastelberg";
+
+function findMainMapHotspot(position) {
+  return mainMapHotspotRegions.find((region) =>
+    isInsideRegion(position, region)
+  ) || null;
+}
+
+function playRandomHoverAudio(soundIds) {
+  if (!Array.isArray(soundIds) || soundIds.length === 0) {
+    return;
+  }
+
+  const audioId =
+    soundIds[Math.floor(Math.random() * soundIds.length)];
+  const audio = document.querySelector(`#${audioId}`);
+
+  if (!audio) {
+    return;
+  }
+
+  audio.pause();
+  audio.currentTime = 0;
+  audio.volume = 0.62;
+  audio.play().catch(() => {});
+}
+
+function showMapHotspotHighlight(region) {
+  if (!mapHotspotHighlight || !region) {
+    return;
+  }
+
+  mapHotspotHighlight.style.left =
+    `${region.minX * 100}%`;
+  mapHotspotHighlight.style.top =
+    `${region.minY * 100}%`;
+  mapHotspotHighlight.style.width =
+    `${(region.maxX - region.minX) * 100}%`;
+  mapHotspotHighlight.style.height =
+    `${(region.maxY - region.minY) * 100}%`;
+
+  mapHotspotHighlight.classList.add("is-visible");
+}
+
+function hideMapHotspotHighlight() {
+  mapHotspotHighlight?.classList.remove("is-visible");
+}
+
+function closeAllMainMapPanels() {
+  closeTroopSelection();
+  closeNeuensteinTroopSelection();
+  closeMapLocationModals();
+}
 
 let activeSoundRegion = null;
 
@@ -789,8 +880,11 @@ mapViewport.addEventListener("pointermove", (event) => {
     battleScreenOpen ||
     yearChangeInProgress
   ) {
+    activeMainMapHotspot = null;
     activeSoundRegion = null;
+    hideMapHotspotHighlight();
     feudHoverIcon.classList.remove("is-visible");
+    mapViewport.classList.remove("is-hotspot-hovered");
     mapViewport.style.cursor = "default";
     return;
   }
@@ -798,89 +892,60 @@ mapViewport.addEventListener("pointermove", (event) => {
   const position = getNormalizedMapPosition(event);
 
   if (!position) {
+    activeMainMapHotspot = null;
+    hideMapHotspotHighlight();
     feudHoverIcon.classList.remove("is-visible");
+    mapViewport.classList.remove("is-hotspot-hovered");
     mapViewport.style.cursor = "default";
     return;
   }
 
-  const region = findSoundRegion(position.x, position.y);
-  const regionId = region ? region.id : null;
-  const overFeudTarget = isInsideRegion(position, feudTargetRegion);
-  const overTroopSelectionTarget =
-    isInsideRegion(position, troopSelectionTargetRegion);
-  const overNeuensteinTroopSelectionTarget =
-    isInsideRegion(position, neuensteinTroopSelectionTargetRegion);
-  const overCowTarget =
-    isInsideRegion(position, cowTargetRegion);
-  const overRingelnatzEstateTarget =
-    isInsideRegion(position, ringelnatzEstateTargetRegion);
+  const hotspot = findMainMapHotspot(position);
+  const hotspotId = hotspot?.id || null;
+  const utilityRegion = findSoundRegion(position.x, position.y);
+  const utilityRegionId = utilityRegion?.id || null;
 
-  if (overTroopSelectionTarget) {
-    mapCharacterHovered = true;
-    window.clearTimeout(troopSelectionCloseTimer);
-    closeNeuensteinTroopSelection();
-    openTroopSelection();
-  } else if (mapCharacterHovered) {
-    mapCharacterHovered = false;
-    scheduleTroopSelectionClose();
-  }
+  if (hotspot) {
+    showMapHotspotHighlight(hotspot);
+    mapViewport.classList.add("is-hotspot-hovered");
+    mapViewport.style.cursor = "";
 
-  if (overNeuensteinTroopSelectionTarget) {
-    neuensteinMapCharacterHovered = true;
-    window.clearTimeout(neuensteinTroopSelectionCloseTimer);
-    closeTroopSelection();
-    openNeuensteinTroopSelection();
-  } else if (neuensteinMapCharacterHovered) {
-    neuensteinMapCharacterHovered = false;
-    scheduleNeuensteinTroopSelectionClose();
-  }
-
-  if (overCowTarget) {
-    if (!lachersgutModalOpen) {
-      openLachersgutModal();
+    if (hotspotId !== activeMainMapHotspot) {
+      activeMainMapHotspot = hotspotId;
+      playRandomHoverAudio(hotspot.soundIds);
     }
-  } else if (overRingelnatzEstateTarget) {
-    if (!meierhofModalOpen) {
-      openMeierhofModal();
-    }
-  } else if (lachersgutModalOpen || meierhofModalOpen) {
-    closeMapLocationModals();
+
+    /* Kastelberg behält als einzige direkte Kartenaktion
+       die bereits vorhandenen gekreuzten Schwerter. */
+    feudHoverIcon.classList.toggle(
+      "is-visible",
+      hotspot.id === "kastelberg"
+    );
+  } else {
+    activeMainMapHotspot = null;
+    hideMapHotspotHighlight();
+    feudHoverIcon.classList.remove("is-visible");
+    mapViewport.classList.remove("is-hotspot-hovered");
+
+    mapViewport.style.cursor =
+      utilityRegion ? "pointer" : "default";
   }
 
-  feudHoverIcon.classList.toggle("is-visible", overFeudTarget);
-  mapViewport.style.cursor =
-    (
-      region ||
-      overFeudTarget ||
-      overTroopSelectionTarget ||
-      overNeuensteinTroopSelectionTarget ||
-      overCowTarget ||
-      overRingelnatzEstateTarget
-    )
-      ? "pointer"
-      : "default";
+  if (utilityRegionId !== activeSoundRegion) {
+    activeSoundRegion = utilityRegionId;
 
-  if (regionId !== activeSoundRegion) {
-    activeSoundRegion = regionId;
-
-    if (region) {
-      playHoverSound(region.audioId);
+    if (utilityRegion && !hotspot) {
+      playHoverSound(utilityRegion.audioId);
     }
   }
 });
 
 mapViewport.addEventListener("pointerleave", () => {
+  activeMainMapHotspot = null;
   activeSoundRegion = null;
-
-  mapCharacterHovered = false;
-  scheduleTroopSelectionClose();
-
-  neuensteinMapCharacterHovered = false;
-  scheduleNeuensteinTroopSelectionClose();
-
-  closeMapLocationModals();
-
+  hideMapHotspotHighlight();
   feudHoverIcon.classList.remove("is-visible");
+  mapViewport.classList.remove("is-hotspot-hovered");
   mapViewport.style.cursor = "default";
 });
 
@@ -934,7 +999,35 @@ function advanceYear() {
 
   window.setTimeout(() => {
     gameState.year += 1;
-    updateYearDisplay();
+    
+mapScreen.addEventListener("contextmenu", (event) => {
+  if (
+    troopSelectionOpen ||
+    neuensteinTroopSelectionOpen ||
+    lachersgutModalOpen ||
+    meierhofModalOpen
+  ) {
+    event.preventDefault();
+    closeAllMainMapPanels();
+    mapViewport.focus?.();
+  }
+});
+
+neuensteinPanelFeudButton?.addEventListener("click", (event) => {
+  event.stopPropagation();
+  pendingFeudTarget = "neuenstein";
+  closeAllMainMapPanels();
+  openFeudConfirmation();
+});
+
+lachersgutPanelFeudButton?.addEventListener("click", (event) => {
+  event.stopPropagation();
+  pendingFeudTarget = "lachersgut";
+  closeAllMainMapPanels();
+  openFeudConfirmation();
+});
+
+updateYearDisplay();
 
     mapState.zoom = 1;
     initializeMap();
@@ -974,6 +1067,40 @@ mapViewport.addEventListener("click", (event) => {
     return;
   }
 
+  const hotspot = findMainMapHotspot(position);
+
+  if (hotspot) {
+    closeAllMainMapPanels();
+
+    switch (hotspot.id) {
+      case "neuensteinTroops":
+        openNeuensteinTroopSelection();
+        return;
+
+      case "ringelnatzTroops":
+        openTroopSelection();
+        return;
+
+      case "ringelnatzEstate":
+        openMeierhofModal();
+        return;
+
+      case "lachersgutCow":
+        openLachersgutModal();
+        return;
+
+      case "kastelberg":
+        pendingFeudTarget = "kastelberg";
+        openFeudConfirmation();
+        return;
+
+      case "schauenburgKnight":
+        /* Noch kein Bild hinterlegt: Hitbox, Sound,
+           Cursor und Highlight sind bereits fertig. */
+        return;
+    }
+  }
+
   if (bellRegion && isInsideRegion(position, bellRegion)) {
     advanceYear();
     return;
@@ -992,11 +1119,6 @@ mapViewport.addEventListener("click", (event) => {
     isInsideRegion(position, scrollRegion)
   ) {
     openDiplomacyModal();
-    return;
-  }
-
-  if (isInsideRegion(position, feudTargetRegion)) {
-    openFeudConfirmation();
   }
 });
 
@@ -4542,6 +4664,12 @@ function showBattleScreen() {
 async function beginFeudSequence() {
   closeNeuensteinTroopSelection();
   closeTroopSelection();
+  closeMapLocationModals();
+
+  if (pendingFeudTarget !== "kastelberg") {
+    closeFeudConfirmation();
+    return;
+  }
   if (
     !feudConfirmationOpen ||
     feudSequenceInProgress ||
