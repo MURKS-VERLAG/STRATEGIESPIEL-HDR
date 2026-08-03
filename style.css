@@ -2208,3 +2208,16 @@ button {
   bottom: clamp(10px, 1.4vw, 22px);
 }
 
+/* V66 – Kartenfenster bleiben visuell gleich, ihre Aktionsbuttons sind anklickbar. */
+.map-location-modal.is-open {
+  pointer-events: auto;
+}
+
+.map-location-modal.is-open .map-location-window {
+  pointer-events: auto;
+}
+
+.map-location-modal .panel-feud-button {
+  pointer-events: auto;
+}
+
