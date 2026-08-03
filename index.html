@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#050505">
   <title>Die Herren der Rench</title>
-  <link rel="stylesheet" href="style.css?v=64">
+  <link rel="stylesheet" href="style.css?v=65">
 </head>
 <body>
   <main class="game">
@@ -142,6 +142,7 @@
       <audio id="hoverKastelberg" preload="auto"><source src="assets/hover-kastelberg.mp3?v=61" type="audio/mpeg"></audio>
       <audio id="hoverRingelnatz" preload="auto"><source src="assets/hover-ringelnatz.mp3?v=61" type="audio/mpeg"></audio>
       <audio id="hoverSchauenburgRitter" preload="auto"><source src="assets/hover-schauenburg-ritter.mp3?v=61" type="audio/mpeg"></audio>
+      <audio id="hoverCowSound" preload="auto"><source src="assets/hover-kuh.mp3?v=65" type="audio/mpeg"></audio>
 
 
 
@@ -258,6 +259,47 @@
         </div>
       </div>
 
+
+      <div
+        class="map-location-modal"
+        id="kastelbergOverviewModal"
+        aria-hidden="true"
+      >
+        <div class="map-location-backdrop" aria-hidden="true"></div>
+        <div class="map-location-window map-location-window--kastelberg">
+          <img
+            class="map-location-image"
+            src="assets/kastelberg-neuenstein-uebersicht.jpg?v=65"
+            alt="Kastelberg – Haus Neuenstein"
+            draggable="false"
+          >
+          <button
+            class="panel-feud-button"
+            id="kastelbergPanelFeudButton"
+            type="button"
+            aria-label="Fehde um den Kastelberg beginnen"
+          >
+            <span class="panel-feud-swords" aria-hidden="true">⚔︎</span>
+            <span>FEHDE BEGINNEN?</span>
+          </button>
+        </div>
+      </div>
+
+      <div
+        class="map-location-modal"
+        id="schauenburgKnightModal"
+        aria-hidden="true"
+      >
+        <div class="map-location-backdrop" aria-hidden="true"></div>
+        <div class="map-location-window map-location-window--schauenburg">
+          <img
+            class="map-location-image"
+            src="assets/schauenburg-ritter-uebersicht.jpg?v=65"
+            alt="Truppen der Schauenburg"
+            draggable="false"
+          >
+        </div>
+      </div>
 
       <div
         class="feud-confirmation"
@@ -608,6 +650,6 @@
     </section>
   </main>
 
-  <script src="script.js?v=64"></script>
+  <script src="script.js?v=65"></script>
 </body>
 </html>

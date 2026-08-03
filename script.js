@@ -58,6 +58,14 @@ const lachersgutModal =
   document.querySelector("#lachersgutModal");
 const meierhofModal =
   document.querySelector("#meierhofModal");
+const kastelbergOverviewModal =
+  document.querySelector("#kastelbergOverviewModal");
+const schauenburgKnightModal =
+  document.querySelector("#schauenburgKnightModal");
+const kastelbergPanelFeudButton =
+  document.querySelector("#kastelbergPanelFeudButton");
+const hoverCowSound =
+  document.querySelector("#hoverCowSound");
 const feudHoverIcon = document.querySelector("#feudHoverIcon");
 const feudConfirmation = document.querySelector("#feudConfirmation");
 const feudConfirmYes = document.querySelector("#feudConfirmYes");
@@ -128,6 +136,8 @@ let neuensteinMapCharacterHovered = false;
 let neuensteinTroopSelectionHovered = false;
 let lachersgutModalOpen = false;
 let meierhofModalOpen = false;
+let kastelbergOverviewModalOpen = false;
+let schauenburgKnightModalOpen = false;
 let feudConfirmationOpen = false;
 let feudSequenceInProgress = false;
 let battleScreenOpen = false;
@@ -601,7 +611,7 @@ const cowTargetRegion = {
   maxX: 0.478,
   minY: 0.115,
   maxY: 0.175,
-  soundIds: [],
+  soundIds: ["hoverCowSound"],
   attackable: true
 };
 
@@ -619,70 +629,67 @@ const mainMapHotspotRegions = [
 function closeMapLocationModals() {
   lachersgutModalOpen = false;
   meierhofModalOpen = false;
+  kastelbergOverviewModalOpen = false;
+  schauenburgKnightModalOpen = false;
 
-  if (lachersgutModal) {
-    lachersgutModal.classList.remove("is-open");
-    lachersgutModal.setAttribute("aria-hidden", "true");
-  }
+  const locationModals = [
+    lachersgutModal,
+    meierhofModal,
+    kastelbergOverviewModal,
+    schauenburgKnightModal
+  ];
 
-  if (meierhofModal) {
-    meierhofModal.classList.remove("is-open");
-    meierhofModal.setAttribute("aria-hidden", "true");
-  }
+  locationModals.forEach((modal) => {
+    if (!modal) return;
+    modal.classList.remove("is-open");
+    modal.setAttribute("aria-hidden", "true");
+  });
+}
+
+function canOpenMainMapLocation() {
+  return !(
+    barracksOpen ||
+    barracksClosing ||
+    diplomacyOpen ||
+    diplomacyClosing ||
+    feudConfirmationOpen ||
+    feudSequenceInProgress ||
+    battleScreenOpen ||
+    yearChangeInProgress
+  );
+}
+
+function openExclusiveLocationModal(modal, stateName) {
+  pauseMainMapHoverFeedback();
+  if (!canOpenMainMapLocation()) return;
+
+  closeTroopSelection();
+  closeNeuensteinTroopSelection();
+  closeMapLocationModals();
+
+  if (stateName === "lachersgut") lachersgutModalOpen = true;
+  if (stateName === "meierhof") meierhofModalOpen = true;
+  if (stateName === "kastelberg") kastelbergOverviewModalOpen = true;
+  if (stateName === "schauenburg") schauenburgKnightModalOpen = true;
+
+  modal?.classList.add("is-open");
+  modal?.setAttribute("aria-hidden", "false");
 }
 
 function openLachersgutModal() {
-  pauseMainMapHoverFeedback();
-  if (
-    barracksOpen ||
-    barracksClosing ||
-    diplomacyOpen ||
-    diplomacyClosing ||
-    feudConfirmationOpen ||
-    feudSequenceInProgress ||
-    battleScreenOpen ||
-    yearChangeInProgress
-  ) {
-    return;
-  }
-
-  closeTroopSelection();
-  closeNeuensteinTroopSelection();
-
-  meierhofModalOpen = false;
-  meierhofModal.classList.remove("is-open");
-  meierhofModal.setAttribute("aria-hidden", "true");
-
-  lachersgutModalOpen = true;
-  lachersgutModal.classList.add("is-open");
-  lachersgutModal.setAttribute("aria-hidden", "false");
+  openExclusiveLocationModal(lachersgutModal, "lachersgut");
 }
 
 function openMeierhofModal() {
-  pauseMainMapHoverFeedback();
-  if (
-    barracksOpen ||
-    barracksClosing ||
-    diplomacyOpen ||
-    diplomacyClosing ||
-    feudConfirmationOpen ||
-    feudSequenceInProgress ||
-    battleScreenOpen ||
-    yearChangeInProgress
-  ) {
-    return;
-  }
+  openExclusiveLocationModal(meierhofModal, "meierhof");
+}
 
-  closeTroopSelection();
-  closeNeuensteinTroopSelection();
+function openKastelbergOverviewModal() {
+  openExclusiveLocationModal(kastelbergOverviewModal, "kastelberg");
+}
 
-  lachersgutModalOpen = false;
-  lachersgutModal.classList.remove("is-open");
-  lachersgutModal.setAttribute("aria-hidden", "true");
-
-  meierhofModalOpen = true;
-  meierhofModal.classList.add("is-open");
-  meierhofModal.setAttribute("aria-hidden", "false");
+function openSchauenburgKnightModal() {
+  openExclusiveLocationModal(schauenburgKnightModal, "schauenburg");
 }
 
 function openTroopSelection() {
@@ -852,7 +859,9 @@ function isAnyMainMapPanelOpen() {
     troopSelectionOpen ||
     neuensteinTroopSelectionOpen ||
     lachersgutModalOpen ||
-    meierhofModalOpen
+    meierhofModalOpen ||
+    kastelbergOverviewModalOpen ||
+    schauenburgKnightModalOpen
   );
 }
 
@@ -906,6 +915,13 @@ neuensteinPanelFeudButton?.addEventListener("click", (event) => {
 lachersgutPanelFeudButton?.addEventListener("click", (event) => {
   event.stopPropagation();
   pendingFeudTarget = "lachersgut";
+  closeAllMainMapPanels();
+  openFeudConfirmation();
+});
+
+kastelbergPanelFeudButton?.addEventListener("click", (event) => {
+  event.stopPropagation();
+  pendingFeudTarget = "kastelberg";
   closeAllMainMapPanels();
   openFeudConfirmation();
 });
@@ -988,12 +1004,8 @@ mapViewport.addEventListener("pointermove", (event) => {
       playRandomHoverAudio(hotspot.soundIds);
     }
 
-    /* Kastelberg behält als einzige direkte Kartenaktion
-       die bereits vorhandenen gekreuzten Schwerter. */
-    feudHoverIcon.classList.toggle(
-      "is-visible",
-      hotspot.id === "kastelberg"
-    );
+    /* V65: Fehde-Schwerter erscheinen nur noch innerhalb der Übersicht. */
+    feudHoverIcon.classList.remove("is-visible");
   } else {
     activeMainMapHotspot = null;
     hideMapHotspotHighlight();
@@ -1136,13 +1148,11 @@ mapViewport.addEventListener("click", (event) => {
         return;
 
       case "kastelberg":
-        pendingFeudTarget = "kastelberg";
-        openFeudConfirmation();
+        openKastelbergOverviewModal();
         return;
 
       case "schauenburgKnight":
-        /* Noch kein Bild hinterlegt: Hitbox, Sound,
-           Cursor und Highlight sind bereits fertig. */
+        openSchauenburgKnightModal();
         return;
     }
   }

@@ -2197,3 +2197,14 @@ button {
   position: relative;
 }
 
+/* V65 – Kastelberg- und Schauenburg-Übersichten verwenden das bestehende Kartenfenster. */
+.map-location-window--kastelberg,
+.map-location-window--schauenburg {
+  width: min(66vw, 880px);
+}
+
+.map-location-window--kastelberg .panel-feud-button {
+  right: clamp(10px, 1.4vw, 22px);
+  bottom: clamp(10px, 1.4vw, 22px);
+}
+
