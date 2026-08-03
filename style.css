@@ -2221,3 +2221,60 @@ button {
   pointer-events: auto;
 }
 
+/* V67 – Fragezeichenmarker für die neuen Karten-Auswahlbilder. */
+.map-selection-stage {
+  position: relative;
+  width: 100%;
+}
+
+.map-selection-marker {
+  position: absolute;
+  z-index: 5;
+  transform: translate(-50%, -50%);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(24px, 2.25vw, 40px);
+  font-weight: 900;
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+  -webkit-text-stroke: 1.4px #ffffff;
+  paint-order: stroke fill;
+}
+
+.map-selection-marker--red {
+  color: #e30000;
+  text-shadow:
+    0 0 3px #ffffff,
+    0 0 7px rgba(255, 20, 20, 0.95),
+    0 0 13px rgba(255, 0, 0, 0.72);
+}
+
+.map-selection-marker--green {
+  color: #75ff79;
+  text-shadow:
+    0 0 3px #ffffff,
+    0 0 7px rgba(112, 255, 120, 0.95),
+    0 0 13px rgba(50, 230, 80, 0.72);
+}
+
+/* Schauenburg-Auswahl: acht Figuren. */
+.red-marker--1 { left: 15.5%; top: 24.0%; }
+.red-marker--2 { left: 37.2%; top: 24.5%; }
+.red-marker--3 { left: 58.3%; top: 25.0%; }
+.red-marker--4 { left: 83.8%; top: 24.5%; }
+.red-marker--5 { left: 14.6%; top: 68.5%; }
+.red-marker--6 { left: 37.2%; top: 69.5%; }
+.red-marker--7 { left: 58.4%; top: 70.0%; }
+.red-marker--8 { left: 84.2%; top: 69.5%; }
+
+/* Braunes Heer: fünf Figuren. */
+.green-marker--1 { left: 18.5%; top: 27.0%; }
+.green-marker--2 { left: 50.5%; top: 26.0%; }
+.green-marker--3 { left: 80.5%; top: 37.0%; }
+.green-marker--4 { left: 16.0%; top: 70.0%; }
+.green-marker--5 { left: 47.5%; top: 69.5%; }
+
+.map-location-window--brown-army {
+  width: min(66vw, 880px);
+}
+

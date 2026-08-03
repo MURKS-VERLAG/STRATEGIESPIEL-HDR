@@ -62,6 +62,8 @@ const kastelbergOverviewModal =
   document.querySelector("#kastelbergOverviewModal");
 const schauenburgKnightModal =
   document.querySelector("#schauenburgKnightModal");
+const brownArmyModal =
+  document.querySelector("#brownArmyModal");
 const kastelbergPanelFeudButton =
   document.querySelector("#kastelbergPanelFeudButton");
 const hoverCowSound =
@@ -138,6 +140,7 @@ let lachersgutModalOpen = false;
 let meierhofModalOpen = false;
 let kastelbergOverviewModalOpen = false;
 let schauenburgKnightModalOpen = false;
+let brownArmyModalOpen = false;
 let feudConfirmationOpen = false;
 let feudSequenceInProgress = false;
 let battleScreenOpen = false;
@@ -604,6 +607,46 @@ const schauenburgKnightTargetRegion = {
   attackable: true
 };
 
+const schauenburgBannerTargetRegion = {
+  id: "schauenburgBanner",
+  minX: 0.338,
+  maxX: 0.376,
+  minY: 0.432,
+  maxY: 0.523,
+  soundIds: ["hoverSchauenburgRitter"],
+  attackable: true
+};
+
+const schauenburgCastleTargetRegion = {
+  id: "schauenburgCastle",
+  minX: 0.491,
+  maxX: 0.570,
+  minY: 0.354,
+  maxY: 0.474,
+  soundIds: ["hoverSchauenburgRitter"],
+  attackable: true
+};
+
+const schauenburgSouthKnightTargetRegion = {
+  id: "schauenburgSouthKnight",
+  minX: 0.535,
+  maxX: 0.574,
+  minY: 0.610,
+  maxY: 0.759,
+  soundIds: ["hoverSchauenburgRitter"],
+  attackable: true
+};
+
+const brownArmyTargetRegion = {
+  id: "brownArmy",
+  minX: 0.491,
+  maxX: 0.540,
+  minY: 0.516,
+  maxY: 0.668,
+  soundIds: [],
+  attackable: true
+};
+
 /* Die Kuh bleibt als einzige Hitbox exakt unverändert. */
 const cowTargetRegion = {
   id: "lachersgutCow",
@@ -621,6 +664,10 @@ const mainMapHotspotRegions = [
   kastelbergTargetRegion,
   ringelnatzEstateTargetRegion,
   schauenburgKnightTargetRegion,
+  schauenburgBannerTargetRegion,
+  schauenburgCastleTargetRegion,
+  schauenburgSouthKnightTargetRegion,
+  brownArmyTargetRegion,
   cowTargetRegion
 ];
 
@@ -631,12 +678,14 @@ function closeMapLocationModals() {
   meierhofModalOpen = false;
   kastelbergOverviewModalOpen = false;
   schauenburgKnightModalOpen = false;
+  brownArmyModalOpen = false;
 
   const locationModals = [
     lachersgutModal,
     meierhofModal,
     kastelbergOverviewModal,
-    schauenburgKnightModal
+    schauenburgKnightModal,
+    brownArmyModal
   ];
 
   locationModals.forEach((modal) => {
@@ -671,6 +720,7 @@ function openExclusiveLocationModal(modal, stateName) {
   if (stateName === "meierhof") meierhofModalOpen = true;
   if (stateName === "kastelberg") kastelbergOverviewModalOpen = true;
   if (stateName === "schauenburg") schauenburgKnightModalOpen = true;
+  if (stateName === "brownArmy") brownArmyModalOpen = true;
 
   modal?.classList.add("is-open");
   modal?.setAttribute("aria-hidden", "false");
@@ -690,6 +740,10 @@ function openKastelbergOverviewModal() {
 
 function openSchauenburgKnightModal() {
   openExclusiveLocationModal(schauenburgKnightModal, "schauenburg");
+}
+
+function openBrownArmyModal() {
+  openExclusiveLocationModal(brownArmyModal, "brownArmy");
 }
 
 function openTroopSelection() {
@@ -861,7 +915,8 @@ function isAnyMainMapPanelOpen() {
     lachersgutModalOpen ||
     meierhofModalOpen ||
     kastelbergOverviewModalOpen ||
-    schauenburgKnightModalOpen
+    schauenburgKnightModalOpen ||
+    brownArmyModalOpen
   );
 }
 
@@ -1152,7 +1207,14 @@ mapViewport.addEventListener("click", (event) => {
         return;
 
       case "schauenburgKnight":
+      case "schauenburgBanner":
+      case "schauenburgCastle":
+      case "schauenburgSouthKnight":
         openSchauenburgKnightModal();
+        return;
+
+      case "brownArmy":
+        openBrownArmyModal();
         return;
     }
   }

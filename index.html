@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#050505">
   <title>Die Herren der Rench</title>
-  <link rel="stylesheet" href="style.css?v=66">
+  <link rel="stylesheet" href="style.css?v=67">
 </head>
 <body>
   <main class="game">
@@ -292,12 +292,47 @@
       >
         <div class="map-location-backdrop" aria-hidden="true"></div>
         <div class="map-location-window map-location-window--schauenburg">
-          <img
-            class="map-location-image"
-            src="assets/schauenburg-ritter-uebersicht.jpg?v=65"
-            alt="Truppen der Schauenburg"
-            draggable="false"
-          >
+          <div class="map-selection-stage">
+            <img
+              class="map-location-image"
+              src="assets/schauenburg-ritter-uebersicht.jpg?v=65"
+              alt="Truppen der Schauenburg"
+              draggable="false"
+            >
+
+            <span class="map-selection-marker map-selection-marker--red red-marker--1">?</span>
+            <span class="map-selection-marker map-selection-marker--red red-marker--2">?</span>
+            <span class="map-selection-marker map-selection-marker--red red-marker--3">?</span>
+            <span class="map-selection-marker map-selection-marker--red red-marker--4">?</span>
+            <span class="map-selection-marker map-selection-marker--red red-marker--5">?</span>
+            <span class="map-selection-marker map-selection-marker--red red-marker--6">?</span>
+            <span class="map-selection-marker map-selection-marker--red red-marker--7">?</span>
+            <span class="map-selection-marker map-selection-marker--red red-marker--8">?</span>
+          </div>
+        </div>
+      </div>
+
+      <div
+        class="map-location-modal"
+        id="brownArmyModal"
+        aria-hidden="true"
+      >
+        <div class="map-location-backdrop" aria-hidden="true"></div>
+        <div class="map-location-window map-location-window--brown-army">
+          <div class="map-selection-stage">
+            <img
+              class="map-location-image"
+              src="assets/braunes-heer-auswahl.png?v=67"
+              alt="Truppenauswahl des braun markierten Heeres"
+              draggable="false"
+            >
+
+            <span class="map-selection-marker map-selection-marker--green green-marker--1">?</span>
+            <span class="map-selection-marker map-selection-marker--green green-marker--2">?</span>
+            <span class="map-selection-marker map-selection-marker--green green-marker--3">?</span>
+            <span class="map-selection-marker map-selection-marker--green green-marker--4">?</span>
+            <span class="map-selection-marker map-selection-marker--green green-marker--5">?</span>
+          </div>
         </div>
       </div>
 
@@ -650,6 +685,6 @@
     </section>
   </main>
 
-  <script src="script.js?v=66"></script>
+  <script src="script.js?v=67"></script>
 </body>
 </html>
