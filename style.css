@@ -2329,23 +2329,23 @@ button {
   transform: translateY(0) scale(1);
 }
 
-
-
-/* V70 – zusätzliche Übersichts-Zoomstufen und Ressourcenleiste links im Außenrand. */
+/* V71 – Ressourcenleiste ab 100 %, dynamisch über die volle Breite des linken Außenrands. */
 .campaign-resource-bar {
   position: absolute;
   z-index: 14;
-  left: 10px;
+  left: var(--resource-bar-left, 8px);
   top: 50%;
-  width: clamp(58px, 6.1vw, 94px);
-  max-height: calc(100vh - 34px);
+  width: var(--resource-bar-width, 0px);
+  max-height: calc(100vh - 20px);
   opacity: 0;
   visibility: hidden;
-  transform: translateY(-50%) translateX(-8px) scale(0.96);
+  transform: translateY(-50%) translateX(-8px) scale(0.97);
   transform-origin: center left;
   pointer-events: none;
   user-select: none;
+  overflow: hidden;
   transition:
+    width 220ms ease,
     opacity 220ms ease,
     transform 220ms ease,
     visibility 0s linear 220ms;
@@ -2356,6 +2356,7 @@ button {
   visibility: visible;
   transform: translateY(-50%) translateX(0) scale(1);
   transition:
+    width 220ms ease,
     opacity 220ms ease,
     transform 220ms ease,
     visibility 0s linear 0s;
@@ -2365,7 +2366,9 @@ button {
   display: block;
   width: 100%;
   height: auto;
-  max-height: calc(100vh - 34px);
+  max-height: calc(100vh - 20px);
   object-fit: contain;
+  object-position: center;
   filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.42));
 }
+

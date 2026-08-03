@@ -370,9 +370,38 @@ function getNearestZoomLevelIndex(zoom) {
 }
 
 function updateOverviewZoomUi() {
-  const overviewZoomActive = mapState.zoom < 1;
-  mapScreen.classList.toggle("is-overview-zoom", overviewZoomActive);
-  campaignResourceBar?.classList.toggle("is-visible", overviewZoomActive);
+  if (!campaignResourceBar) {
+    return;
+  }
+
+  const viewportWidth = mapViewport.clientWidth;
+  const leftMapEdge = Math.max(0, mapState.x);
+  const outerPadding = 8;
+  const availableBorderWidth = Math.max(
+    0,
+    Math.min(leftMapEdge - outerPadding * 2, viewportWidth * 0.32)
+  );
+  const resourceBarVisible =
+    mapState.zoom <= 1 &&
+    availableBorderWidth >= 42;
+
+  mapScreen.classList.toggle(
+    "is-overview-zoom",
+    mapState.zoom < 1
+  );
+
+  campaignResourceBar.style.setProperty(
+    "--resource-bar-left",
+    `${outerPadding}px`
+  );
+  campaignResourceBar.style.setProperty(
+    "--resource-bar-width",
+    `${availableBorderWidth}px`
+  );
+  campaignResourceBar.classList.toggle(
+    "is-visible",
+    resourceBarVisible
+  );
 }
 
 function renderMap() {
