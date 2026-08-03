@@ -2278,3 +2278,54 @@ button {
   width: min(66vw, 880px);
 }
 
+/* V69 – Niccolo-Marktplatz oben links auf der Kampagnenkarte. */
+.map-merchant {
+  position: absolute;
+  z-index: 9;
+  left: 0.8%;
+  top: 1.0%;
+  width: 12.4%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  transform-origin: 50% 50%;
+  filter:
+    drop-shadow(0 2px 2px rgba(0, 0, 0, 0.44));
+}
+
+.map-merchant-key {
+  position: absolute;
+  z-index: 12;
+  left: 12.2%;
+  top: 3.6%;
+  min-width: 1.55em;
+  height: 1.55em;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  transform: translateY(-4px) scale(0.92);
+  border: 1px solid rgba(255, 255, 255, 0.56);
+  border-radius: 2px;
+  color: #ffffff;
+  background: rgba(7, 7, 7, 0.94);
+  box-shadow:
+    0 2px 5px rgba(0, 0, 0, 0.48),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(12px, 1.18vw, 20px);
+  font-weight: 800;
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+  transition:
+    opacity 220ms ease,
+    transform 220ms ease;
+}
+
+.map-merchant-key.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+

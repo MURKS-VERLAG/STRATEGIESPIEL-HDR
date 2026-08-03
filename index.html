@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#050505">
   <title>Die Herren der Rench</title>
-  <link rel="stylesheet" href="style.css?v=67">
+  <link rel="stylesheet" href="style.css?v=69">
 </head>
 <body>
   <main class="game">
@@ -112,6 +112,19 @@
             draggable="false"
             aria-hidden="true"
           >
+          <img
+            class="map-merchant"
+            id="mapMerchant"
+            src="assets/niccolo-marktplatz.png?v=69"
+            alt=""
+            draggable="false"
+            aria-hidden="true"
+          >
+          <div
+            class="map-merchant-key"
+            id="mapMerchantKey"
+            aria-hidden="true"
+          >1</div>
           <div
             class="map-hotspot-highlight"
             id="mapHotspotHighlight"
@@ -143,6 +156,8 @@
       <audio id="hoverRingelnatz" preload="auto"><source src="assets/hover-ringelnatz.mp3?v=61" type="audio/mpeg"></audio>
       <audio id="hoverSchauenburgRitter" preload="auto"><source src="assets/hover-schauenburg-ritter.mp3?v=61" type="audio/mpeg"></audio>
       <audio id="hoverCowSound" preload="auto"><source src="assets/hover-kuh.mp3?v=65" type="audio/mpeg"></audio>
+      <audio id="hoverMerchantSound" preload="auto"><source src="assets/niccolo-hover.mp3?v=69" type="audio/mpeg"></audio>
+      <audio id="merchantKeySound" preload="auto"><source src="assets/niccolo-taste-1.mp3?v=69" type="audio/mpeg"></audio>
       <audio id="hoverBrownArmy1" preload="auto"><source src="assets/hover-brown-army-1.mp3?v=68" type="audio/mpeg"></audio>
       <audio id="hoverBrownArmy2" preload="auto"><source src="assets/hover-brown-army-2.mp3?v=68" type="audio/mpeg"></audio>
       <audio id="hoverBrownArmy3" preload="auto"><source src="assets/hover-brown-army-3.mp3?v=68" type="audio/mpeg"></audio>
@@ -692,6 +707,6 @@
     </section>
   </main>
 
-  <script src="script.js?v=68"></script>
+  <script src="script.js?v=69"></script>
 </body>
 </html>

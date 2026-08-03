@@ -35,6 +35,14 @@ const neuensteinTroopSelectionWindow =
   document.querySelector("#neuensteinTroopSelectionWindow");
 const mapHotspotHighlight =
   document.querySelector("#mapHotspotHighlight");
+const mapMerchant =
+  document.querySelector("#mapMerchant");
+const mapMerchantKey =
+  document.querySelector("#mapMerchantKey");
+const hoverMerchantSound =
+  document.querySelector("#hoverMerchantSound");
+const merchantKeySound =
+  document.querySelector("#merchantKeySound");
 const neuensteinPanelFeudButton =
   document.querySelector("#neuensteinPanelFeudButton");
 const lachersgutPanelFeudButton =
@@ -658,7 +666,18 @@ const cowTargetRegion = {
   attackable: true
 };
 
+const merchantTargetRegion = {
+  id: "niccoloMerchant",
+  minX: 0.004,
+  maxX: 0.138,
+  minY: 0.004,
+  maxY: 0.156,
+  soundIds: [],
+  attackable: false
+};
+
 const mainMapHotspotRegions = [
+  merchantTargetRegion,
   neuensteinTroopSelectionTargetRegion,
   troopSelectionTargetRegion,
   kastelbergTargetRegion,
@@ -854,6 +873,7 @@ neuensteinTroopSelectionWindow.addEventListener(
 
 let activeMainMapHotspot = null;
 let pendingFeudTarget = "kastelberg";
+let merchantHasBeenHovered = false;
 
 function findMainMapHotspot(position) {
   return mainMapHotspotRegions.find((region) =>
@@ -907,6 +927,63 @@ function playRandomHoverAudio(soundIds, poolKey = null) {
   audio.currentTime = 0;
   audio.volume = 0.62;
   audio.play().catch(() => {});
+}
+
+function playMerchantHoverSound() {
+  if (!hoverMerchantSound) {
+    return;
+  }
+
+  if (!hoverMerchantSound.paused && !hoverMerchantSound.ended) {
+    return;
+  }
+
+  hoverMerchantSound.currentTime = 0;
+  hoverMerchantSound.volume = 0.62;
+  hoverMerchantSound.play().catch(() => {});
+}
+
+function revealMerchantKey() {
+  if (merchantHasBeenHovered) {
+    return;
+  }
+
+  merchantHasBeenHovered = true;
+  mapMerchantKey?.classList.add("is-visible");
+}
+
+function triggerMerchantKeySound() {
+  if (!merchantHasBeenHovered || !mapScreen.classList.contains("is-active")) {
+    return;
+  }
+
+  if (
+    battleScreenOpen ||
+    barracksOpen ||
+    barracksClosing ||
+    diplomacyOpen ||
+    diplomacyClosing ||
+    feudConfirmationOpen ||
+    feudSequenceInProgress ||
+    yearChangeInProgress ||
+    isAnyMainMapPanelOpen()
+  ) {
+    return;
+  }
+
+  if (hoverMerchantSound) {
+    hoverMerchantSound.pause();
+    hoverMerchantSound.currentTime = 0;
+  }
+
+  if (!merchantKeySound) {
+    return;
+  }
+
+  merchantKeySound.pause();
+  merchantKeySound.currentTime = 0;
+  merchantKeySound.volume = 0.68;
+  merchantKeySound.play().catch(() => {});
 }
 
 function showMapHotspotHighlight(region) {
@@ -979,6 +1056,14 @@ function closeMainMapViewFromUserInput(event) {
 
 mapScreen.addEventListener("contextmenu", (event) => {
   closeMainMapViewFromUserInput(event);
+});
+
+window.addEventListener("keydown", (event) => {
+  if (event.key !== "1" || event.repeat) {
+    return;
+  }
+
+  triggerMerchantKeySound();
 });
 
 window.addEventListener("keydown", (event) => {
@@ -1085,10 +1170,16 @@ mapViewport.addEventListener("pointermove", (event) => {
 
     if (hotspotId !== activeMainMapHotspot) {
       activeMainMapHotspot = hotspotId;
-      playRandomHoverAudio(
-        hotspot.soundIds,
-        hotspot.id === "brownArmy" ? "brownArmy" : null
-      );
+
+      if (hotspot.id === "niccoloMerchant") {
+        revealMerchantKey();
+        playMerchantHoverSound();
+      } else {
+        playRandomHoverAudio(
+          hotspot.soundIds,
+          hotspot.id === "brownArmy" ? "brownArmy" : null
+        );
+      }
     }
 
     /* V65: Fehde-Schwerter erscheinen nur noch innerhalb der Übersicht. */
@@ -1218,6 +1309,9 @@ mapViewport.addEventListener("click", (event) => {
     closeAllMainMapPanels();
 
     switch (hotspot.id) {
+      case "niccoloMerchant":
+        return;
+
       case "neuensteinTroops":
         openNeuensteinTroopSelection();
         return;
