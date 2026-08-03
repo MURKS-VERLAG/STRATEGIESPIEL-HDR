@@ -632,6 +632,7 @@ function closeMapLocationModals() {
 }
 
 function openLachersgutModal() {
+  pauseMainMapHoverFeedback();
   if (
     barracksOpen ||
     barracksClosing ||
@@ -658,6 +659,7 @@ function openLachersgutModal() {
 }
 
 function openMeierhofModal() {
+  pauseMainMapHoverFeedback();
   if (
     barracksOpen ||
     barracksClosing ||
@@ -684,6 +686,7 @@ function openMeierhofModal() {
 }
 
 function openTroopSelection() {
+  pauseMainMapHoverFeedback();
   closeMapLocationModals();
   closeNeuensteinTroopSelection();
   if (
@@ -733,6 +736,7 @@ troopSelectionWindow.addEventListener("pointerleave", () => {
 
 
 function openNeuensteinTroopSelection() {
+  pauseMainMapHoverFeedback();
   closeMapLocationModals();
 
   if (
@@ -852,6 +856,17 @@ function isAnyMainMapPanelOpen() {
   );
 }
 
+
+function pauseMainMapHoverFeedback() {
+  activeMainMapHotspot = null;
+  activeSoundRegion = null;
+
+  hideMapHotspotHighlight();
+  feudHoverIcon.classList.remove("is-visible");
+  mapViewport.classList.remove("is-hotspot-hovered");
+  mapViewport.style.cursor = "default";
+}
+
 function closeMainMapViewFromUserInput(event) {
   if (!isAnyMainMapPanelOpen()) {
     return false;
@@ -925,6 +940,11 @@ function playHoverSound(audioId) {
 }
 
 mapViewport.addEventListener("pointermove", (event) => {
+  if (isAnyMainMapPanelOpen()) {
+    pauseMainMapHoverFeedback();
+    return;
+  }
+
   if (
     barracksOpen ||
     barracksClosing ||
