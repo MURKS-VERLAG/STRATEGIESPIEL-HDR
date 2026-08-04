@@ -18,6 +18,8 @@ const yearDisplay = document.querySelector("#yearDisplay");
 const zoomDisplay = document.querySelector("#zoomDisplay");
 const mapHint = document.querySelector("#mapHint");
 const campaignResourceBar = document.querySelector("#campaignResourceBar");
+const campaignScribe = document.querySelector("#campaignScribe");
+const campaignScribeBlink = document.querySelector("#campaignScribeBlink");
 const campaignRightLogos = document.querySelector("#campaignRightLogos");
 const campaignMurksLogo = document.querySelector("#campaignMurksLogo");
 const campaignFireflyLogo = document.querySelector("#campaignFireflyLogo");
@@ -442,6 +444,17 @@ function updateOverviewZoomUi() {
     "is-visible",
     resourceBarVisible
   );
+
+  if (campaignScribe) {
+    campaignScribe.style.setProperty(
+      "--scribe-width",
+      `${availableLeftBorderWidth}px`
+    );
+    campaignScribe.classList.toggle(
+      "is-visible",
+      resourceBarVisible
+    );
+  }
 
   if (campaignRightLogos) {
     campaignRightLogos.style.setProperty(
@@ -1183,6 +1196,22 @@ function closeMainMapViewFromUserInput(event) {
 
   return true;
 }
+
+function startCampaignScribeAnimation() {
+  if (!campaignScribeBlink) {
+    return;
+  }
+
+  window.setInterval(() => {
+    campaignScribeBlink.classList.add("is-visible");
+
+    window.setTimeout(() => {
+      campaignScribeBlink.classList.remove("is-visible");
+    }, 2000);
+  }, 20000);
+}
+
+startCampaignScribeAnimation();
 
 campaignFireflyLogo?.addEventListener("mouseenter", () => {
   playLogoHoverSound(fireflyHoverSoundIds);
