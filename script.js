@@ -212,12 +212,12 @@ const ringelnatzUnits = [
   ringelnatzMercenary
 ];
 
-const MAP_ZOOM_LEVELS = [0.77, 0.88, 1, 1.14, 1.30, 1.36];
+const MAP_ZOOM_LEVELS = [0.88, 1, 1.14, 1.30];
 
 const mapState = {
   fitScale: 1,
   zoom: 1,
-  maxZoom: 1.36,
+  maxZoom: 1.30,
   x: 0,
   y: 0
 };

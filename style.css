@@ -283,12 +283,14 @@ button {
 
 .map-hint {
   left: 1rem;
-  bottom: 1rem;
+  top: 1rem;
+  bottom: auto;
 }
 
 .zoom-display {
   right: 1rem;
-  bottom: 1rem;
+  top: 1rem;
+  bottom: auto;
   min-width: 68px;
   text-align: center;
 }
