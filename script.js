@@ -1952,9 +1952,10 @@ const marchUnitDefinitions = {
     height: 22,
     duration: 5800,
     switchesPoseOnCollision: true,
+    visualOffsetY: 10,
     attackScale: 1.08,
     attackOffsetX: 5,
-    attackOffsetY: 0
+    attackOffsetY: 10
   },
   cavalry: {
     type: "cavalry",
@@ -1964,7 +1965,8 @@ const marchUnitDefinitions = {
     width: 9.2,
     height: 25,
     duration: 4400,
-    switchesPoseOnCollision: false
+    switchesPoseOnCollision: false,
+    visualOffsetY: 10
   },
   crossbow: {
     type: "crossbow",
@@ -1978,9 +1980,12 @@ const marchUnitDefinitions = {
     duration: 2000,
     shortMove: true,
     rangedUnit: true,
+    visualOffsetY: 10,
     attackScale: 1,
     attackOffsetX: 0,
-    attackOffsetY: 0
+    attackOffsetY: 10,
+    reloadOffsetY: 10,
+    deathOffsetY: 10
   },
   builder: {
     type: "builder",
@@ -1990,7 +1995,8 @@ const marchUnitDefinitions = {
     width: 6.2,
     height: 22,
     duration: 13000,
-    switchesPoseOnCollision: false
+    switchesPoseOnCollision: false,
+    visualOffsetY: 10
   },
   assassin: {
     type: "assassin",
@@ -2001,9 +2007,10 @@ const marchUnitDefinitions = {
     height: 20,
     duration: 10000,
     switchesPoseOnCollision: true,
+    visualOffsetY: 10,
     attackScale: 1.24,
     attackOffsetX: 4,
-    attackOffsetY: "-2cm"
+    attackOffsetY: 10
   },
   mercenary: {
     type: "mercenary",
@@ -4600,6 +4607,8 @@ function spawnAndMarchUnit(unitType) {
   idleImage.src = definition.idleSrc;
   idleImage.alt = "";
   idleImage.draggable = false;
+  idleImage.style.transform =
+    `translateX(-50%) translateY(${definition.visualOffsetY || 0}px)`;
   wrapper.appendChild(idleImage);
 
   let attackImage = null;
@@ -4613,6 +4622,10 @@ function spawnAndMarchUnit(unitType) {
     attackImage.src = definition.attackSrc;
     attackImage.alt = "";
     attackImage.draggable = false;
+    attackImage.style.transform =
+      `translateX(calc(-50% + ${definition.attackOffsetX || 0}px)) ` +
+      `translateY(${definition.attackOffsetY || 0}px) ` +
+      `scale(${definition.attackScale || 1})`;
     wrapper.appendChild(attackImage);
   }
 
@@ -4623,6 +4636,8 @@ function spawnAndMarchUnit(unitType) {
     reloadImage.src = definition.reloadSrc;
     reloadImage.alt = "";
     reloadImage.draggable = false;
+    reloadImage.style.transform =
+      `translateX(-50%) translateY(${definition.reloadOffsetY || 0}px)`;
     wrapper.appendChild(reloadImage);
   }
 
@@ -4633,6 +4648,8 @@ function spawnAndMarchUnit(unitType) {
     deathImage.src = definition.deathSrc;
     deathImage.alt = "";
     deathImage.draggable = false;
+    deathImage.style.transform =
+      `translateX(-50%) translateY(${definition.deathOffsetY || 0}px)`;
     wrapper.appendChild(deathImage);
   }
 
