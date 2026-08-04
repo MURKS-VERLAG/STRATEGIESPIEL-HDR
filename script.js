@@ -5880,7 +5880,8 @@ function resetPoliticalMapTransitionToNormal() {
 
   politicalMapOverlay?.classList.remove(
     "is-visible",
-    "is-iris-opening"
+    "is-iris-opening",
+    "is-iris-closing"
   );
 
   normalMapIrisOverlay?.classList.remove(
@@ -5920,7 +5921,10 @@ async function showPoliticalMapWithIris(sequenceToken) {
 
   // Phase 2: politische Karte aus der Bildmitte über Schwarz öffnen.
   politicalMapOverlay?.classList.add("is-visible");
-  politicalMapOverlay?.classList.remove("is-iris-opening");
+  politicalMapOverlay?.classList.remove(
+    "is-iris-opening",
+    "is-iris-closing"
+  );
 
   // Erzwungener Layout-Schritt, damit der Kreis sicher bei 0 % beginnt.
   void politicalMapOverlay?.offsetWidth;
@@ -5945,9 +5949,19 @@ async function showNormalMapWithIris(sequenceToken) {
     return;
   }
 
-  // Phase 1: politische Karte innerhalb exakt 0,4 s vollständig zu Schwarz.
-  mapBlackTransition?.classList.add("is-front");
+  // V88 – Phase 1: politische Karte bleibt sichtbar und schließt sich
+  // innerhalb exakt 0,4 s per umgekehrter Iris von außen zur Mitte.
+  mapBlackTransition?.classList.remove("is-front");
   mapBlackTransition?.classList.add("is-visible");
+
+  politicalMapOverlay?.classList.add("is-visible");
+  politicalMapOverlay?.classList.remove("is-iris-closing");
+
+  // Sicherstellen, dass die politische Karte vollständig geöffnet gerendert ist.
+  politicalMapOverlay?.classList.add("is-iris-opening");
+  void politicalMapOverlay?.offsetWidth;
+
+  politicalMapOverlay?.classList.add("is-iris-closing");
 
   await waitForMapIrisPhase();
 
@@ -5958,37 +5972,28 @@ async function showNormalMapWithIris(sequenceToken) {
     return;
   }
 
+  // Nach der geschlossenen Iris bleibt die Kartenfläche kurz vollständig schwarz.
   politicalMapOverlay?.classList.remove(
+    "is-visible",
+    "is-iris-opening",
+    "is-iris-closing"
+  );
+
+  // Das alte Normal-Karten-Iris-Duplikat wird beim Rückweg nicht mehr verwendet.
+  normalMapIrisOverlay?.classList.remove(
     "is-visible",
     "is-iris-opening"
   );
 
-  // Schwarz wieder hinter die Iris legen.
-  mapBlackTransition?.classList.remove("is-front");
-
-  // Phase 2: normale Karte aus der Bildmitte über Schwarz öffnen.
-  normalMapIrisOverlay?.classList.add("is-visible");
-  normalMapIrisOverlay?.classList.remove("is-iris-opening");
-
-  void normalMapIrisOverlay?.offsetWidth;
-
-  normalMapIrisOverlay?.classList.add("is-iris-opening");
+  // V88 – Phase 2: Schwarz fadet innerhalb exakt 0,4 s smooth aus.
+  // Darunter erscheint direkt die originale, unveränderte Kampagnenkarte.
+  mapBlackTransition?.classList.remove("is-visible", "is-front");
 
   await waitForMapIrisPhase();
 
   if (sequenceToken !== mapIrisSequenceToken) {
     return;
   }
-
-  // Danach übernimmt wieder das originale, unveränderte Kartenbild.
-  normalMapIrisOverlay?.classList.remove(
-    "is-visible",
-    "is-iris-opening"
-  );
-  mapBlackTransition?.classList.remove(
-    "is-visible",
-    "is-front"
-  );
 
   mapIrisSequenceRunning = false;
 

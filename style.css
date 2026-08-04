@@ -3142,6 +3142,12 @@ body *,
   transition: clip-path 400ms ease-in-out;
 }
 
+/* V88 – Rückweg: politische Karte schließt sich von außen zur Mitte. */
+.political-map-overlay.is-iris-closing {
+  clip-path: circle(0% at 50% 50%);
+  transition: clip-path 400ms ease-in-out;
+}
+
 /* Vollständig schwarze Ebene ausschließlich über der Kartenfläche. */
 .map-black-transition {
   position: absolute;
