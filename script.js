@@ -23,6 +23,13 @@ const campaignScribeBlink = document.querySelector("#campaignScribeBlink");
 const campaignRightLogos = document.querySelector("#campaignRightLogos");
 const campaignMurksLogo = document.querySelector("#campaignMurksLogo");
 const campaignFireflyLogo = document.querySelector("#campaignFireflyLogo");
+const campaignLeftTopMenu = document.querySelector("#campaignLeftTopMenu");
+const campaignRightUpperMenu = document.querySelector("#campaignRightUpperMenu");
+const campaignBookMenu = document.querySelector("#campaignBookMenu");
+const politicalMapOverlay = document.querySelector("#politicalMapOverlay");
+const politicalMapMenuIcon = document.querySelector("#politicalMapMenuIcon");
+const darkTriadMenuIcon = document.querySelector("#darkTriadMenuIcon");
+const darkTriadHoverSound = document.querySelector("#darkTriadHoverSound");
 
 const fireflyHoverSoundIds = [
   "hoverFirefly1",
@@ -503,6 +510,36 @@ function updateOverviewZoomUi() {
       rightLogosVisible
     );
   }
+
+  if (campaignLeftTopMenu) {
+    campaignLeftTopMenu.style.setProperty(
+      "--left-menu-offset",
+      `${outerPadding}px`
+    );
+    campaignLeftTopMenu.style.setProperty(
+      "--left-menu-width",
+      `${availableLeftBorderWidth}px`
+    );
+    campaignLeftTopMenu.classList.toggle(
+      "is-visible",
+      resourceBarVisible
+    );
+  }
+
+  if (campaignRightUpperMenu) {
+    campaignRightUpperMenu.style.setProperty(
+      "--right-upper-offset",
+      `${outerPadding}px`
+    );
+    campaignRightUpperMenu.style.setProperty(
+      "--right-upper-width",
+      `${availableRightBorderWidth}px`
+    );
+    campaignRightUpperMenu.classList.toggle(
+      "is-visible",
+      rightLogosVisible
+    );
+  }
 }
 
 function renderMap() {
@@ -510,6 +547,13 @@ function renderMap() {
 
   campaignMap.style.transform =
     `translate(${mapState.x}px, ${mapState.y}px) scale(${mapState.zoom})`;
+
+  if (politicalMapOverlay) {
+    politicalMapOverlay.style.width = `${campaignMap.offsetWidth}px`;
+    politicalMapOverlay.style.height = `${campaignMap.offsetHeight}px`;
+    politicalMapOverlay.style.transform =
+      `translate(${mapState.x}px, ${mapState.y}px) scale(${mapState.zoom})`;
+  }
 
   mapOverlay.style.transform =
     `translate(${mapState.x}px, ${mapState.y}px) scale(${mapState.zoom})`;
@@ -5787,3 +5831,24 @@ window.addEventListener("keydown", (event) => {
   event.preventDefault();
   spawnAndMarchUnit(unitType);
 });
+
+
+// V86 – politische Übersicht nur während des Hoverns über das Schlangen-Schwert.
+if (politicalMapMenuIcon && politicalMapOverlay) {
+  politicalMapMenuIcon.addEventListener("mouseenter", () => {
+    politicalMapOverlay.classList.add("is-visible");
+  });
+
+  politicalMapMenuIcon.addEventListener("mouseleave", () => {
+    politicalMapOverlay.classList.remove("is-visible");
+  });
+}
+
+// V86 – Dunkle Triade: einmaliger Sound pro Hover-Eintritt, kein Klickverhalten.
+if (darkTriadMenuIcon && darkTriadHoverSound) {
+  darkTriadMenuIcon.addEventListener("mouseenter", () => {
+    darkTriadHoverSound.pause();
+    darkTriadHoverSound.currentTime = 0;
+    darkTriadHoverSound.play().catch(() => {});
+  });
+}

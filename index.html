@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#050505">
   <title>Die Herren der Rench</title>
-  <link rel="stylesheet" href="style.css?v=85">
+  <link rel="stylesheet" href="style.css?v=86">
 </head>
 <body>
   <main class="game">
@@ -89,6 +89,15 @@
           src="assets/diplomatie-karte-hd.png?v=19"
           alt="Diplomatiekarte der Herren der Rench."
           draggable="false"
+        >
+
+        <img
+          class="political-map-overlay"
+          id="politicalMapOverlay"
+          src="assets/politische-karte.png?v=86"
+          alt=""
+          draggable="false"
+          aria-hidden="true"
         >
 
         <div class="map-fog-layer" id="mapFogLayer" aria-hidden="true">
@@ -195,6 +204,44 @@
         >
       </div>
 
+      <div class="campaign-left-top-menu"
+           id="campaignLeftTopMenu"
+           aria-hidden="true">
+        <div class="campaign-book-menu" id="campaignBookMenu">
+          <img
+            class="campaign-book-image campaign-book-image--closed"
+            src="assets/rand-buch-geschlossen.png?v=86"
+            alt=""
+            draggable="false"
+          >
+          <img
+            class="campaign-book-image campaign-book-image--open"
+            src="assets/rand-buch-offen.png?v=86"
+            alt=""
+            draggable="false"
+          >
+        </div>
+      </div>
+
+      <div class="campaign-right-upper-menu"
+           id="campaignRightUpperMenu"
+           aria-hidden="true">
+        <img
+          class="campaign-side-icon campaign-side-icon--dark-triad"
+          id="darkTriadMenuIcon"
+          src="assets/rand-symbol-dunkle-triade.png?v=86"
+          alt=""
+          draggable="false"
+        >
+        <img
+          class="campaign-side-icon campaign-side-icon--political-map"
+          id="politicalMapMenuIcon"
+          src="assets/rand-symbol-schlangenschwert.png?v=86"
+          alt=""
+          draggable="false"
+        >
+      </div>
+
       <div class="campaign-right-logos" id="campaignRightLogos" aria-hidden="true">
         <img
           class="campaign-right-logo campaign-right-logo--murks"
@@ -259,6 +306,9 @@
       <audio id="hoverMurks5" preload="auto"><source src="assets/hover-murks-5.mp3?v=73" type="audio/mpeg"></audio>
       <audio id="hoverMurks6" preload="auto"><source src="assets/hover-murks-6.mp3?v=73" type="audio/mpeg"></audio>
       <audio id="hoverMurks7" preload="auto"><source src="assets/hover-murks-7.mp3?v=73" type="audio/mpeg"></audio>
+      <audio id="darkTriadHoverSound" preload="auto">
+        <source src="assets/dunkle-triade-hover.mp3?v=86" type="audio/mpeg">
+      </audio>
 
 
 
@@ -908,6 +958,6 @@
     </section>
   </main>
 
-  <script src="script.js?v=83"></script>
+  <script src="script.js?v=86"></script>
 </body>
 </html>

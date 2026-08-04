@@ -2917,3 +2917,200 @@ body *,
 .campaign-resource-value--nahrung {
   font-size: clamp(9px, calc(var(--resource-bar-width, 120px) * 0.088), 24px);
 }
+
+
+/* V86 – politische Kartenüberblendung exakt über der sichtbaren Kartenfläche. */
+.political-map-overlay {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 2;
+  max-width: none;
+  max-height: none;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  user-select: none;
+  transform-origin: 0 0;
+  will-change: transform, width, height, opacity;
+  transition:
+    opacity 360ms ease,
+    visibility 0s linear 360ms;
+  image-rendering: auto;
+}
+
+.political-map-overlay.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 360ms ease,
+    visibility 0s linear 0s;
+}
+
+/* Die bestehende Karten-UI bleibt oberhalb der politischen Ansicht. */
+.map-fog-layer {
+  z-index: 2;
+}
+
+.map-overlay {
+  z-index: 3;
+}
+
+/* V86 – linkes Buchmenü ausschließlich im hellbraunen Außenrand. */
+.campaign-left-top-menu {
+  position: absolute;
+  z-index: 15;
+  left: var(--left-menu-offset, 8px);
+  top: 10px;
+  width: var(--left-menu-width, 0px);
+  height: min(18vh, 150px);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-8px) scale(0.97);
+  transform-origin: left top;
+  pointer-events: none;
+  user-select: none;
+  transition:
+    width 220ms ease,
+    opacity 220ms ease,
+    transform 220ms ease,
+    visibility 0s linear 220ms;
+}
+
+.campaign-left-top-menu.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(0) scale(1);
+  transition:
+    width 220ms ease,
+    opacity 220ms ease,
+    transform 220ms ease,
+    visibility 0s linear 0s;
+}
+
+.campaign-book-menu {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  pointer-events: auto;
+}
+
+.campaign-book-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center top;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.42));
+  transition:
+    opacity 360ms ease,
+    filter 260ms ease,
+    transform 360ms ease;
+}
+
+.campaign-book-image--closed {
+  opacity: 1;
+  transform: scale(0.96);
+}
+
+.campaign-book-image--open {
+  opacity: 0;
+  transform: scale(0.92);
+}
+
+.campaign-book-menu:hover .campaign-book-image--closed {
+  opacity: 0;
+  transform: scale(0.92);
+}
+
+.campaign-book-menu:hover .campaign-book-image--open {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* V86 – obere rechte Menüs ausschließlich im rechten hellbraunen Außenrand. */
+.campaign-right-upper-menu {
+  position: absolute;
+  z-index: 15;
+  right: var(--right-upper-offset, 8px);
+  top: 10px;
+  bottom: 31%;
+  width: var(--right-upper-width, 0px);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: space-between;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(8px) scale(0.97);
+  transform-origin: right top;
+  pointer-events: none;
+  user-select: none;
+  transition:
+    width 220ms ease,
+    opacity 220ms ease,
+    transform 220ms ease,
+    visibility 0s linear 220ms;
+}
+
+.campaign-right-upper-menu.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(0) scale(1);
+  transition:
+    width 220ms ease,
+    opacity 220ms ease,
+    transform 220ms ease,
+    visibility 0s linear 0s;
+}
+
+.campaign-side-icon {
+  display: block;
+  width: 100%;
+  max-height: 29%;
+  object-fit: contain;
+  object-position: center;
+  pointer-events: auto;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.44));
+  transition:
+    filter 240ms ease,
+    transform 240ms ease,
+    opacity 240ms ease;
+}
+
+.campaign-side-icon--dark-triad {
+  align-self: flex-start;
+}
+
+.campaign-side-icon--political-map {
+  align-self: flex-end;
+  margin-bottom: 2%;
+}
+
+.campaign-side-icon:hover {
+  transform: scale(1.035);
+}
+
+.campaign-side-icon--dark-triad:hover {
+  filter:
+    brightness(1.22)
+    drop-shadow(0 0 7px rgba(255, 255, 255, 0.88))
+    drop-shadow(0 2px 4px rgba(0, 0, 0, 0.44));
+}
+
+.campaign-side-icon--political-map:hover {
+  filter:
+    brightness(1.13)
+    drop-shadow(0 0 7px rgba(255, 222, 83, 0.72))
+    drop-shadow(0 2px 4px rgba(0, 0, 0, 0.44));
+}
+
+/* V86 – Zoomanzeige aus der rechten oberen Ecke nach unten in die Bildmitte. */
+.zoom-display {
+  left: 50%;
+  right: auto;
+  top: auto;
+  bottom: 10px;
+  transform: translateX(-50%);
+}
