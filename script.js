@@ -3162,6 +3162,7 @@ const NEUENSTEIN_SPAWN_X = 88.0;
 const NEUENSTEIN_TENT_STOP_X = 15.8;
 const BATTLE_LINE_TOP = "97.2%";
 const NEUENSTEIN_BATTLE_LINE_TOP = BATTLE_LINE_TOP;
+const RINGELNATZ_BATTLE_LINE_TOP = "calc(97.2% + 10px)";
 const NEUENSTEIN_MELEE_SPACING = 4.8;
 const NEUENSTEIN_ARCHER_ATTACK_DURATION = 1000;
 const NEUENSTEIN_ARCHER_IDLE_DURATION = 3000;
@@ -3219,9 +3220,9 @@ const neuensteinUnitDefinitions = {
     speed: 4.13,
     ranged: false,
     attackScale: 1.15,
-    idleOffsetY: 32,
+    idleOffsetY: 24,
     attackOffsetX: -5,
-    attackOffsetY: 46
+    attackOffsetY: 38
   }
 };
 
@@ -4574,7 +4575,7 @@ function spawnAndMarchUnit(unitType) {
       ? "march-unit-instance march-unit-instance--crossbow"
       : "march-unit-instance";
   wrapper.style.left = "14.5%";
-  wrapper.style.top = BATTLE_LINE_TOP;
+  wrapper.style.top = RINGELNATZ_BATTLE_LINE_TOP;
   wrapper.style.width = `${definition.width}%`;
   wrapper.style.height = `${definition.height}%`;
   wrapper.style.setProperty(
