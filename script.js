@@ -3160,7 +3160,7 @@ function startRingelnatzCrossbowCycle(instance) {
 const NEUENSTEIN_SPAWN_INTERVAL = 7000;
 const NEUENSTEIN_SPAWN_X = 88.0;
 const NEUENSTEIN_TENT_STOP_X = 15.8;
-const BATTLE_LINE_TOP = "calc(94% + 0.5cm)";
+const BATTLE_LINE_TOP = "calc(95% + 0.5cm)";
 const NEUENSTEIN_BATTLE_LINE_TOP = BATTLE_LINE_TOP;
 const NEUENSTEIN_MELEE_SPACING = 4.8;
 const NEUENSTEIN_ARCHER_ATTACK_DURATION = 1000;
@@ -3217,7 +3217,7 @@ const neuensteinUnitDefinitions = {
     ranged: false,
     attackScale: 1.15,
     attackOffsetX: -5,
-    attackOffsetY: 0
+    attackOffsetY: 9
   }
 };
 
