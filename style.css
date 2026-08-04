@@ -3114,3 +3114,112 @@ body *,
   bottom: 10px;
   transform: translateX(-50%);
 }
+
+
+/* ================================================================
+   V87 – Kampagnenkarte: schneller Schwarz-/Iriswechsel
+   ================================================================ */
+
+/* Politische Karte liegt bei der Iris vollständig über Kartenmotiven,
+   Nebel und Karten-Hotspots, aber weiterhin nur innerhalb des Viewports. */
+.political-map-overlay {
+  z-index: 20;
+  opacity: 1;
+  visibility: hidden;
+  clip-path: circle(0% at 50% 50%);
+  transition: none;
+  will-change: clip-path, transform, width, height;
+}
+
+.political-map-overlay.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transition: none;
+}
+
+.political-map-overlay.is-iris-opening {
+  clip-path: circle(80% at 50% 50%);
+  transition: clip-path 400ms ease-in-out;
+}
+
+/* Vollständig schwarze Ebene ausschließlich über der Kartenfläche. */
+.map-black-transition {
+  position: absolute;
+  inset: 0;
+  z-index: 19;
+  background: #000;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  user-select: none;
+  transition:
+    opacity 400ms ease-in-out,
+    visibility 0s linear 400ms;
+}
+
+.map-black-transition.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 400ms ease-in-out,
+    visibility 0s linear 0s;
+}
+
+/* Während politische Karte zu Schwarz verschwindet, muss Schwarz davor liegen. */
+.map-black-transition.is-front {
+  z-index: 22;
+}
+
+/* Duplikat der normalen Karte nur für die rückwärts öffnende Iris. */
+.normal-map-iris-overlay {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 20;
+  max-width: none;
+  max-height: none;
+  opacity: 1;
+  visibility: hidden;
+  pointer-events: none;
+  user-select: none;
+  transform-origin: 0 0;
+  clip-path: circle(0% at 50% 50%);
+  will-change: clip-path, transform, width, height;
+  transition: none;
+  image-rendering: auto;
+}
+
+.normal-map-iris-overlay.is-visible {
+  visibility: visible;
+}
+
+.normal-map-iris-overlay.is-iris-opening {
+  clip-path: circle(80% at 50% 50%);
+  transition: clip-path 400ms ease-in-out;
+}
+
+/* ================================================================
+   V87 – Buch nur auf niedrigster Karten-Zoomstufe größer
+   ================================================================ */
+
+.campaign-left-top-menu.is-lowest-map-zoom {
+  height: min(26vh, 225px);
+}
+
+.campaign-left-top-menu.is-lowest-map-zoom .campaign-book-image {
+  object-position: center top;
+}
+
+/* ================================================================
+   V87 – Dunkle-Triade-Klickeinblendung
+   ================================================================ */
+
+.dark-triad-window {
+  width: min(76vw, 1080px);
+  max-width: calc(100vw - 90px);
+  max-height: 86vh;
+}
+
+.dark-triad-overview-image {
+  max-height: 86vh;
+}

@@ -30,6 +30,9 @@ const politicalMapOverlay = document.querySelector("#politicalMapOverlay");
 const politicalMapMenuIcon = document.querySelector("#politicalMapMenuIcon");
 const darkTriadMenuIcon = document.querySelector("#darkTriadMenuIcon");
 const darkTriadHoverSound = document.querySelector("#darkTriadHoverSound");
+const darkTriadModal = document.querySelector("#darkTriadModal");
+const mapBlackTransition = document.querySelector("#mapBlackTransition");
+const normalMapIrisOverlay = document.querySelector("#normalMapIrisOverlay");
 
 const fireflyHoverSoundIds = [
   "hoverFirefly1",
@@ -199,6 +202,7 @@ let meierhofModalOpen = false;
 let kastelbergOverviewModalOpen = false;
 let schauenburgKnightModalOpen = false;
 let brownArmyModalOpen = false;
+let darkTriadModalOpen = false;
 let feudConfirmationOpen = false;
 let feudSequenceInProgress = false;
 let battleScreenOpen = false;
@@ -524,6 +528,10 @@ function updateOverviewZoomUi() {
       "is-visible",
       resourceBarVisible
     );
+    campaignLeftTopMenu.classList.toggle(
+      "is-lowest-map-zoom",
+      Math.abs(mapState.zoom - MAP_ZOOM_LEVELS[0]) < 0.001
+    );
   }
 
   if (campaignRightUpperMenu) {
@@ -552,6 +560,13 @@ function renderMap() {
     politicalMapOverlay.style.width = `${campaignMap.offsetWidth}px`;
     politicalMapOverlay.style.height = `${campaignMap.offsetHeight}px`;
     politicalMapOverlay.style.transform =
+      `translate(${mapState.x}px, ${mapState.y}px) scale(${mapState.zoom})`;
+  }
+
+  if (normalMapIrisOverlay) {
+    normalMapIrisOverlay.style.width = `${campaignMap.offsetWidth}px`;
+    normalMapIrisOverlay.style.height = `${campaignMap.offsetHeight}px`;
+    normalMapIrisOverlay.style.transform =
       `translate(${mapState.x}px, ${mapState.y}px) scale(${mapState.zoom})`;
   }
 
@@ -899,13 +914,15 @@ function closeMapLocationModals() {
   kastelbergOverviewModalOpen = false;
   schauenburgKnightModalOpen = false;
   brownArmyModalOpen = false;
+  darkTriadModalOpen = false;
 
   const locationModals = [
     lachersgutModal,
     meierhofModal,
     kastelbergOverviewModal,
     schauenburgKnightModal,
-    brownArmyModal
+    brownArmyModal,
+    darkTriadModal
   ];
 
   locationModals.forEach((modal) => {
@@ -941,6 +958,7 @@ function openExclusiveLocationModal(modal, stateName) {
   if (stateName === "kastelberg") kastelbergOverviewModalOpen = true;
   if (stateName === "schauenburg") schauenburgKnightModalOpen = true;
   if (stateName === "brownArmy") brownArmyModalOpen = true;
+  if (stateName === "darkTriad") darkTriadModalOpen = true;
 
   modal?.classList.add("is-open");
   modal?.setAttribute("aria-hidden", "false");
@@ -964,6 +982,12 @@ function openSchauenburgKnightModal() {
 
 function openBrownArmyModal() {
   openExclusiveLocationModal(brownArmyModal, "brownArmy");
+}
+
+function openDarkTriadModal() {
+  politicalMapRequested = false;
+  resetPoliticalMapTransitionToNormal();
+  openExclusiveLocationModal(darkTriadModal, "darkTriad");
 }
 
 function openTroopSelection() {
@@ -1242,7 +1266,8 @@ function isAnyMainMapPanelOpen() {
     meierhofModalOpen ||
     kastelbergOverviewModalOpen ||
     schauenburgKnightModalOpen ||
-    brownArmyModalOpen
+    brownArmyModalOpen ||
+    darkTriadModalOpen
   );
 }
 
@@ -5833,22 +5858,204 @@ window.addEventListener("keydown", (event) => {
 });
 
 
-// V86 – politische Übersicht nur während des Hoverns über das Schlangen-Schwert.
-if (politicalMapMenuIcon && politicalMapOverlay) {
-  politicalMapMenuIcon.addEventListener("mouseenter", () => {
-    politicalMapOverlay.classList.add("is-visible");
-  });
+// ================================================================
+// V87 – robuster Schwarz-/Iriswechsel der Kampagnenkarte.
+// ================================================================
 
-  politicalMapMenuIcon.addEventListener("mouseleave", () => {
-    politicalMapOverlay.classList.remove("is-visible");
+const MAP_IRIS_PHASE_MS = 400;
+
+let politicalMapRequested = false;
+let mapIrisSequenceRunning = false;
+let mapIrisSequenceToken = 0;
+
+function waitForMapIrisPhase(duration = MAP_IRIS_PHASE_MS) {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, duration);
   });
 }
 
-// V86 – Dunkle Triade: einmaliger Sound pro Hover-Eintritt, kein Klickverhalten.
+function resetPoliticalMapTransitionToNormal() {
+  mapIrisSequenceToken += 1;
+  mapIrisSequenceRunning = false;
+
+  politicalMapOverlay?.classList.remove(
+    "is-visible",
+    "is-iris-opening"
+  );
+
+  normalMapIrisOverlay?.classList.remove(
+    "is-visible",
+    "is-iris-opening"
+  );
+
+  mapBlackTransition?.classList.remove(
+    "is-visible",
+    "is-front"
+  );
+}
+
+async function showPoliticalMapWithIris(sequenceToken) {
+  if (
+    sequenceToken !== mapIrisSequenceToken ||
+    darkTriadModalOpen ||
+    isAnyMainMapPanelOpen()
+  ) {
+    return;
+  }
+
+  // Phase 1: normale Karte innerhalb exakt 0,4 s vollständig zu Schwarz.
+  mapBlackTransition?.classList.remove("is-front");
+  mapBlackTransition?.classList.add("is-visible");
+
+  await waitForMapIrisPhase();
+
+  if (
+    sequenceToken !== mapIrisSequenceToken ||
+    !politicalMapRequested ||
+    darkTriadModalOpen ||
+    isAnyMainMapPanelOpen()
+  ) {
+    return;
+  }
+
+  // Phase 2: politische Karte aus der Bildmitte über Schwarz öffnen.
+  politicalMapOverlay?.classList.add("is-visible");
+  politicalMapOverlay?.classList.remove("is-iris-opening");
+
+  // Erzwungener Layout-Schritt, damit der Kreis sicher bei 0 % beginnt.
+  void politicalMapOverlay?.offsetWidth;
+
+  politicalMapOverlay?.classList.add("is-iris-opening");
+
+  await waitForMapIrisPhase();
+
+  if (sequenceToken !== mapIrisSequenceToken) {
+    return;
+  }
+
+  mapIrisSequenceRunning = false;
+
+  if (!politicalMapRequested) {
+    runRequestedMapIrisState();
+  }
+}
+
+async function showNormalMapWithIris(sequenceToken) {
+  if (sequenceToken !== mapIrisSequenceToken) {
+    return;
+  }
+
+  // Phase 1: politische Karte innerhalb exakt 0,4 s vollständig zu Schwarz.
+  mapBlackTransition?.classList.add("is-front");
+  mapBlackTransition?.classList.add("is-visible");
+
+  await waitForMapIrisPhase();
+
+  if (
+    sequenceToken !== mapIrisSequenceToken ||
+    politicalMapRequested
+  ) {
+    return;
+  }
+
+  politicalMapOverlay?.classList.remove(
+    "is-visible",
+    "is-iris-opening"
+  );
+
+  // Schwarz wieder hinter die Iris legen.
+  mapBlackTransition?.classList.remove("is-front");
+
+  // Phase 2: normale Karte aus der Bildmitte über Schwarz öffnen.
+  normalMapIrisOverlay?.classList.add("is-visible");
+  normalMapIrisOverlay?.classList.remove("is-iris-opening");
+
+  void normalMapIrisOverlay?.offsetWidth;
+
+  normalMapIrisOverlay?.classList.add("is-iris-opening");
+
+  await waitForMapIrisPhase();
+
+  if (sequenceToken !== mapIrisSequenceToken) {
+    return;
+  }
+
+  // Danach übernimmt wieder das originale, unveränderte Kartenbild.
+  normalMapIrisOverlay?.classList.remove(
+    "is-visible",
+    "is-iris-opening"
+  );
+  mapBlackTransition?.classList.remove(
+    "is-visible",
+    "is-front"
+  );
+
+  mapIrisSequenceRunning = false;
+
+  if (politicalMapRequested) {
+    runRequestedMapIrisState();
+  }
+}
+
+function runRequestedMapIrisState() {
+  if (
+    mapIrisSequenceRunning ||
+    darkTriadModalOpen ||
+    isAnyMainMapPanelOpen()
+  ) {
+    return;
+  }
+
+  const politicalVisible =
+    politicalMapOverlay?.classList.contains("is-visible");
+
+  if (politicalMapRequested && !politicalVisible) {
+    mapIrisSequenceRunning = true;
+    const sequenceToken = ++mapIrisSequenceToken;
+    showPoliticalMapWithIris(sequenceToken);
+    return;
+  }
+
+  if (!politicalMapRequested && politicalVisible) {
+    mapIrisSequenceRunning = true;
+    const sequenceToken = ++mapIrisSequenceToken;
+    showNormalMapWithIris(sequenceToken);
+  }
+}
+
+if (politicalMapMenuIcon && politicalMapOverlay) {
+  politicalMapMenuIcon.addEventListener("mouseenter", () => {
+    if (darkTriadModalOpen || isAnyMainMapPanelOpen()) {
+      return;
+    }
+
+    politicalMapRequested = true;
+    runRequestedMapIrisState();
+  });
+
+  politicalMapMenuIcon.addEventListener("mouseleave", () => {
+    politicalMapRequested = false;
+    runRequestedMapIrisState();
+  });
+}
+
+// Dunkle Triade: vorhandener Hover-Sound und Leuchteffekt bleiben bestehen.
 if (darkTriadMenuIcon && darkTriadHoverSound) {
   darkTriadMenuIcon.addEventListener("mouseenter", () => {
     darkTriadHoverSound.pause();
     darkTriadHoverSound.currentTime = 0;
     darkTriadHoverSound.play().catch(() => {});
+  });
+
+  // Neu: Linksklick öffnet die normale zentrale Karten-Einblendung.
+  darkTriadMenuIcon.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!canOpenMainMapLocation()) {
+      return;
+    }
+
+    openDarkTriadModal();
   });
 }
