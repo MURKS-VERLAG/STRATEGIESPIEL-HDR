@@ -151,6 +151,22 @@ const ringelnatzBuilder = document.querySelector("#ringelnatzBuilder");
 const ringelnatzAssassin = document.querySelector("#ringelnatzAssassin");
 const ringelnatzMercenary = document.querySelector("#ringelnatzMercenary");
 const surrenderButton = document.querySelector("#surrenderButton");
+const battleScreenImage =
+  document.querySelector(".battle-screen-image");
+const siegeTransitionOverlay =
+  document.querySelector("#siegeTransitionOverlay");
+const kastelbergSiegeLayer =
+  document.querySelector("#kastelbergSiegeLayer");
+const kastelbergSiegeDefenders =
+  document.querySelector("#kastelbergSiegeDefenders");
+const siegeStructureUi =
+  document.querySelector("#siegeStructureUi");
+const siegePreparationUnitLayer =
+  document.querySelector("#siegePreparationUnitLayer");
+const siegeBuilderCount =
+  document.querySelector("#siegeBuilderCount");
+const siegeShieldKnightAppearSound =
+  document.querySelector("#siegeShieldKnightAppearSound");
 
 const INTRO_DURATION = 72000;
 const TRANSITION_DURATION = 1400;
@@ -193,6 +209,23 @@ let marchingUnitInstances = [];
 let productionCooldownUntil = 0;
 let ringelnatzProductionUnlocked = false;
 let marchInstanceCounter = 0;
+
+const KASTELBERG_PHASES = Object.freeze({
+  FIELD_BATTLE: "field-battle",
+  TRANSITION_TO_SIEGE: "transition-to-siege",
+  SIEGE_DEFENDERS_INTRO: "siege-defenders-intro",
+  SIEGE_RINGELNATZ_UI_INTRO: "siege-ringelnatz-ui-intro",
+  SIEGE_PREPARATION: "siege-preparation",
+  SIEGE_COUNTDOWN: "siege-countdown",
+  SIEGE_ACTIVE: "siege-active"
+});
+
+let kastelbergPhase = KASTELBERG_PHASES.FIELD_BATTLE;
+let siegeTransitionStarted = false;
+let siegeSequenceTimers = [];
+let siegePlacementBusy = false;
+let siegeCrossbowSlotsFilled = 0;
+let siegeBuildersAssigned = 0;
 
 let neuensteinSpawnTimer = null;
 let neuensteinSpawnQueue = [];
@@ -2268,6 +2301,398 @@ function preloadKillSounds() {
 
 preloadKillSounds();
 
+
+const SIEGE_CROSSBOW_SLOTS = [
+  {
+    startX: 0,
+    startY: 84,
+    targetX: 24.3,
+    targetY: 70.2
+  },
+  {
+    startX: 0,
+    startY: 84,
+    targetX: 34.8,
+    targetY: 67.8
+  },
+  {
+    startX: 100,
+    startY: 84,
+    targetX: 79.8,
+    targetY: 72.2
+  }
+];
+
+const SIEGE_BUILDER_ROUTE = {
+  startX: 100,
+  startY: 91,
+  targetX: 88.6,
+  targetY: 64.5
+};
+
+function clearSiegeSequenceTimers() {
+  siegeSequenceTimers.forEach((timer) => {
+    window.clearTimeout(timer);
+  });
+  siegeSequenceTimers = [];
+}
+
+function playSiegeSequenceSound(audio, volume = 0.72) {
+  if (!audio) {
+    return;
+  }
+
+  audio.pause();
+  audio.currentTime = 0;
+  audio.volume = volume;
+  audio.play().catch(() => {});
+}
+
+function resetKastelbergSiegeSystem() {
+  clearSiegeSequenceTimers();
+  kastelbergPhase = KASTELBERG_PHASES.FIELD_BATTLE;
+  siegeTransitionStarted = false;
+  siegePlacementBusy = false;
+  siegeCrossbowSlotsFilled = 0;
+  siegeBuildersAssigned = 0;
+
+  if (siegeBuilderCount) {
+    siegeBuilderCount.textContent = "×2";
+  }
+
+  if (siegePreparationUnitLayer) {
+    siegePreparationUnitLayer.replaceChildren();
+  }
+
+  if (kastelbergSiegeDefenders) {
+    kastelbergSiegeDefenders
+      .querySelectorAll(".siege-defender")
+      .forEach((defender) => {
+        defender.classList.remove("is-visible");
+      });
+  }
+
+  ringelnatzUnits.forEach((unit) => {
+    unit.classList.remove("is-visible");
+  });
+  unitKeyElements.forEach((key) => {
+    key.classList.remove("is-visible");
+  });
+
+  kastelbergSiegeLayer?.classList.remove(
+    "is-visible",
+    "is-preparation-ready"
+  );
+  kastelbergSiegeLayer?.setAttribute("aria-hidden", "true");
+  siegeTransitionOverlay?.classList.remove("is-visible");
+  battleStage?.classList.remove("is-siege-phase");
+
+  if (battleScreenImage) {
+    battleScreenImage.classList.remove("is-part-one-hidden");
+  }
+}
+
+function hidePartOneForSiege() {
+  stopCastleArcher();
+  stopNeuensteinProduction();
+  clearBattleCountdown();
+  resetMarchingUnits();
+  resetNeuensteinBattleSystem();
+
+  [
+    battleArcherOne,
+    battleSwordsman,
+    battleArcherTwo
+  ].forEach((unit) => {
+    unit?.classList.remove("is-visible");
+  });
+
+  ringelnatzTentTarget?.classList.add("is-siege-hidden");
+  neuensteinTentTarget?.classList.add("is-siege-hidden");
+  battleStage?.classList.add("is-siege-phase");
+}
+
+function revealSiegeDefender(defender) {
+  if (!defender || !battleScreenOpen) {
+    return;
+  }
+
+  defender.classList.add("is-visible");
+
+  const defenderType = defender.dataset.siegeDefender;
+
+  if (defenderType === "shield") {
+    playSiegeSequenceSound(siegeShieldKnightAppearSound, 0.76);
+  } else if (defenderType === "swordsman") {
+    playBattleUnitSound(swordsmanAppearSound);
+  } else {
+    playBattleUnitSound(archerAppearSound);
+  }
+}
+
+function startSiegeRingelnatzUiSequence() {
+  kastelbergPhase =
+    KASTELBERG_PHASES.SIEGE_RINGELNATZ_UI_INTRO;
+
+  resetRingelnatzUnits();
+
+  ringelnatzUnits.forEach((unit, index) => {
+    siegeSequenceTimers.push(
+      window.setTimeout(() => {
+        if (
+          !battleScreenOpen ||
+          kastelbergPhase !==
+            KASTELBERG_PHASES.SIEGE_RINGELNATZ_UI_INTRO
+        ) {
+          return;
+        }
+
+        unit.classList.add("is-visible");
+        syncUnitKeysWithSelectionUnits();
+      }, index * 220)
+    );
+  });
+
+  siegeSequenceTimers.push(
+    window.setTimeout(() => {
+      if (!battleScreenOpen) {
+        return;
+      }
+
+      kastelbergPhase =
+        KASTELBERG_PHASES.SIEGE_PREPARATION;
+      kastelbergSiegeLayer?.classList.add(
+        "is-preparation-ready"
+      );
+    }, ringelnatzUnits.length * 220 + 350)
+  );
+}
+
+function startSiegeDefenderSequence() {
+  kastelbergPhase =
+    KASTELBERG_PHASES.SIEGE_DEFENDERS_INTRO;
+
+  const defenders = Array.from(
+    kastelbergSiegeDefenders?.querySelectorAll(
+      ".siege-defender"
+    ) || []
+  );
+
+  defenders.forEach((defender, index) => {
+    siegeSequenceTimers.push(
+      window.setTimeout(() => {
+        if (
+          !battleScreenOpen ||
+          kastelbergPhase !==
+            KASTELBERG_PHASES.SIEGE_DEFENDERS_INTRO
+        ) {
+          return;
+        }
+
+        revealSiegeDefender(defender);
+      }, index * 850)
+    );
+  });
+
+  siegeSequenceTimers.push(
+    window.setTimeout(() => {
+      if (battleScreenOpen) {
+        startSiegeRingelnatzUiSequence();
+      }
+    }, defenders.length * 850 + 500)
+  );
+}
+
+function startKastelbergSiegeTransition() {
+  if (
+    siegeTransitionStarted ||
+    !battleScreenOpen
+  ) {
+    return;
+  }
+
+  siegeTransitionStarted = true;
+  kastelbergPhase =
+    KASTELBERG_PHASES.TRANSITION_TO_SIEGE;
+  ringelnatzProductionUnlocked = false;
+  hidePartOneForSiege();
+
+  siegeTransitionOverlay?.classList.add("is-visible");
+
+  siegeSequenceTimers.push(
+    window.setTimeout(() => {
+      if (!battleScreenOpen) {
+        return;
+      }
+
+      battleScreenImage?.classList.add("is-part-one-hidden");
+      kastelbergSiegeLayer?.classList.add("is-visible");
+      kastelbergSiegeLayer?.setAttribute(
+        "aria-hidden",
+        "false"
+      );
+    }, 700)
+  );
+
+  siegeSequenceTimers.push(
+    window.setTimeout(() => {
+      if (!battleScreenOpen) {
+        return;
+      }
+
+      siegeTransitionOverlay?.classList.remove("is-visible");
+    }, 1150)
+  );
+
+  siegeSequenceTimers.push(
+    window.setTimeout(() => {
+      if (battleScreenOpen) {
+        startSiegeDefenderSequence();
+      }
+    }, 1650)
+  );
+}
+
+function createSiegePreparationUnit(type, start, target, onArrive) {
+  if (
+    !siegePreparationUnitLayer ||
+    !battleScreenOpen
+  ) {
+    siegePlacementBusy = false;
+    return;
+  }
+
+  const definition = marchUnitDefinitions[type];
+  if (!definition) {
+    siegePlacementBusy = false;
+    return;
+  }
+
+  const wrapper = document.createElement("div");
+  wrapper.className =
+    "siege-preparation-unit " +
+    `siege-preparation-unit--${type}`;
+  wrapper.style.left = `${start.startX}%`;
+  wrapper.style.top = `${start.startY}%`;
+  wrapper.style.width = `${definition.width}%`;
+  wrapper.style.height = `${definition.height}%`;
+
+  const image = document.createElement("img");
+  image.src = definition.idleSrc;
+  image.alt = "";
+  image.draggable = false;
+  image.style.transform =
+    `translateX(-50%) translateY(${definition.visualOffsetY || 0}px)`;
+  wrapper.appendChild(image);
+  siegePreparationUnitLayer.appendChild(wrapper);
+
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
+      wrapper.classList.add("is-visible");
+
+      window.setTimeout(() => {
+        const dx = target.targetX - start.startX;
+        const dy = target.targetY - start.startY;
+        const distance = Math.hypot(dx, dy);
+        const duration = Math.max(1400, distance * 55);
+
+        wrapper.style.transitionDuration = `${duration}ms`;
+        wrapper.style.left = `${target.targetX}%`;
+        wrapper.style.top = `${target.targetY}%`;
+
+        window.setTimeout(() => {
+          if (typeof onArrive === "function") {
+            onArrive(wrapper);
+          }
+          siegePlacementBusy = false;
+        }, duration + 80);
+      }, 60);
+    });
+  });
+}
+
+function deployNextSiegeCrossbow() {
+  if (
+    kastelbergPhase !==
+      KASTELBERG_PHASES.SIEGE_PREPARATION ||
+    siegePlacementBusy ||
+    siegeCrossbowSlotsFilled >=
+      SIEGE_CROSSBOW_SLOTS.length
+  ) {
+    return;
+  }
+
+  const slot =
+    SIEGE_CROSSBOW_SLOTS[siegeCrossbowSlotsFilled];
+
+  siegePlacementBusy = true;
+  playUnitProductionSound("crossbow");
+
+  createSiegePreparationUnit(
+    "crossbow",
+    {
+      startX: slot.startX,
+      startY: slot.startY
+    },
+    {
+      targetX: slot.targetX,
+      targetY: slot.targetY
+    },
+    (wrapper) => {
+      wrapper.classList.add("is-parked");
+      siegeCrossbowSlotsFilled += 1;
+
+      const slotElement =
+        siegeStructureUi?.querySelector(
+          `[data-siege-slot="${siegeCrossbowSlotsFilled - 1}"]`
+        );
+      slotElement?.classList.add("is-occupied");
+    }
+  );
+}
+
+function deployNextSiegeBuilder() {
+  if (
+    kastelbergPhase !==
+      KASTELBERG_PHASES.SIEGE_PREPARATION ||
+    siegePlacementBusy ||
+    siegeBuildersAssigned >= 2
+  ) {
+    return;
+  }
+
+  siegePlacementBusy = true;
+  playUnitProductionSound("builder");
+
+  createSiegePreparationUnit(
+    "builder",
+    {
+      startX: SIEGE_BUILDER_ROUTE.startX,
+      startY: SIEGE_BUILDER_ROUTE.startY
+    },
+    {
+      targetX: SIEGE_BUILDER_ROUTE.targetX,
+      targetY: SIEGE_BUILDER_ROUTE.targetY
+    },
+    (wrapper) => {
+      wrapper.classList.add("is-dissolving");
+
+      window.setTimeout(() => {
+        wrapper.remove();
+      }, 500);
+
+      siegeBuildersAssigned += 1;
+      const remaining =
+        Math.max(0, 2 - siegeBuildersAssigned);
+
+      if (siegeBuilderCount) {
+        siegeBuilderCount.textContent =
+          remaining > 0 ? `×${remaining}` : "✓";
+      }
+    }
+  );
+}
+
 const TENT_DAMAGE_PER_HIT = 5;
 
 const ringelnatzTent = {
@@ -2330,6 +2755,12 @@ function defeatTent(tent) {
     stopNeuensteinProduction();
     neuensteinProductionFinished = true;
     ringelnatzProductionUnlocked = false;
+
+    window.setTimeout(() => {
+      if (battleScreenOpen) {
+        startKastelbergSiegeTransition();
+      }
+    }, 650);
     return;
   }
 
@@ -4999,6 +5430,7 @@ function resetBattleUnits() {
   resetNeuensteinBattleSystem();
   resetRingelnatzUnits();
   resetMarchingUnits();
+  resetKastelbergSiegeSystem();
   battleUnitSequenceStarted = false;
 
   battleArcherOne.classList.remove("is-visible");
@@ -5017,6 +5449,8 @@ function resetBattleUnits() {
 
 function startBattleUnitSequence() {
   resetBattleUnits();
+  ringelnatzTentTarget?.classList.remove("is-siege-hidden");
+  neuensteinTentTarget?.classList.remove("is-siege-hidden");
   battleUnitSequenceStarted = true;
 
   battleUnitTimers.push(
@@ -5171,6 +5605,36 @@ window.addEventListener("keydown", (event) => {
     event.code && event.code.startsWith("Numpad")
       ? event.code
       : event.key;
+
+  if (
+    battleScreenOpen &&
+    kastelbergPhase ===
+      KASTELBERG_PHASES.SIEGE_PREPARATION
+  ) {
+    if (
+      key === "4" ||
+      key === "Numpad4"
+    ) {
+      event.preventDefault();
+      deployNextSiegeCrossbow();
+      return;
+    }
+
+    if (
+      key === "5" ||
+      key === "Numpad5"
+    ) {
+      event.preventDefault();
+      deployNextSiegeBuilder();
+      return;
+    }
+
+    // During the paused preparation phase no normal field unit may spawn.
+    if (unitKeyMap[key]) {
+      event.preventDefault();
+      return;
+    }
+  }
 
   const unitType = unitKeyMap[key];
 

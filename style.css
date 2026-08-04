@@ -2512,3 +2512,321 @@ body *,
 .campaign-scribe-image--blink.is-visible {
   opacity: 1;
 }
+
+
+/* V82 – Kastelberg Part 2: preparation phase only. */
+.siege-transition-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 190;
+  background: #e8dfca;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 700ms ease,
+    visibility 0s linear 700ms;
+}
+
+.siege-transition-overlay.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 700ms ease,
+    visibility 0s linear 0s;
+}
+
+.battle-screen-image {
+  transition: opacity 650ms ease;
+}
+
+.battle-screen-image.is-part-one-hidden {
+  opacity: 0;
+}
+
+.battle-tent-target.is-siege-hidden {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+.kastelberg-siege-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 52;
+  opacity: 0;
+  visibility: hidden;
+  overflow: hidden;
+  pointer-events: none;
+  transition:
+    opacity 700ms ease,
+    visibility 0s linear 700ms;
+}
+
+.kastelberg-siege-layer.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 700ms ease,
+    visibility 0s linear 0s;
+}
+
+.kastelberg-siege-map {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  user-select: none;
+  pointer-events: none;
+}
+
+.kastelberg-siege-defenders,
+.siege-structure-ui,
+.siege-preparation-unit-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.kastelberg-siege-defenders {
+  z-index: 58;
+}
+
+.siege-defender {
+  position: absolute;
+  display: block;
+  object-fit: contain;
+  object-position: center bottom;
+  opacity: 0;
+  transform: translate(-50%, -100%) scale(0.88);
+  transform-origin: 50% 100%;
+  transition:
+    opacity 430ms ease,
+    transform 430ms ease;
+}
+
+.siege-defender.is-visible {
+  opacity: 1;
+  transform: translate(-50%, -100%) scale(1);
+}
+
+.siege-defender--top-left {
+  left: 54.2%;
+  top: 35.4%;
+  width: 7.3%;
+  height: 20%;
+}
+
+.siege-defender--top-right {
+  left: 68.1%;
+  top: 35.9%;
+  width: 7.3%;
+  height: 20%;
+}
+
+.siege-defender--gate-shield {
+  left: 60.4%;
+  top: 46.4%;
+  width: 8.7%;
+  height: 23%;
+}
+
+.siege-defender--gate-swordsman {
+  left: 64.7%;
+  top: 47.5%;
+  width: 7.5%;
+  height: 21%;
+}
+
+.siege-defender--lower-shield {
+  left: 49.1%;
+  top: 60.4%;
+  width: 8.7%;
+  height: 23%;
+}
+
+.siege-defender--lower-archer {
+  left: 54.2%;
+  top: 59.4%;
+  width: 7.3%;
+  height: 20%;
+}
+
+.siege-structure-ui {
+  z-index: 63;
+  opacity: 0;
+  transition: opacity 350ms ease;
+}
+
+.kastelberg-siege-layer.is-preparation-ready
+.siege-structure-ui {
+  opacity: 1;
+}
+
+.siege-health-frame {
+  width: 100%;
+  height: 8px;
+  overflow: hidden;
+  border: 3px solid #111;
+  background: rgba(35, 24, 12, 0.84);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.35),
+    0 2px 6px rgba(0, 0, 0, 0.48);
+}
+
+.siege-health-fill {
+  width: 100%;
+  height: 100%;
+  transform-origin: left center;
+}
+
+.siege-health-fill--castle {
+  background: #5ae8f5;
+}
+
+.siege-health-fill--yellow {
+  background: #f6d529;
+}
+
+.siege-castle-health {
+  position: absolute;
+  right: 2.6%;
+  top: 48.2%;
+  width: 19.8%;
+}
+
+.siege-slot {
+  position: absolute;
+  width: 8.7%;
+  min-width: 72px;
+  text-align: center;
+  opacity: 0.96;
+}
+
+.siege-slot--one {
+  left: 18.7%;
+  top: 66.7%;
+}
+
+.siege-slot--two {
+  left: 29.2%;
+  top: 64.4%;
+}
+
+.siege-slot--three {
+  left: 75.5%;
+  top: 68.5%;
+}
+
+.siege-slot .siege-health-frame {
+  margin-bottom: 4px;
+}
+
+.siege-roman,
+.siege-builder-count {
+  color: #ffe13d;
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 900;
+  line-height: 1;
+  -webkit-text-stroke: 1px #14100a;
+  text-shadow:
+    -2px -2px 0 #17110a,
+     2px -2px 0 #17110a,
+    -2px  2px 0 #17110a,
+     2px  2px 0 #17110a,
+     0 0 7px rgba(255, 221, 50, 0.85);
+}
+
+.siege-roman {
+  font-size: clamp(18px, 2vw, 33px);
+}
+
+.siege-key {
+  display: inline-grid;
+  place-items: center;
+  min-width: 30px;
+  min-height: 28px;
+  margin-top: 4px;
+  padding: 2px 7px;
+  border: 3px solid #111;
+  background: #17130e;
+  color: #ffe13d;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(16px, 1.45vw, 25px);
+  font-weight: 900;
+  line-height: 1;
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.44),
+    inset 0 0 0 1px rgba(255, 225, 85, 0.22);
+}
+
+.siege-slot.is-occupied .siege-key {
+  opacity: 0.45;
+}
+
+.siege-catapult-ui {
+  position: absolute;
+  right: 4.8%;
+  top: 59.2%;
+  width: 13.5%;
+  text-align: center;
+}
+
+.siege-builder-key-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 7px;
+  margin-top: 6px;
+}
+
+.siege-builder-count {
+  font-size: clamp(17px, 1.7vw, 27px);
+}
+
+.siege-preparation-unit-layer {
+  z-index: 67;
+  overflow: hidden;
+}
+
+.siege-preparation-unit {
+  position: absolute;
+  opacity: 0;
+  transform: translate(-50%, -100%) scale(0.92);
+  transform-origin: 50% 100%;
+  transition:
+    left 2600ms linear,
+    top 2600ms linear,
+    opacity 320ms ease,
+    transform 320ms ease;
+  will-change: left, top, opacity, transform;
+}
+
+.siege-preparation-unit.is-visible {
+  opacity: 1;
+  transform: translate(-50%, -100%) scale(1);
+}
+
+.siege-preparation-unit.is-dissolving {
+  opacity: 0;
+  transform: translate(-50%, -100%) scale(0.93);
+  transition:
+    opacity 500ms ease,
+    transform 500ms ease;
+}
+
+.siege-preparation-unit img {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  user-select: none;
+  pointer-events: none;
+}

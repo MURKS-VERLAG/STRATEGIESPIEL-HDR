@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#050505">
   <title>Die Herren der Rench</title>
-  <link rel="stylesheet" href="style.css?v=77">
+  <link rel="stylesheet" href="style.css?v=82">
 </head>
 <body>
   <main class="game">
@@ -693,6 +693,106 @@
         </div>
 
         <div
+          class="siege-transition-overlay"
+          id="siegeTransitionOverlay"
+          aria-hidden="true"
+        ></div>
+
+        <div
+          class="kastelberg-siege-layer"
+          id="kastelbergSiegeLayer"
+          aria-hidden="true"
+        >
+          <img
+            class="kastelberg-siege-map"
+            id="kastelbergSiegeMap"
+            src="assets/kastelberg-belagerung.png?v=82"
+            alt=""
+            draggable="false"
+          >
+
+          <div
+            class="kastelberg-siege-defenders"
+            id="kastelbergSiegeDefenders"
+            aria-hidden="true"
+          >
+            <img class="siege-defender siege-defender--top-left"
+                 data-siege-defender="archer"
+                 src="assets/kastelberg-bogenschuetze.png?v=24"
+                 alt="" draggable="false">
+            <img class="siege-defender siege-defender--top-right"
+                 data-siege-defender="archer"
+                 src="assets/kastelberg-bogenschuetze.png?v=24"
+                 alt="" draggable="false">
+            <img class="siege-defender siege-defender--gate-shield"
+                 data-siege-defender="shield"
+                 src="assets/kastelberg-schildritter.png?v=82"
+                 alt="" draggable="false">
+            <img class="siege-defender siege-defender--gate-swordsman"
+                 data-siege-defender="swordsman"
+                 src="assets/kastelberg-schwertkaempfer.png?v=24"
+                 alt="" draggable="false">
+            <img class="siege-defender siege-defender--lower-shield"
+                 data-siege-defender="shield"
+                 src="assets/kastelberg-schildritter.png?v=82"
+                 alt="" draggable="false">
+            <img class="siege-defender siege-defender--lower-archer"
+                 data-siege-defender="archer"
+                 src="assets/kastelberg-bogenschuetze.png?v=24"
+                 alt="" draggable="false">
+          </div>
+
+          <div class="siege-structure-ui" id="siegeStructureUi" aria-hidden="true">
+            <div class="siege-castle-health">
+              <div class="siege-health-frame">
+                <div class="siege-health-fill siege-health-fill--castle"
+                     id="siegeCastleHealthFill"></div>
+              </div>
+            </div>
+
+            <div class="siege-slot siege-slot--one" data-siege-slot="0">
+              <div class="siege-health-frame siege-health-frame--yellow">
+                <div class="siege-health-fill siege-health-fill--yellow"></div>
+              </div>
+              <div class="siege-roman">I</div>
+              <div class="siege-key">4</div>
+            </div>
+
+            <div class="siege-slot siege-slot--two" data-siege-slot="1">
+              <div class="siege-health-frame siege-health-frame--yellow">
+                <div class="siege-health-fill siege-health-fill--yellow"></div>
+              </div>
+              <div class="siege-roman">II</div>
+              <div class="siege-key">4</div>
+            </div>
+
+            <div class="siege-slot siege-slot--three" data-siege-slot="2">
+              <div class="siege-health-frame siege-health-frame--yellow">
+                <div class="siege-health-fill siege-health-fill--yellow"></div>
+              </div>
+              <div class="siege-roman">III</div>
+              <div class="siege-key">4</div>
+            </div>
+
+            <div class="siege-catapult-ui">
+              <div class="siege-health-frame siege-health-frame--yellow">
+                <div class="siege-health-fill siege-health-fill--yellow"></div>
+              </div>
+              <div class="siege-builder-key-row">
+                <div class="siege-key">5</div>
+                <div class="siege-builder-count" id="siegeBuilderCount">×2</div>
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="siege-preparation-unit-layer"
+            id="siegePreparationUnitLayer"
+            aria-hidden="true"
+          ></div>
+        </div>
+
+        <div
           class="battle-tent-target battle-tent-target--ringelnatz"
           id="ringelnatzTentTarget"
           aria-hidden="true"
@@ -757,9 +857,16 @@
         <source src="assets/unit-key-7.mp3?v=30" type="audio/mpeg">
       </audio>
 
+      <audio id="siegeShieldKnightAppearSound" preload="auto">
+        <source
+          src="assets/kastelberg-schildritter-erscheint.mp3?v=82"
+          type="audio/mpeg"
+        >
+      </audio>
+
     </section>
   </main>
 
-  <script src="script.js?v=81"></script>
+  <script src="script.js?v=82"></script>
 </body>
 </html>
