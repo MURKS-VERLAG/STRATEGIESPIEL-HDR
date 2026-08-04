@@ -2830,3 +2830,90 @@ body *,
   user-select: none;
   pointer-events: none;
 }
+
+
+/* V84 – reine Zahlenanzeige auf der bestehenden Kampagnen-Ressourcenleiste. */
+.campaign-resource-values {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  user-select: none;
+}
+
+.campaign-resource-value {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  min-width: 1.15em;
+  min-height: 1.15em;
+  transform: translate(-50%, -50%);
+  color: #ffe13b;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(10px, calc(var(--resource-bar-width, 120px) * 0.105), 28px);
+  font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
+  -webkit-text-stroke: 0.7px #130e08;
+  paint-order: stroke fill;
+  text-shadow:
+    -1px -1px 0 #130e08,
+     1px -1px 0 #130e08,
+    -1px  1px 0 #130e08,
+     1px  1px 0 #130e08,
+     0 0 4px rgba(255, 218, 40, 0.95),
+     0 0 8px rgba(255, 198, 20, 0.62);
+}
+
+/* Spaltenmitten der vorhandenen Motive. */
+.campaign-resource-value--gulden,
+.campaign-resource-value--ehre,
+.campaign-resource-value--holz,
+.campaign-resource-value--eisen,
+.campaign-resource-value--hoefe,
+.campaign-resource-value--soldaten {
+  left: 31.2%;
+}
+
+.campaign-resource-value--pfennige,
+.campaign-resource-value--nahrung,
+.campaign-resource-value--stein,
+.campaign-resource-value--felle,
+.campaign-resource-value--burgen {
+  left: 68.7%;
+}
+
+/* Reihenmitten – Werte liegen klein und direkt auf den Motiven. */
+.campaign-resource-value--gulden,
+.campaign-resource-value--pfennige {
+  top: 8.0%;
+}
+
+.campaign-resource-value--ehre,
+.campaign-resource-value--nahrung {
+  top: 24.2%;
+}
+
+.campaign-resource-value--holz,
+.campaign-resource-value--stein {
+  top: 41.1%;
+}
+
+.campaign-resource-value--eisen,
+.campaign-resource-value--felle {
+  top: 57.7%;
+}
+
+.campaign-resource-value--hoefe,
+.campaign-resource-value--burgen {
+  top: 75.3%;
+}
+
+.campaign-resource-value--soldaten {
+  top: 91.5%;
+}
+
+/* Dreistellige Werte etwas kleiner, damit sie sauber innerhalb des Motivs bleiben. */
+.campaign-resource-value--nahrung {
+  font-size: clamp(9px, calc(var(--resource-bar-width, 120px) * 0.088), 24px);
+}
