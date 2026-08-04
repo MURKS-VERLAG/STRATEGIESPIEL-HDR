@@ -234,7 +234,9 @@ button {
   position: absolute;
   inset: 0;
   overflow: hidden;
-  cursor: default;
+  cursor:
+    url("assets/cursor-schwert.png?v=74") 61 2,
+    default;
   touch-action: none;
   background: #e9e1d0;
 }
@@ -1065,7 +1067,9 @@ button {
 }
 
 .diplomacy-stage.is-character-pinned {
-  cursor: default;
+  cursor:
+    url("assets/cursor-schwert.png?v=74") 61 2,
+    default;
 }
 
 /* V29 – Tasten erscheinen mit Einheiten, Mehrfachproduktion, 3-Sekunden-Cooldown. */
@@ -2431,4 +2435,17 @@ button {
 /* V73 – ausschließlich Hover-Erkennung für die beiden Logos rechts. */
 .campaign-right-logo {
   pointer-events: auto;
+}
+
+
+/* V74 – Schwert als Standardcursor; vorhandene Spezialcursor bleiben bestehen. */
+html,
+body,
+.game,
+.intro-screen,
+.map-screen,
+.battle-screen {
+  cursor:
+    url("assets/cursor-schwert.png?v=74") 61 2,
+    default;
 }
