@@ -3160,7 +3160,7 @@ function startRingelnatzCrossbowCycle(instance) {
 const NEUENSTEIN_SPAWN_INTERVAL = 7000;
 const NEUENSTEIN_SPAWN_X = 88.0;
 const NEUENSTEIN_TENT_STOP_X = 15.8;
-const BATTLE_LINE_TOP = "calc(95% + 0.5cm)";
+const BATTLE_LINE_TOP = "97.2%";
 const NEUENSTEIN_BATTLE_LINE_TOP = BATTLE_LINE_TOP;
 const NEUENSTEIN_MELEE_SPACING = 4.8;
 const NEUENSTEIN_ARCHER_ATTACK_DURATION = 1000;
@@ -3177,8 +3177,9 @@ const neuensteinUnitDefinitions = {
     speed: 5.4,
     ranged: true,
     attackScale: 1.16,
+    idleOffsetY: 22,
     attackOffsetX: -6,
-    attackOffsetY: 0
+    attackOffsetY: 22
   },
   halberdier: {
     type: "halberdier",
@@ -3190,8 +3191,9 @@ const neuensteinUnitDefinitions = {
     speed: 3.99,
     ranged: false,
     attackScale: 1.15,
+    idleOffsetY: 34,
     attackOffsetX: -7,
-    attackOffsetY: 0
+    attackOffsetY: 34
   },
   flail: {
     type: "flail",
@@ -3203,8 +3205,9 @@ const neuensteinUnitDefinitions = {
     speed: 5.6,
     ranged: false,
     attackScale: 1.15,
+    idleOffsetY: 24,
     attackOffsetX: -6,
-    attackOffsetY: 0
+    attackOffsetY: 24
   },
   swordsman: {
     type: "swordsman",
@@ -3216,8 +3219,9 @@ const neuensteinUnitDefinitions = {
     speed: 4.13,
     ranged: false,
     attackScale: 1.15,
+    idleOffsetY: 32,
     attackOffsetX: -5,
-    attackOffsetY: 9
+    attackOffsetY: 46
   }
 };
 
@@ -3720,6 +3724,8 @@ function createNeuensteinUnitElement(type, definition) {
   idleImage.src = definition.idleSrc;
   idleImage.alt = "";
   idleImage.draggable = false;
+  idleImage.style.transform =
+    `translateX(-50%) translateY(${definition.idleOffsetY || 0}px)`;
   wrapper.appendChild(idleImage);
 
   const attackImage = document.createElement("img");
@@ -3728,6 +3734,10 @@ function createNeuensteinUnitElement(type, definition) {
   attackImage.src = definition.attackSrc;
   attackImage.alt = "";
   attackImage.draggable = false;
+  attackImage.style.transform =
+    `translateX(calc(-50% + ${definition.attackOffsetX || 0}px)) ` +
+    `translateY(${definition.attackOffsetY || 0}px) ` +
+    `scale(${definition.attackScale || 1})`;
   wrapper.appendChild(attackImage);
 
   const {
