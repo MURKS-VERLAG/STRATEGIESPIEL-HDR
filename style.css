@@ -2613,43 +2613,43 @@ body *,
 }
 
 .siege-defender--top-left {
-  left: 54.2%;
-  top: 35.4%;
+  left: 53.2%;
+  top: 34.2%;
   width: 7.3%;
   height: 20%;
 }
 
 .siege-defender--top-right {
-  left: 68.1%;
-  top: 35.9%;
+  left: 66.9%;
+  top: 34.8%;
   width: 7.3%;
   height: 20%;
 }
 
 .siege-defender--gate-shield {
-  left: 60.4%;
-  top: 46.4%;
-  width: 8.7%;
-  height: 23%;
+  left: 58.1%;
+  top: 44.1%;
+  width: 7.3%;
+  height: 20%;
 }
 
 .siege-defender--gate-swordsman {
-  left: 64.7%;
-  top: 47.5%;
+  left: 63.6%;
+  top: 46.8%;
   width: 7.5%;
   height: 21%;
 }
 
 .siege-defender--lower-shield {
-  left: 49.1%;
+  left: 49.0%;
   top: 60.4%;
-  width: 8.7%;
-  height: 23%;
+  width: 7.3%;
+  height: 20%;
 }
 
 .siege-defender--lower-archer {
-  left: 54.2%;
-  top: 59.4%;
+  left: 54.7%;
+  top: 57.5%;
   width: 7.3%;
   height: 20%;
 }

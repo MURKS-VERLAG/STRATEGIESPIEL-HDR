@@ -2304,22 +2304,22 @@ preloadKillSounds();
 
 const SIEGE_CROSSBOW_SLOTS = [
   {
-    startX: 0,
-    startY: 84,
-    targetX: 24.3,
-    targetY: 70.2
+    route: [
+      { x: 27.0, y: 99.0 },
+      { x: 27.5, y: 75.0 }
+    ]
   },
   {
-    startX: 0,
-    startY: 84,
-    targetX: 34.8,
-    targetY: 67.8
+    route: [
+      { x: 28.0, y: 99.0 },
+      { x: 36.2, y: 73.6 }
+    ]
   },
   {
-    startX: 100,
-    startY: 84,
-    targetX: 79.8,
-    targetY: 72.2
+    route: [
+      { x: 71.0, y: 99.0 },
+      { x: 73.5, y: 80.4 }
+    ]
   }
 ];
 
@@ -2337,15 +2337,107 @@ function clearSiegeSequenceTimers() {
   siegeSequenceTimers = [];
 }
 
-function playSiegeSequenceSound(audio, volume = 0.72) {
-  if (!audio) {
-    return;
+function waitForSiegeDelay(milliseconds) {
+  return new Promise((resolve) => {
+    const timer = window.setTimeout(resolve, milliseconds);
+    siegeSequenceTimers.push(timer);
+  });
+}
+
+function getSiegeDefenderSound(defender) {
+  const defenderType = defender?.dataset.siegeDefender;
+
+  if (defenderType === "shield") {
+    return {
+      audio: siegeShieldKnightAppearSound,
+      volume: 0.76
+    };
   }
 
-  audio.pause();
-  audio.currentTime = 0;
-  audio.volume = volume;
-  audio.play().catch(() => {});
+  if (defenderType === "swordsman") {
+    return {
+      audio: swordsmanAppearSound,
+      volume: 0.70
+    };
+  }
+
+  return {
+    audio: archerAppearSound,
+    volume: 0.70
+  };
+}
+
+function playSiegeSequenceSoundToEnd(audio, volume = 0.72) {
+  return new Promise((resolve) => {
+    if (!audio) {
+      resolve();
+      return;
+    }
+
+    let finished = false;
+    let fallbackTimer = 0;
+
+    const finish = () => {
+      if (finished) {
+        return;
+      }
+
+      finished = true;
+      audio.removeEventListener("ended", finish);
+      audio.removeEventListener("error", finish);
+
+      if (fallbackTimer) {
+        window.clearTimeout(fallbackTimer);
+      }
+
+      resolve();
+    };
+
+    const startPlayback = () => {
+      audio.pause();
+      audio.currentTime = 0;
+      audio.volume = volume;
+      audio.addEventListener("ended", finish, { once: true });
+      audio.addEventListener("error", finish, { once: true });
+
+      const knownDuration =
+        Number.isFinite(audio.duration) && audio.duration > 0
+          ? audio.duration
+          : 8;
+
+      fallbackTimer = window.setTimeout(
+        finish,
+        Math.ceil(knownDuration * 1000) + 500
+      );
+
+      const result = audio.play();
+
+      if (result && typeof result.catch === "function") {
+        result.catch(finish);
+      }
+    };
+
+    if (
+      audio.readyState >= HTMLMediaElement.HAVE_METADATA &&
+      Number.isFinite(audio.duration)
+    ) {
+      startPlayback();
+      return;
+    }
+
+    const metadataFallback = window.setTimeout(startPlayback, 1200);
+
+    audio.addEventListener(
+      "loadedmetadata",
+      () => {
+        window.clearTimeout(metadataFallback);
+        startPlayback();
+      },
+      { once: true }
+    );
+
+    audio.load();
+  });
 }
 
 function resetKastelbergSiegeSystem() {
@@ -2412,22 +2504,29 @@ function hidePartOneForSiege() {
   battleStage?.classList.add("is-siege-phase");
 }
 
-function revealSiegeDefender(defender) {
+async function revealSiegeDefender(defender) {
   if (!defender || !battleScreenOpen) {
-    return;
+    return false;
   }
 
   defender.classList.add("is-visible");
 
-  const defenderType = defender.dataset.siegeDefender;
+  const sound = getSiegeDefenderSound(defender);
+  await playSiegeSequenceSoundToEnd(
+    sound.audio,
+    sound.volume
+  );
 
-  if (defenderType === "shield") {
-    playSiegeSequenceSound(siegeShieldKnightAppearSound, 0.76);
-  } else if (defenderType === "swordsman") {
-    playBattleUnitSound(swordsmanAppearSound);
-  } else {
-    playBattleUnitSound(archerAppearSound);
+  if (
+    !battleScreenOpen ||
+    kastelbergPhase !==
+      KASTELBERG_PHASES.SIEGE_DEFENDERS_INTRO
+  ) {
+    return false;
   }
+
+  await waitForSiegeDelay(200);
+  return true;
 }
 
 function startSiegeRingelnatzUiSequence() {
@@ -2468,7 +2567,7 @@ function startSiegeRingelnatzUiSequence() {
   );
 }
 
-function startSiegeDefenderSequence() {
+async function startSiegeDefenderSequence() {
   kastelbergPhase =
     KASTELBERG_PHASES.SIEGE_DEFENDERS_INTRO;
 
@@ -2478,29 +2577,30 @@ function startSiegeDefenderSequence() {
     ) || []
   );
 
-  defenders.forEach((defender, index) => {
-    siegeSequenceTimers.push(
-      window.setTimeout(() => {
-        if (
-          !battleScreenOpen ||
-          kastelbergPhase !==
-            KASTELBERG_PHASES.SIEGE_DEFENDERS_INTRO
-        ) {
-          return;
-        }
+  for (const defender of defenders) {
+    if (
+      !battleScreenOpen ||
+      kastelbergPhase !==
+        KASTELBERG_PHASES.SIEGE_DEFENDERS_INTRO
+    ) {
+      return;
+    }
 
-        revealSiegeDefender(defender);
-      }, index * 850)
-    );
-  });
+    const completed =
+      await revealSiegeDefender(defender);
 
-  siegeSequenceTimers.push(
-    window.setTimeout(() => {
-      if (battleScreenOpen) {
-        startSiegeRingelnatzUiSequence();
-      }
-    }, defenders.length * 850 + 500)
-  );
+    if (!completed) {
+      return;
+    }
+  }
+
+  if (
+    battleScreenOpen &&
+    kastelbergPhase ===
+      KASTELBERG_PHASES.SIEGE_DEFENDERS_INTRO
+  ) {
+    startSiegeRingelnatzUiSequence();
+  }
 }
 
 function startKastelbergSiegeTransition() {
@@ -2553,10 +2653,35 @@ function startKastelbergSiegeTransition() {
   );
 }
 
-function createSiegePreparationUnit(type, start, target, onArrive) {
+function moveSiegePreparationUnitToPoint(
+  wrapper,
+  fromPoint,
+  targetPoint
+) {
+  return new Promise((resolve) => {
+    const dx = targetPoint.x - fromPoint.x;
+    const dy = targetPoint.y - fromPoint.y;
+    const distance = Math.hypot(dx, dy);
+    const duration = Math.max(850, distance * 58);
+
+    wrapper.style.transitionDuration = `${duration}ms`;
+    wrapper.style.left = `${targetPoint.x}%`;
+    wrapper.style.top = `${targetPoint.y}%`;
+
+    const timer = window.setTimeout(
+      resolve,
+      duration + 80
+    );
+    siegeSequenceTimers.push(timer);
+  });
+}
+
+function createSiegePreparationUnit(type, route, onArrive) {
   if (
     !siegePreparationUnitLayer ||
-    !battleScreenOpen
+    !battleScreenOpen ||
+    !Array.isArray(route) ||
+    route.length < 2
   ) {
     siegePlacementBusy = false;
     return;
@@ -2572,8 +2697,10 @@ function createSiegePreparationUnit(type, start, target, onArrive) {
   wrapper.className =
     "siege-preparation-unit " +
     `siege-preparation-unit--${type}`;
-  wrapper.style.left = `${start.startX}%`;
-  wrapper.style.top = `${start.startY}%`;
+
+  const firstPoint = route[0];
+  wrapper.style.left = `${firstPoint.x}%`;
+  wrapper.style.top = `${firstPoint.y}%`;
   wrapper.style.width = `${definition.width}%`;
   wrapper.style.height = `${definition.height}%`;
 
@@ -2587,26 +2714,36 @@ function createSiegePreparationUnit(type, start, target, onArrive) {
   siegePreparationUnitLayer.appendChild(wrapper);
 
   window.requestAnimationFrame(() => {
-    window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(async () => {
       wrapper.classList.add("is-visible");
+      await waitForSiegeDelay(60);
 
-      window.setTimeout(() => {
-        const dx = target.targetX - start.startX;
-        const dy = target.targetY - start.startY;
-        const distance = Math.hypot(dx, dy);
-        const duration = Math.max(1400, distance * 55);
+      let previousPoint = firstPoint;
 
-        wrapper.style.transitionDuration = `${duration}ms`;
-        wrapper.style.left = `${target.targetX}%`;
-        wrapper.style.top = `${target.targetY}%`;
-
-        window.setTimeout(() => {
-          if (typeof onArrive === "function") {
-            onArrive(wrapper);
-          }
+      for (const targetPoint of route.slice(1)) {
+        if (
+          !battleScreenOpen ||
+          kastelbergPhase !==
+            KASTELBERG_PHASES.SIEGE_PREPARATION
+        ) {
+          wrapper.remove();
           siegePlacementBusy = false;
-        }, duration + 80);
-      }, 60);
+          return;
+        }
+
+        await moveSiegePreparationUnitToPoint(
+          wrapper,
+          previousPoint,
+          targetPoint
+        );
+        previousPoint = targetPoint;
+      }
+
+      if (typeof onArrive === "function") {
+        onArrive(wrapper);
+      }
+
+      siegePlacementBusy = false;
     });
   });
 }
@@ -2630,14 +2767,7 @@ function deployNextSiegeCrossbow() {
 
   createSiegePreparationUnit(
     "crossbow",
-    {
-      startX: slot.startX,
-      startY: slot.startY
-    },
-    {
-      targetX: slot.targetX,
-      targetY: slot.targetY
-    },
+    slot.route,
     (wrapper) => {
       wrapper.classList.add("is-parked");
       siegeCrossbowSlotsFilled += 1;
@@ -2666,14 +2796,16 @@ function deployNextSiegeBuilder() {
 
   createSiegePreparationUnit(
     "builder",
-    {
-      startX: SIEGE_BUILDER_ROUTE.startX,
-      startY: SIEGE_BUILDER_ROUTE.startY
-    },
-    {
-      targetX: SIEGE_BUILDER_ROUTE.targetX,
-      targetY: SIEGE_BUILDER_ROUTE.targetY
-    },
+    [
+      {
+        x: SIEGE_BUILDER_ROUTE.startX,
+        y: SIEGE_BUILDER_ROUTE.startY
+      },
+      {
+        x: SIEGE_BUILDER_ROUTE.targetX,
+        y: SIEGE_BUILDER_ROUTE.targetY
+      }
+    ],
     (wrapper) => {
       wrapper.classList.add("is-dissolving");
 
