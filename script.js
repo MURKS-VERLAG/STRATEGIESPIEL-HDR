@@ -6407,6 +6407,10 @@ const meierhofSurrenderButton = document.querySelector("#meierhofSurrenderButton
 const meierhofMarchLayer = document.querySelector("#meierhofMarchLayer");
 const meierhofCooldown = document.querySelector("#meierhofCooldown");
 const meierhofCooldownRing = document.querySelector("#meierhofCooldownRing");
+const meierhofBattleStage = document.querySelector("#meierhofBattleStage");
+const meierhofAimUi = document.querySelector("#meierhofAimUi");
+const meierhofReloadIndicator = document.querySelector("#meierhofReloadIndicator");
+const meierhofReloadRing = document.querySelector("#meierhofReloadRing");
 
 let meierhofBattleOpen = false;
 let meierhofIntroRunning = false;
@@ -6414,7 +6418,14 @@ let meierhofIntroCompleted = false;
 let meierhofProductionUnlocked = false;
 let meierhofProductionCooldownUntil = 0;
 let meierhofCooldownFrame = null;
-let meierhofFixedCrossbowMoved = false;
+let meierhofAimingActive = false;
+let meierhofPlayerWeaponLoaded = true;
+let meierhofReloadActive = false;
+let meierhofReloadComplete = false;
+let meierhofReloadStartedAt = 0;
+let meierhofReloadAnimationFrame = null;
+let meierhofControlHeld = false;
+const MEIERHOF_RELOAD_DURATION = 5000;
 let meierhofMarchInstanceCounter = 0;
 const meierhofMarchingUnits = [];
 const meierhofOccupiedFormationSlots = new Set();
@@ -6431,7 +6442,7 @@ const MEIERHOF_UNIT_WIDTHS = Object.freeze({ 1: 7.1, 2: 7.0, 4: 7.2, 7: 6.8 });
 const MEIERHOF_FORMATION_SLOTS = Object.freeze([14.0, 19.4, 24.8, 30.2, 35.6, 41.0, 46.4, 51.8]);
 const MEIERHOF_CROSSBOW_SLOTS = Object.freeze([55.0, 59.4]);
 const MEIERHOF_SPAWN_X = 64.1;
-const MEIERHOF_BATTLE_LINE_TOP = 96.1;
+const MEIERHOF_BATTLE_LINE_TOP = 99.35;
 const MEIERHOF_INITIAL_STOCK = Object.freeze({ 1: 5, 2: 3, 3: 0, 4: 1, 5: 0, 6: 0, 7: 1 });
 const meierhofUnitStock = { ...MEIERHOF_INITIAL_STOCK };
 
@@ -6563,15 +6574,7 @@ function spawnAndMarchMeierhofUnit(unitKey) {
   requestAnimationFrame(move);
   return true;
 }
-function moveMeierhofFixedCrossbowToBattleLine() {
-  if (meierhofFixedCrossbowMoved || !meierhofCrossbowDefender) return;
-  meierhofFixedCrossbowMoved = true;
-  meierhofCrossbowDefender.classList.add("is-battle-position");
-  createMeierhofDust(43.2, 61.8);
-  window.setTimeout(() => {
-    if (meierhofBattleOpen) createMeierhofDust(58.2, 91.4);
-  }, 720);
-}
+
 function clearMeierhofDynamicUnits() {
   meierhofMarchingUnits.splice(0).forEach(({ element }) => element?.remove());
   meierhofOccupiedFormationSlots.clear();
@@ -6588,13 +6591,83 @@ function tryRecruitMeierhofUnit(unitKey) {
   playMeierhofRecruitSound(unitKey);
   startMeierhofCooldown(cooldown);
 }
+function updateMeierhofAimPosition(event) {
+  if (!meierhofAimingActive || !meierhofBattleStage || !meierhofAimUi) return;
+  const rect = meierhofBattleStage.getBoundingClientRect();
+  const x = Math.max(0, Math.min(rect.width, event.clientX - rect.left));
+  const y = Math.max(0, Math.min(rect.height, event.clientY - rect.top));
+  meierhofAimUi.style.left = `${x}px`;
+  meierhofAimUi.style.top = `${y}px`;
+}
+function stopMeierhofReload(resetProgress = true) {
+  if (meierhofReloadAnimationFrame !== null) cancelAnimationFrame(meierhofReloadAnimationFrame);
+  meierhofReloadAnimationFrame = null;
+  meierhofReloadActive = false;
+  meierhofControlHeld = false;
+  if (resetProgress && !meierhofReloadComplete) {
+    meierhofReloadRing?.style.setProperty("--meierhof-reload-progress", "0deg");
+    meierhofReloadIndicator?.classList.remove("is-visible", "is-complete");
+    meierhofReloadIndicator?.setAttribute("aria-hidden", "true");
+  }
+}
+function resetMeierhofAiming() {
+  stopMeierhofReload(true);
+  meierhofAimingActive = false;
+  meierhofPlayerWeaponLoaded = true;
+  meierhofReloadComplete = false;
+  meierhofAimUi?.classList.remove("is-active");
+  meierhofAimUi?.setAttribute("aria-hidden", "true");
+  meierhofReloadIndicator?.classList.remove("is-visible", "is-complete");
+  meierhofReloadRing?.style.setProperty("--meierhof-reload-progress", "0deg");
+  meierhofBattleStage?.classList.remove("has-meierhof-aim");
+}
+function activateMeierhofAiming() {
+  meierhofAimingActive = true;
+  meierhofPlayerWeaponLoaded = true;
+  meierhofReloadComplete = false;
+  meierhofAimUi?.classList.add("is-active");
+  meierhofAimUi?.setAttribute("aria-hidden", "false");
+  meierhofBattleStage?.classList.add("has-meierhof-aim");
+}
+function fireMeierhofPlayerShot(targetX, targetY) {
+  // Vorbereitet für spätere Projektil- und Trefferlogik.
+  void targetX; void targetY;
+}
+function beginMeierhofReload() {
+  if (!meierhofAimingActive || meierhofPlayerWeaponLoaded || meierhofReloadActive) return;
+  meierhofReloadActive = true;
+  meierhofReloadComplete = false;
+  meierhofControlHeld = true;
+  meierhofReloadStartedAt = performance.now();
+  meierhofReloadIndicator?.classList.add("is-visible");
+  meierhofReloadIndicator?.classList.remove("is-complete");
+  meierhofReloadIndicator?.setAttribute("aria-hidden", "false");
+  const draw = (now) => {
+    if (!meierhofReloadActive || !meierhofControlHeld || !meierhofBattleOpen) return;
+    const progress = Math.min(1, (now - meierhofReloadStartedAt) / MEIERHOF_RELOAD_DURATION);
+    meierhofReloadRing?.style.setProperty("--meierhof-reload-progress", `${progress * 360}deg`);
+    if (progress < 1) meierhofReloadAnimationFrame = requestAnimationFrame(draw);
+    else {
+      meierhofReloadAnimationFrame = null;
+      meierhofReloadActive = false;
+      meierhofReloadComplete = true;
+      meierhofPlayerWeaponLoaded = true;
+      meierhofReloadIndicator?.classList.add("is-complete");
+    }
+  };
+  meierhofReloadAnimationFrame = requestAnimationFrame(draw);
+}
+function cancelMeierhofReloadOnRelease() {
+  if (!meierhofReloadActive) { meierhofControlHeld = false; return; }
+  meierhofReloadComplete = false;
+  stopMeierhofReload(true);
+}
 function resetMeierhofBattleVisuals() {
+  resetMeierhofAiming();
   meierhofProductionUnlocked=false;
   stopMeierhofCooldown();
   clearMeierhofDynamicUnits();
   resetMeierhofStock();
-  meierhofFixedCrossbowMoved=false;
-  meierhofCrossbowDefender?.classList.remove("is-battle-position");
   [meierhofLord,meierhofBanditFlag,meierhofCamp,meierhofCrossbowDefender,meierhofFarmerDefender,meierhofSpearmanDefenderOne,meierhofSpearmanDefenderTwo,...meierhofSelectionUnits,...meierhofSelectionKeys,...meierhofStockCounts].forEach((el)=>el?.classList.remove("is-visible"));
   meierhofCountdown?.classList.remove("is-active");
   meierhofCountdown?.setAttribute("aria-hidden","true");
@@ -6695,7 +6768,7 @@ async function runMeierhofCountdown() {
   battleStartHorn.pause(); battleStartHorn.currentTime=0; battleStartHorn.volume=.9; battleStartHorn.play().catch(()=>{});
   meierhofIntroCompleted=true;
   meierhofProductionUnlocked=true;
-  moveMeierhofFixedCrossbowToBattleLine();
+  activateMeierhofAiming();
   meierhofIntroRunning=false;
 }
 async function runMeierhofOpeningSequence() {
@@ -6753,6 +6826,31 @@ window.addEventListener("keydown", (event) => {
   event.preventDefault();
   tryRecruitMeierhofUnit(unitKey);
 });
+
+meierhofBattleStage?.addEventListener("pointermove", updateMeierhofAimPosition);
+meierhofBattleStage?.addEventListener("pointerdown", (event) => {
+  if (event.button !== 0 || !meierhofAimingActive || !meierhofPlayerWeaponLoaded) return;
+  if (event.target.closest("button")) return;
+  const rect = meierhofBattleStage.getBoundingClientRect();
+  fireMeierhofPlayerShot(event.clientX - rect.left, event.clientY - rect.top);
+  meierhofPlayerWeaponLoaded = false;
+  meierhofReloadComplete = false;
+  meierhofReloadIndicator?.classList.remove("is-visible", "is-complete");
+  meierhofReloadIndicator?.setAttribute("aria-hidden", "true");
+  meierhofReloadRing?.style.setProperty("--meierhof-reload-progress", "0deg");
+});
+window.addEventListener("keydown", (event) => {
+  if (!meierhofBattleOpen || !meierhofAimingActive) return;
+  if (event.code !== "ControlLeft" && event.code !== "ControlRight") return;
+  event.preventDefault();
+  if (event.repeat) return;
+  beginMeierhofReload();
+});
+window.addEventListener("keyup", (event) => {
+  if (event.code !== "ControlLeft" && event.code !== "ControlRight") return;
+  cancelMeierhofReloadOnRelease();
+});
+window.addEventListener("blur", () => cancelMeierhofReloadOnRelease());
 
 meierhofSurrenderButton?.addEventListener("click",returnFromMeierhofBattle);
 
