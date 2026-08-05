@@ -3229,3 +3229,157 @@ body *,
 .dark-triad-overview-image {
   max-height: 86vh;
 }
+
+/* ================================================================
+   V89 – Dunkle Triade: Ringelnatz-Einspieler beim Hover über Bücher
+   ================================================================ */
+
+.dark-triad-stage {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.dark-triad-stage .dark-triad-overview-image {
+  position: relative;
+  z-index: 1;
+}
+
+/* Die drei unsichtbaren Flächen liegen exakt über den drei Büchern. */
+.dark-triad-book-hotspot {
+  position: absolute;
+  z-index: 6;
+  top: 63.5%;
+  height: 22.5%;
+  cursor: url("assets/schlangen-schwert-cursor.png?v=75") 4 4, pointer;
+}
+
+.dark-triad-book-hotspot--left {
+  left: 27.4%;
+  width: 17.2%;
+  transform: rotate(-10deg);
+}
+
+.dark-triad-book-hotspot--middle {
+  left: 44.5%;
+  width: 16.2%;
+  transform: rotate(7deg);
+}
+
+.dark-triad-book-hotspot--right {
+  left: 60.7%;
+  width: 17.5%;
+  transform: rotate(11deg);
+}
+
+/* Einspieler liegt bündig am unteren Rand der Einspielerkarte. */
+.dark-triad-response {
+  position: absolute;
+  z-index: 8;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 34%;
+  overflow: hidden;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 200ms ease,
+    visibility 0s linear 200ms;
+}
+
+.dark-triad-response.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 200ms ease,
+    visibility 0s linear 0s;
+}
+
+.dark-triad-response::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.97) 0%,
+      rgba(0, 0, 0, 0.90) 39%,
+      rgba(0, 0, 0, 0.78) 68%,
+      rgba(0, 0, 0, 0.62) 100%
+    );
+  box-shadow: 0 -8px 18px rgba(0, 0, 0, 0.50);
+}
+
+.dark-triad-response-character {
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  bottom: -1%;
+  width: 43%;
+  height: 106%;
+  object-fit: contain;
+  object-position: left bottom;
+  user-select: none;
+  pointer-events: none;
+  filter: drop-shadow(7px 0 7px rgba(0, 0, 0, 0.70));
+}
+
+.dark-triad-response-text {
+  position: absolute;
+  z-index: 3;
+  left: 38%;
+  right: 3.2%;
+  top: 17%;
+  display: flex;
+  align-items: flex-start;
+  color: #ffe331;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(15px, 1.42vw, 25px);
+  font-weight: 900;
+  font-style: italic;
+  line-height: 1.28;
+  letter-spacing: 0.01em;
+  text-align: left;
+  text-wrap: balance;
+  text-shadow:
+    -2px -2px 0 #000,
+     2px -2px 0 #000,
+    -2px  2px 0 #000,
+     2px  2px 0 #000,
+     0 3px 4px rgba(0, 0, 0, 0.95);
+  pointer-events: none;
+}
+
+/* Der mittlere Ringelnatz benötigt wegen des Dolches etwas mehr Breite. */
+.dark-triad-response[data-active-book="middle"] .dark-triad-response-character {
+  width: 47%;
+}
+
+.dark-triad-response[data-active-book="middle"] .dark-triad-response-text {
+  left: 43%;
+  right: 2.6%;
+  top: 15%;
+}
+
+/* Beim rechten Buch bleibt der erhobene Zeigefinger vollständig sichtbar. */
+.dark-triad-response[data-active-book="right"] .dark-triad-response-character {
+  width: 44%;
+}
+
+.dark-triad-response[data-active-book="right"] .dark-triad-response-text {
+  left: 40%;
+  top: 15%;
+}
+
+@media (max-width: 900px), (max-height: 700px) {
+  .dark-triad-response {
+    height: 37%;
+  }
+
+  .dark-triad-response-text {
+    font-size: clamp(12px, 1.65vw, 18px);
+    line-height: 1.2;
+  }
+}

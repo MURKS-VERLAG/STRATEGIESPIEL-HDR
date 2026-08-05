@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#050505">
   <title>Die Herren der Rench</title>
-  <link rel="stylesheet" href="style.css?v=88">
+  <link rel="stylesheet" href="style.css?v=89">
 </head>
 <body>
   <main class="game">
@@ -324,6 +324,12 @@
       <audio id="darkTriadHoverSound" preload="auto">
         <source src="assets/dunkle-triade-hover.mp3?v=86" type="audio/mpeg">
       </audio>
+      <audio id="darkTriadBookMiddleSound" preload="auto">
+        <source src="assets/dunkle-triade-buch-mitte.mp3?v=89" type="audio/mpeg">
+      </audio>
+      <audio id="darkTriadBookSidesSound" preload="auto">
+        <source src="assets/dunkle-triade-buch-seiten.mp3?v=89" type="audio/mpeg">
+      </audio>
 
 
 
@@ -335,12 +341,48 @@
         <div class="map-location-backdrop" aria-hidden="true"></div>
 
         <div class="map-location-window dark-triad-window">
-          <img
-            class="map-location-image dark-triad-overview-image"
-            src="assets/dunkle-triade-klick.jpg?v=87"
-            alt="Dunkle Machenschaften"
-            draggable="false"
-          >
+          <div class="dark-triad-stage" id="darkTriadStage">
+            <img
+              class="map-location-image dark-triad-overview-image"
+              src="assets/dunkle-triade-klick.jpg?v=87"
+              alt="Dunkle Machenschaften"
+              draggable="false"
+            >
+
+            <div
+              class="dark-triad-book-hotspot dark-triad-book-hotspot--left"
+              data-dark-triad-book="left"
+              aria-label="Narzissmus"
+            ></div>
+            <div
+              class="dark-triad-book-hotspot dark-triad-book-hotspot--middle"
+              data-dark-triad-book="middle"
+              aria-label="Machiavellismus"
+            ></div>
+            <div
+              class="dark-triad-book-hotspot dark-triad-book-hotspot--right"
+              data-dark-triad-book="right"
+              aria-label="Psychopathie"
+            ></div>
+
+            <div
+              class="dark-triad-response"
+              id="darkTriadResponse"
+              aria-hidden="true"
+            >
+              <img
+                class="dark-triad-response-character"
+                id="darkTriadResponseCharacter"
+                src=""
+                alt=""
+                draggable="false"
+              >
+              <div
+                class="dark-triad-response-text"
+                id="darkTriadResponseText"
+              ></div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -991,6 +1033,6 @@
     </section>
   </main>
 
-  <script src="script.js?v=88"></script>
+  <script src="script.js?v=89"></script>
 </body>
 </html>

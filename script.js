@@ -31,6 +31,14 @@ const politicalMapMenuIcon = document.querySelector("#politicalMapMenuIcon");
 const darkTriadMenuIcon = document.querySelector("#darkTriadMenuIcon");
 const darkTriadHoverSound = document.querySelector("#darkTriadHoverSound");
 const darkTriadModal = document.querySelector("#darkTriadModal");
+const darkTriadResponse = document.querySelector("#darkTriadResponse");
+const darkTriadResponseCharacter = document.querySelector("#darkTriadResponseCharacter");
+const darkTriadResponseText = document.querySelector("#darkTriadResponseText");
+const darkTriadBookHotspots = Array.from(
+  document.querySelectorAll("[data-dark-triad-book]")
+);
+const darkTriadBookMiddleSound = document.querySelector("#darkTriadBookMiddleSound");
+const darkTriadBookSidesSound = document.querySelector("#darkTriadBookSidesSound");
 const mapBlackTransition = document.querySelector("#mapBlackTransition");
 const normalMapIrisOverlay = document.querySelector("#normalMapIrisOverlay");
 
@@ -908,7 +916,76 @@ const mainMapHotspotRegions = [
 
 
 
+const DARK_TRIAD_BOOK_RESPONSES = {
+  left: {
+    image: "assets/dunkle-triade-ringelnatz-links.png?v=89",
+    text: "„Der Einfall ist vollendet. Allein, es fehlen noch die rechten Bekanntschaften. Ein wahrhaft hinterfotziger Plan gedeiht selten ohne die passenden... Geschäftspartner.“",
+    sound: darkTriadBookSidesSound
+  },
+  middle: {
+    image: "assets/dunkle-triade-ringelnatz-mitte.png?v=89",
+    text: "„Ein Plan von solcher Hinterfotzigkeit ist selten zu schauen. Seid unbesorgt: Er kostet keinerlei Ehre... denn ehrenloser könnte er kaum sein.“",
+    sound: darkTriadBookMiddleSound
+  },
+  right: {
+    image: "assets/dunkle-triade-ringelnatz-rechts.png?v=89",
+    text: "„Ein Meisterwerk! Allein, wir kennen noch nicht genügend zwielichtige Leute. Selbst die größte Hinterfotzigkeit bedarf bisweilen der richtigen Kontakte.“",
+    sound: darkTriadBookSidesSound
+  }
+};
+
+let activeDarkTriadBook = null;
+
+function stopDarkTriadBookSounds() {
+  [darkTriadBookMiddleSound, darkTriadBookSidesSound].forEach((sound) => {
+    if (!sound) return;
+    sound.pause();
+    sound.currentTime = 0;
+  });
+}
+
+function hideDarkTriadBookResponse() {
+  activeDarkTriadBook = null;
+  stopDarkTriadBookSounds();
+
+  if (darkTriadResponse) {
+    darkTriadResponse.classList.remove("is-visible");
+    darkTriadResponse.setAttribute("aria-hidden", "true");
+    darkTriadResponse.removeAttribute("data-active-book");
+  }
+}
+
+function showDarkTriadBookResponse(bookKey) {
+  const response = DARK_TRIAD_BOOK_RESPONSES[bookKey];
+
+  if (
+    !response ||
+    !darkTriadModalOpen ||
+    !darkTriadResponse ||
+    !darkTriadResponseCharacter ||
+    !darkTriadResponseText
+  ) {
+    return;
+  }
+
+  activeDarkTriadBook = bookKey;
+  stopDarkTriadBookSounds();
+
+  darkTriadResponseCharacter.src = response.image;
+  darkTriadResponseText.textContent = response.text;
+  darkTriadResponse.dataset.activeBook = bookKey;
+  darkTriadResponse.classList.add("is-visible");
+  darkTriadResponse.setAttribute("aria-hidden", "false");
+
+  if (response.sound) {
+    response.sound.currentTime = 0;
+    response.sound.play().catch(() => {});
+  }
+}
+
 function closeMapLocationModals() {
+  hideDarkTriadBookResponse();
+
   lachersgutModalOpen = false;
   meierhofModalOpen = false;
   kastelbergOverviewModalOpen = false;
@@ -6064,3 +6141,21 @@ if (darkTriadMenuIcon && darkTriadHoverSound) {
     openDarkTriadModal();
   });
 }
+
+// ================================================================
+// V89 – Dunkle Triade: Buch-Hover mit Ringelnatz, Text und Sound.
+// ================================================================
+
+darkTriadBookHotspots.forEach((hotspot) => {
+  const bookKey = hotspot.dataset.darkTriadBook;
+
+  hotspot.addEventListener("mouseenter", () => {
+    showDarkTriadBookResponse(bookKey);
+  });
+
+  hotspot.addEventListener("mouseleave", () => {
+    if (activeDarkTriadBook === bookKey) {
+      hideDarkTriadBookResponse();
+    }
+  });
+});
