@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#050505">
   <title>Die Herren der Rench</title>
-  <link rel="stylesheet" href="style.css?v=91">
+  <link rel="stylesheet" href="style.css?v=92">
 </head>
 <body>
   <main class="game">
@@ -1179,6 +1179,94 @@
     </section>
   </main>
 
-  <script src="script.js?v=91"></script>
+  <script src="script.js?v=92"></script>
+
+  <!-- V92 MINIFIX:
+       - Nur die vier festen Meierhof-Garnisonseinheiten erhalten beim tatsächlichen
+         Sichtbarwerden ihren bereits vorhandenen Einheitensound.
+       - Die spätere linke Einheitenleiste bleibt vollständig stumm.
+       - Der feste Armbrustschütze wird unabhängig von vorhandenen transform-Regeln
+         um exakt 0,2 cm nach unten versetzt. -->
+  <style>
+    #meierhofCrossbowDefender {
+      translate: 0 0.2cm;
+    }
+  </style>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const battleScreen = document.getElementById("meierhofBattleScreen");
+
+      const fixedSpawnSounds = [
+        {
+          unit: document.getElementById("meierhofCrossbowDefender"),
+          audio: document.getElementById("unitKeySound4")
+        },
+        {
+          unit: document.getElementById("meierhofFarmerDefender"),
+          audio: document.getElementById("unitKeySound1")
+        },
+        {
+          unit: document.getElementById("meierhofSpearmanDefenderOne"),
+          audio: document.getElementById("unitKeySound2")
+        },
+        {
+          unit: document.getElementById("meierhofSpearmanDefenderTwo"),
+          audio: document.getElementById("unitKeySound2")
+        }
+      ].filter(({ unit, audio }) => unit && audio);
+
+      const spawnState = new WeakMap(
+        fixedSpawnSounds.map(({ unit }) => [unit, false])
+      );
+
+      function isActuallyVisible(element) {
+        if (!battleScreen || battleScreen.hidden) return false;
+
+        const style = window.getComputedStyle(element);
+        const rect = element.getBoundingClientRect();
+        const opacity = Number.parseFloat(style.opacity || "1");
+
+        return (
+          style.display !== "none" &&
+          style.visibility !== "hidden" &&
+          opacity > 0.05 &&
+          rect.width > 0 &&
+          rect.height > 0
+        );
+      }
+
+      function replay(audio) {
+        audio.pause();
+        audio.currentTime = 0;
+        audio.play().catch(() => {});
+      }
+
+      function monitorFixedMeierhofSpawns() {
+        for (const { unit, audio } of fixedSpawnSounds) {
+          const visible = isActuallyVisible(unit);
+          const wasVisible = spawnState.get(unit) === true;
+
+          if (visible && !wasVisible) {
+            /*
+             * Ausschließlich die festen Garnisonseinheiten werden überwacht.
+             * Elemente aus #meierhofUnitColumn und #meierhofUnitKeyLayer
+             * können diesen Soundblock daher niemals auslösen.
+             */
+            replay(audio);
+          }
+
+          spawnState.set(unit, visible);
+        }
+
+        window.requestAnimationFrame(monitorFixedMeierhofSpawns);
+      }
+
+      window.requestAnimationFrame(monitorFixedMeierhofSpawns);
+    })();
+  </script>
+
 </body>
 </html>
