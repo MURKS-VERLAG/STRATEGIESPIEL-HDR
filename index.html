@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#050505">
   <title>Die Herren der Rench</title>
-  <link rel="stylesheet" href="style.css?v=93">
+  <link rel="stylesheet" href="style.css?v=94">
 </head>
 <body>
   <main class="game">
@@ -474,6 +474,9 @@
         </audio>
         <audio id="banditEventRr4Sound" preload="auto">
           <source src="assets/event-1431-rr4.mp3?v=90" type="audio/mpeg">
+        </audio>
+        <audio id="banditEventStartHoverSound" preload="auto">
+          <source src="assets/meierhof-gefecht-start-hover.mp3?v=94" type="audio/mpeg">
         </audio>
       </div>
 
@@ -1168,6 +1171,16 @@
           <div class="meierhof-unit-key meierhof-unit-key--7" data-meierhof-key="7">7</div>
         </div>
 
+        <div class="meierhof-stock-layer" id="meierhofStockLayer" aria-hidden="true">
+          <div class="meierhof-stock-count meierhof-stock-count--1" data-meierhof-stock="1">5</div>
+          <div class="meierhof-stock-count meierhof-stock-count--2" data-meierhof-stock="2">3</div>
+          <div class="meierhof-stock-count meierhof-stock-count--3" data-meierhof-stock="3">0</div>
+          <div class="meierhof-stock-count meierhof-stock-count--4" data-meierhof-stock="4">1</div>
+          <div class="meierhof-stock-count meierhof-stock-count--5" data-meierhof-stock="5">0</div>
+          <div class="meierhof-stock-count meierhof-stock-count--6" data-meierhof-stock="6">0</div>
+          <div class="meierhof-stock-count meierhof-stock-count--7" data-meierhof-stock="7">1</div>
+        </div>
+
         <div class="meierhof-countdown" id="meierhofCountdown" aria-live="assertive" aria-hidden="true">
           <span class="meierhof-countdown-number" id="meierhofCountdownNumber"></span>
         </div>
@@ -1179,6 +1192,6 @@
     </section>
   </main>
 
-  <script src="script.js?v=93"></script>
+  <script src="script.js?v=94"></script>
 </body>
 </html>

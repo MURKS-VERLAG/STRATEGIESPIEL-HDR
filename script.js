@@ -26,6 +26,7 @@ const banditEventStartButton = document.querySelector("#banditEventStartButton")
 const banditEventOpeningSound = document.querySelector("#banditEventOpeningSound");
 const banditEventRr5Sound = document.querySelector("#banditEventRr5Sound");
 const banditEventRr4Sound = document.querySelector("#banditEventRr4Sound");
+const banditEventStartHoverSound = document.querySelector("#banditEventStartHoverSound");
 const zoomDisplay = document.querySelector("#zoomDisplay");
 const mapHint = document.querySelector("#mapHint");
 const campaignResourceBar = document.querySelector("#campaignResourceBar");
@@ -6399,6 +6400,7 @@ const meierhofSpearmanDefenderOne = document.querySelector("#meierhofSpearmanDef
 const meierhofSpearmanDefenderTwo = document.querySelector("#meierhofSpearmanDefenderTwo");
 const meierhofSelectionUnits = [...document.querySelectorAll("[data-meierhof-unit]")];
 const meierhofSelectionKeys = [...document.querySelectorAll("[data-meierhof-key]")];
+const meierhofStockCounts = [...document.querySelectorAll("[data-meierhof-stock]")];
 const meierhofCountdown = document.querySelector("#meierhofCountdown");
 const meierhofCountdownNumber = document.querySelector("#meierhofCountdownNumber");
 const meierhofSurrenderButton = document.querySelector("#meierhofSurrenderButton");
@@ -6422,7 +6424,7 @@ function clearMeierhofTimers() {
   meierhofTimers.clear();
 }
 function resetMeierhofBattleVisuals() {
-  [meierhofLord,meierhofBanditFlag,meierhofCamp,meierhofCrossbowDefender,meierhofFarmerDefender,meierhofSpearmanDefenderOne,meierhofSpearmanDefenderTwo,...meierhofSelectionUnits,...meierhofSelectionKeys].forEach((el)=>el?.classList.remove("is-visible"));
+  [meierhofLord,meierhofBanditFlag,meierhofCamp,meierhofCrossbowDefender,meierhofFarmerDefender,meierhofSpearmanDefenderOne,meierhofSpearmanDefenderTwo,...meierhofSelectionUnits,...meierhofSelectionKeys,...meierhofStockCounts].forEach((el)=>el?.classList.remove("is-visible"));
   meierhofCountdown?.classList.remove("is-active");
   meierhofCountdown?.setAttribute("aria-hidden","true");
   if (meierhofCountdownNumber) { meierhofCountdownNumber.classList.remove("is-showing"); meierhofCountdownNumber.textContent=""; }
@@ -6498,6 +6500,7 @@ async function revealMeierhofUnitColumn() {
     await meierhofDelay(380);
     if (!meierhofBattleOpen) return;
     meierhofSelectionKeys[i]?.classList.add("is-visible");
+    meierhofStockCounts[i]?.classList.add("is-visible");
     // V93: Die linke Einheitenleiste erscheint absichtlich vollständig stumm.
     await meierhofDelay(330);
   }
@@ -6571,3 +6574,13 @@ function returnFromMeierhofBattle() {
   },870);
 }
 meierhofSurrenderButton?.addEventListener("click",returnFromMeierhofBattle);
+
+
+// V94 – Schwertsound einmal beim Betreten des Buttons „GEFECHT STARTEN“.
+if (banditEventStartButton && banditEventStartHoverSound) {
+  banditEventStartButton.addEventListener("pointerenter", () => {
+    banditEventStartHoverSound.pause();
+    banditEventStartHoverSound.currentTime = 0;
+    void banditEventStartHoverSound.play().catch(() => {});
+  });
+}

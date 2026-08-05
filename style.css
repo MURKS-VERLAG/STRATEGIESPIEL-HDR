@@ -3776,7 +3776,7 @@ body.is-campaign-event-locked .map-screen > *:not(.campaign-event-modal):not(.ro
 .meierhof-fixed-unit--lord { left:36.8%; top:47.8%; width:10.2%; }
 .meierhof-fixed-unit--bandit-flag { left:3.9%; top:98.6%; width:7.2%; }
 .meierhof-fixed-unit--camp { left:64.1%; top:100.2%; width:27.5%; }
-.meierhof-fixed-unit--crossbow { left:34.1%; top:calc(22.8% + 0.2cm); width:7.2%; }
+.meierhof-fixed-unit--crossbow { left:43.2%; top:62.2%; width:7.2%; }
 .meierhof-fixed-unit--farmer { left:23.3%; top:69.4%; width:7.1%; }
 .meierhof-fixed-unit--spearman-one { left:48.4%; top:56.0%; width:7.0%; }
 .meierhof-fixed-unit--spearman-two { left:75.5%; top:61.3%; width:7.0%; }
@@ -3803,3 +3803,15 @@ body.is-campaign-event-locked .map-screen > *:not(.campaign-event-modal):not(.ro
 .meierhof-countdown-number { color:#9e1717; font-family:Georgia,"Times New Roman",serif; font-size:clamp(82px,12vw,190px); font-weight:900; line-height:1; -webkit-text-stroke:1px rgba(55,5,5,.9); text-shadow:0 3px 0 rgba(35,0,0,.92),0 0 10px rgba(185,22,22,.62),0 0 24px rgba(100,0,0,.42); opacity:0; transform:scale(.82); }
 .meierhof-countdown-number.is-showing { animation:battleCountdownFade 900ms ease-in-out forwards; }
 .meierhof-surrender-button { z-index:252 !important; }
+
+
+/* V94 – Bestandszahlen der Meierhof-Einheitenleiste */
+.meierhof-stock-count { position:absolute; left:11.85%; width:2.2%; transform:translate(-50%,-50%) scale(.94); opacity:0; text-align:center; color:#ffe02f; font-family:Georgia,"Times New Roman",serif; font-size:clamp(17px,1.45vw,29px); font-weight:1000; line-height:1; -webkit-text-stroke:1px rgba(20,12,0,.96); text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000,0 0 7px rgba(255,220,35,.92),0 3px 3px rgba(0,0,0,.88); transition:opacity 300ms ease,transform 300ms ease; }
+.meierhof-stock-count.is-visible { opacity:1; transform:translate(-50%,-50%) scale(1); }
+.meierhof-stock-count--1 { top:9.1%; }
+.meierhof-stock-count--2 { top:18.4%; }
+.meierhof-stock-count--3 { top:28.1%; }
+.meierhof-stock-count--4 { top:37.9%; }
+.meierhof-stock-count--5 { top:47.2%; }
+.meierhof-stock-count--6 { top:56.5%; }
+.meierhof-stock-count--7 { top:65.5%; }
