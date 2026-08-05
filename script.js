@@ -15,6 +15,17 @@ const campaignMap = document.querySelector("#campaignMap");
 const mapOverlay = document.querySelector("#mapOverlay");
 const mapFogLayer = document.querySelector("#mapFogLayer");
 const yearDisplay = document.querySelector("#yearDisplay");
+const roundTransitionIris = document.querySelector("#roundTransitionIris");
+const banditEventModal = document.querySelector("#banditEventModal");
+const banditEventWindow = document.querySelector("#banditEventWindow");
+const banditEventRr5 = document.querySelector("#banditEventRr5");
+const banditEventGeneralGroup = document.querySelector("#banditEventGeneralGroup");
+const banditEventBanditLine = document.querySelector("#banditEventBanditLine");
+const banditEventRr4 = document.querySelector("#banditEventRr4");
+const banditEventStartButton = document.querySelector("#banditEventStartButton");
+const banditEventOpeningSound = document.querySelector("#banditEventOpeningSound");
+const banditEventRr5Sound = document.querySelector("#banditEventRr5Sound");
+const banditEventRr4Sound = document.querySelector("#banditEventRr4Sound");
 const zoomDisplay = document.querySelector("#zoomDisplay");
 const mapHint = document.querySelector("#mapHint");
 const campaignResourceBar = document.querySelector("#campaignResourceBar");
@@ -1558,6 +1569,216 @@ mapViewport.addEventListener("pointerleave", () => {
   mapViewport.style.cursor = "default";
 });
 
+/* V90: vollständig geskriptetes Banditenereignis beim Wechsel auf 1431. */
+let campaignEventInProgress = false;
+let banditEventCompleted = false;
+
+const wait = (milliseconds) =>
+  new Promise((resolve) => window.setTimeout(resolve, milliseconds));
+
+function safePlay(audio) {
+  if (!audio) {
+    return Promise.resolve();
+  }
+
+  audio.pause();
+  audio.currentTime = 0;
+
+  const playResult = audio.play();
+  if (playResult && typeof playResult.catch === "function") {
+    playResult.catch(() => {});
+  }
+
+  return new Promise((resolve) => {
+    let resolved = false;
+
+    const finish = () => {
+      if (resolved) return;
+      resolved = true;
+      audio.removeEventListener("ended", finish);
+      audio.removeEventListener("error", finish);
+      resolve();
+    };
+
+    audio.addEventListener("ended", finish, { once: true });
+    audio.addEventListener("error", finish, { once: true });
+
+    const fallbackDuration =
+      Number.isFinite(audio.duration) && audio.duration > 0
+        ? (audio.duration * 1000) + 450
+        : 6500;
+
+    window.setTimeout(finish, fallbackDuration);
+  });
+}
+
+function stopBanditEventSounds() {
+  [banditEventOpeningSound, banditEventRr5Sound, banditEventRr4Sound].forEach(
+    (audio) => {
+      if (!audio) return;
+      audio.pause();
+      audio.currentTime = 0;
+    }
+  );
+}
+
+function resetBanditEventVisuals() {
+  banditEventRr5?.classList.remove("is-visible");
+  banditEventGeneralGroup?.classList.remove("is-visible");
+  banditEventBanditLine?.classList.remove("is-visible");
+  banditEventRr4?.classList.remove("is-visible");
+  banditEventStartButton?.classList.remove("is-visible");
+
+  banditEventGeneralGroup?.setAttribute("aria-hidden", "true");
+  banditEventBanditLine?.setAttribute("aria-hidden", "true");
+}
+
+async function runRoundIrisTransition(nextYear) {
+  if (!roundTransitionIris) {
+    gameState.year = nextYear;
+    updateYearDisplay();
+    mapState.zoom = 1;
+    initializeMap();
+    await wait(600);
+    return;
+  }
+
+  roundTransitionIris.classList.add("is-active");
+  roundTransitionIris.classList.remove("is-closed");
+
+  await new Promise((resolve) => requestAnimationFrame(resolve));
+  await new Promise((resolve) => requestAnimationFrame(resolve));
+
+  roundTransitionIris.classList.add("is-closed");
+  await wait(300);
+
+  gameState.year = nextYear;
+  updateYearDisplay();
+
+  mapState.zoom = 1;
+  initializeMap();
+
+  await wait(30);
+  roundTransitionIris.classList.remove("is-closed");
+  await wait(300);
+
+  roundTransitionIris.classList.remove("is-active");
+}
+
+async function runBanditEvent1431() {
+  if (
+    campaignEventInProgress ||
+    banditEventCompleted ||
+    !banditEventModal
+  ) {
+    return;
+  }
+
+  campaignEventInProgress = true;
+  yearChangeInProgress = true;
+  document.body.classList.add("is-campaign-event-locked");
+  resetBanditEventVisuals();
+  stopBanditEventSounds();
+
+  await runRoundIrisTransition(1431);
+  await wait(400);
+
+  banditEventModal.classList.add("is-open", "is-cinematic");
+  banditEventModal.setAttribute("aria-hidden", "false");
+  await wait(500);
+
+  await safePlay(banditEventOpeningSound);
+  await wait(180);
+
+  banditEventRr5?.classList.add("is-visible");
+  await wait(380);
+  await safePlay(banditEventRr5Sound);
+  banditEventRr5?.classList.remove("is-visible");
+  await wait(420);
+
+  banditEventGeneralGroup?.classList.add("is-visible");
+  banditEventGeneralGroup?.setAttribute("aria-hidden", "false");
+  await wait(12000);
+  banditEventGeneralGroup?.classList.remove("is-visible");
+  banditEventGeneralGroup?.setAttribute("aria-hidden", "true");
+  await wait(450);
+
+  banditEventBanditLine?.classList.add("is-visible");
+  banditEventBanditLine?.setAttribute("aria-hidden", "false");
+  await wait(2500);
+  banditEventBanditLine?.classList.remove("is-visible");
+  banditEventBanditLine?.setAttribute("aria-hidden", "true");
+  await wait(380);
+
+  banditEventRr4?.classList.add("is-visible");
+  await wait(380);
+  await safePlay(banditEventRr4Sound);
+  banditEventRr4?.classList.remove("is-visible");
+  await wait(460);
+
+  banditEventStartButton?.classList.add("is-visible");
+  banditEventModal.classList.remove("is-cinematic");
+
+  banditEventCompleted = true;
+  campaignEventInProgress = false;
+  yearChangeInProgress = false;
+  document.body.classList.remove("is-campaign-event-locked");
+}
+
+function isCampaignEventInputAllowed(target) {
+  return (
+    banditEventCompleted &&
+    banditEventModal?.classList.contains("is-open") &&
+    Boolean(target?.closest?.("#banditEventStartButton"))
+  );
+}
+
+window.addEventListener(
+  "keydown",
+  (event) => {
+    if (campaignEventInProgress) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    }
+  },
+  true
+);
+
+window.addEventListener(
+  "wheel",
+  (event) => {
+    if (campaignEventInProgress) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    }
+  },
+  { capture: true, passive: false }
+);
+
+window.addEventListener(
+  "pointerdown",
+  (event) => {
+    if (
+      campaignEventInProgress &&
+      !isCampaignEventInputAllowed(event.target)
+    ) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    }
+  },
+  true
+);
+
+banditEventStartButton?.addEventListener("click", (event) => {
+  event.preventDefault();
+  event.stopPropagation();
+
+  /*
+    V90: Der Button ist für den nächsten Arbeitsschritt vollständig hinterlegt.
+    Noch kein Schlachtwechsel – die Einblendung bleibt geöffnet.
+  */
+});
+
 /* V18: Jahreswechsel über einen Klick auf die Glocke. */
 const gameState = {
   year: 1430
@@ -1599,7 +1820,17 @@ function isInsideRegion(position, region) {
 function advanceYear() {
   closeNeuensteinTroopSelection();
   closeTroopSelection();
-  if (yearChangeInProgress) {
+
+  if (
+    yearChangeInProgress ||
+    campaignEventInProgress ||
+    banditEventModal?.classList.contains("is-open")
+  ) {
+    return;
+  }
+
+  if (gameState.year === 1430 && !banditEventCompleted) {
+    runBanditEvent1431();
     return;
   }
 
@@ -1608,7 +1839,7 @@ function advanceYear() {
 
   window.setTimeout(() => {
     gameState.year += 1;
-    
+
     updateYearDisplay();
 
     mapState.zoom = 1;

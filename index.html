@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#050505">
   <title>Die Herren der Rench</title>
-  <link rel="stylesheet" href="style.css?v=89">
+  <link rel="stylesheet" href="style.css?v=90">
 </head>
 <body>
   <main class="game">
@@ -384,6 +384,97 @@
             </div>
           </div>
         </div>
+      </div>
+
+
+      <div
+        class="round-transition-iris"
+        id="roundTransitionIris"
+        aria-hidden="true"
+      ></div>
+
+      <div
+        class="campaign-event-modal campaign-event-modal--bandits"
+        id="banditEventModal"
+        aria-hidden="true"
+      >
+        <div class="campaign-event-backdrop" aria-hidden="true"></div>
+
+        <div class="campaign-event-window" id="banditEventWindow">
+          <div class="campaign-event-stage">
+            <img
+              class="campaign-event-image"
+              src="assets/event-1431-banditen.jpg?v=90"
+              alt="Banditen bedrohen den Meierhof"
+              draggable="false"
+            >
+
+            <img
+              class="campaign-event-character campaign-event-character--rr5"
+              id="banditEventRr5"
+              src="assets/event-1431-ringelnatz-rr5.png?v=90"
+              alt=""
+              draggable="false"
+            >
+
+            <div
+              class="campaign-event-general-group"
+              id="banditEventGeneralGroup"
+              aria-hidden="true"
+            >
+              <div class="campaign-event-general-text">
+                „Herr! Keine Sorge. Meine Männer und ich sind bereits auf dem Weg zu Euch.
+                Nun zeigt sich, wie standhaft Eure neuen Mauern und wie tapfer Eure Knechte
+                wirklich sind. Eine bessere Gelegenheit, unsere Verteidigung zu prüfen,
+                wird sich kaum bieten. Zeit, den Halunken eine ordentliche Abreibung zu
+                verpassen!“
+              </div>
+
+              <img
+                class="campaign-event-character campaign-event-character--general"
+                src="assets/event-1431-general.png?v=90"
+                alt=""
+                draggable="false"
+              >
+            </div>
+
+            <div
+              class="campaign-event-bandit-line"
+              id="banditEventBanditLine"
+              aria-hidden="true"
+            >
+              DÜRFET WIR EUCH DENN NUN ENDLICH AUSRAUBEN?
+            </div>
+
+            <img
+              class="campaign-event-character campaign-event-character--rr4"
+              id="banditEventRr4"
+              src="assets/event-1431-ringelnatz-rr4.png?v=90"
+              alt=""
+              draggable="false"
+            >
+
+            <button
+              class="campaign-event-start-button"
+              id="banditEventStartButton"
+              type="button"
+              aria-label="Gefechtsvorbereitung öffnen"
+            >
+              <span class="campaign-event-start-swords" aria-hidden="true">⚔</span>
+              <span class="campaign-event-start-label">GEFECHT STARTEN</span>
+            </button>
+          </div>
+        </div>
+
+        <audio id="banditEventOpeningSound" preload="auto">
+          <source src="assets/event-1431-auftakt.mp3?v=90" type="audio/mpeg">
+        </audio>
+        <audio id="banditEventRr5Sound" preload="auto">
+          <source src="assets/event-1431-rr5.mp3?v=90" type="audio/mpeg">
+        </audio>
+        <audio id="banditEventRr4Sound" preload="auto">
+          <source src="assets/event-1431-rr4.mp3?v=90" type="audio/mpeg">
+        </audio>
       </div>
 
 
@@ -1033,6 +1124,6 @@
     </section>
   </main>
 
-  <script src="script.js?v=89"></script>
+  <script src="script.js?v=90"></script>
 </body>
 </html>
