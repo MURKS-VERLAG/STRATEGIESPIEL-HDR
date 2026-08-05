@@ -6434,6 +6434,63 @@ async function revealMeierhofElement(element, pause=190) {
   await meierhofDelay(420 + pause);
   return meierhofBattleOpen;
 }
+async function playMeierhofGarrisonSoundAndWait(audio) {
+  if (!audio) {
+    await meierhofDelay(200);
+    return meierhofBattleOpen;
+  }
+
+  audio.pause();
+  audio.currentTime = 0;
+
+  let finished = false;
+
+  await new Promise((resolve) => {
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      audio.removeEventListener("ended", finish);
+      audio.removeEventListener("error", finish);
+      resolve();
+    };
+
+    audio.addEventListener("ended", finish, { once: true });
+    audio.addEventListener("error", finish, { once: true });
+
+    const playResult = audio.play();
+    if (playResult && typeof playResult.catch === "function") {
+      playResult.catch(finish);
+    }
+
+    // Sicherheitsfallback, falls ein Browser kein ended-Ereignis liefert.
+    const fallbackMs =
+      Number.isFinite(audio.duration) && audio.duration > 0
+        ? Math.ceil(audio.duration * 1000) + 350
+        : 8000;
+
+    const fallbackTimer = window.setTimeout(() => {
+      meierhofTimers.delete(fallbackTimer);
+      finish();
+    }, fallbackMs);
+
+    meierhofTimers.add(fallbackTimer);
+  });
+
+  if (!meierhofBattleOpen) return false;
+
+  await meierhofDelay(200);
+  return meierhofBattleOpen;
+}
+
+async function revealMeierhofGarrisonUnit(element, audio) {
+  if (!meierhofBattleOpen || !element) return false;
+
+  element.classList.add("is-visible");
+
+  // Sound startet gleichzeitig mit der Smooth-Einblendung.
+  return playMeierhofGarrisonSoundAndWait(audio);
+}
+
 async function revealMeierhofUnitColumn() {
   for (let i=0;i<meierhofSelectionUnits.length;i+=1) {
     if (!meierhofBattleOpen) return;
@@ -6441,8 +6498,7 @@ async function revealMeierhofUnitColumn() {
     await meierhofDelay(380);
     if (!meierhofBattleOpen) return;
     meierhofSelectionKeys[i]?.classList.add("is-visible");
-    const sound=document.querySelector(`#unitKeySound${i+1}`);
-    if (sound) { sound.pause(); sound.currentTime=0; sound.play().catch(()=>{}); }
+    // V93: Die linke Einheitenleiste erscheint absichtlich vollständig stumm.
     await meierhofDelay(330);
   }
 }
@@ -6472,11 +6528,15 @@ async function runMeierhofOpeningSequence() {
   await revealMeierhofElement(meierhofLord);
   await revealMeierhofElement(meierhofBanditFlag);
   await revealMeierhofElement(meierhofCamp);
-  await revealMeierhofElement(meierhofCrossbowDefender);
-  await revealMeierhofElement(meierhofFarmerDefender);
-  await revealMeierhofElement(meierhofSpearmanDefenderOne);
-  await revealMeierhofElement(meierhofSpearmanDefenderTwo);
+
+  // V93: Erst nach vollständigem Sound + 0,2 s erscheint die nächste Garnisonseinheit.
+  await revealMeierhofGarrisonUnit(meierhofCrossbowDefender, unitKeySound4);
+  await revealMeierhofGarrisonUnit(meierhofFarmerDefender, unitKeySound1);
+  await revealMeierhofGarrisonUnit(meierhofSpearmanDefenderOne, unitKeySound2);
+  await revealMeierhofGarrisonUnit(meierhofSpearmanDefenderTwo, unitKeySound2);
+
   if (!meierhofBattleOpen) return;
+  // Die linke Leiste bleibt bei ihrer Einblendung vollständig stumm.
   await revealMeierhofUnitColumn();
   if (!meierhofBattleOpen) return;
   await meierhofDelay(250);

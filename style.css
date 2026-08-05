@@ -3776,7 +3776,7 @@ body.is-campaign-event-locked .map-screen > *:not(.campaign-event-modal):not(.ro
 .meierhof-fixed-unit--lord { left:36.8%; top:47.8%; width:10.2%; }
 .meierhof-fixed-unit--bandit-flag { left:3.9%; top:98.6%; width:7.2%; }
 .meierhof-fixed-unit--camp { left:64.1%; top:100.2%; width:27.5%; }
-.meierhof-fixed-unit--crossbow { left:34.1%; top:22.8%; width:7.2%; }
+.meierhof-fixed-unit--crossbow { left:34.1%; top:calc(22.8% + 0.2cm); width:7.2%; }
 .meierhof-fixed-unit--farmer { left:23.3%; top:69.4%; width:7.1%; }
 .meierhof-fixed-unit--spearman-one { left:48.4%; top:56.0%; width:7.0%; }
 .meierhof-fixed-unit--spearman-two { left:75.5%; top:61.3%; width:7.0%; }
