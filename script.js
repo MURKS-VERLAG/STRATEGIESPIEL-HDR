@@ -1772,11 +1772,7 @@ window.addEventListener(
 banditEventStartButton?.addEventListener("click", (event) => {
   event.preventDefault();
   event.stopPropagation();
-
-  /*
-    V90: Der Button ist für den nächsten Arbeitsschritt vollständig hinterlegt.
-    Noch kein Schlachtwechsel – die Einblendung bleibt geöffnet.
-  */
+  startMeierhofBattle();
 });
 
 /* V18: Jahreswechsel über einen Klick auf die Glocke. */
@@ -6390,3 +6386,128 @@ darkTriadBookHotspots.forEach((hotspot) => {
     }
   });
 });
+
+
+/* V91 – eigenständige Meierhof-Startaufstellung; Kastelberg bleibt unangetastet. */
+const meierhofBattleScreen = document.querySelector("#meierhofBattleScreen");
+const meierhofLord = document.querySelector("#meierhofLord");
+const meierhofBanditFlag = document.querySelector("#meierhofBanditFlag");
+const meierhofCamp = document.querySelector("#meierhofCamp");
+const meierhofCrossbowDefender = document.querySelector("#meierhofCrossbowDefender");
+const meierhofFarmerDefender = document.querySelector("#meierhofFarmerDefender");
+const meierhofSpearmanDefenderOne = document.querySelector("#meierhofSpearmanDefenderOne");
+const meierhofSpearmanDefenderTwo = document.querySelector("#meierhofSpearmanDefenderTwo");
+const meierhofSelectionUnits = [...document.querySelectorAll("[data-meierhof-unit]")];
+const meierhofSelectionKeys = [...document.querySelectorAll("[data-meierhof-key]")];
+const meierhofCountdown = document.querySelector("#meierhofCountdown");
+const meierhofCountdownNumber = document.querySelector("#meierhofCountdownNumber");
+const meierhofSurrenderButton = document.querySelector("#meierhofSurrenderButton");
+
+let meierhofBattleOpen = false;
+let meierhofIntroRunning = false;
+let meierhofIntroCompleted = false;
+const meierhofTimers = new Set();
+
+function meierhofDelay(ms) {
+  return new Promise((resolve) => {
+    const timer = window.setTimeout(() => {
+      meierhofTimers.delete(timer);
+      resolve();
+    }, ms);
+    meierhofTimers.add(timer);
+  });
+}
+function clearMeierhofTimers() {
+  meierhofTimers.forEach((timer) => window.clearTimeout(timer));
+  meierhofTimers.clear();
+}
+function resetMeierhofBattleVisuals() {
+  [meierhofLord,meierhofBanditFlag,meierhofCamp,meierhofCrossbowDefender,meierhofFarmerDefender,meierhofSpearmanDefenderOne,meierhofSpearmanDefenderTwo,...meierhofSelectionUnits,...meierhofSelectionKeys].forEach((el)=>el?.classList.remove("is-visible"));
+  meierhofCountdown?.classList.remove("is-active");
+  meierhofCountdown?.setAttribute("aria-hidden","true");
+  if (meierhofCountdownNumber) { meierhofCountdownNumber.classList.remove("is-showing"); meierhofCountdownNumber.textContent=""; }
+  battleStartHorn.pause(); battleStartHorn.currentTime=0;
+}
+async function revealMeierhofElement(element, pause=190) {
+  if (!meierhofBattleOpen || !element) return false;
+  element.classList.add("is-visible");
+  await meierhofDelay(420 + pause);
+  return meierhofBattleOpen;
+}
+async function revealMeierhofUnitColumn() {
+  for (let i=0;i<meierhofSelectionUnits.length;i+=1) {
+    if (!meierhofBattleOpen) return;
+    meierhofSelectionUnits[i]?.classList.add("is-visible");
+    await meierhofDelay(380);
+    if (!meierhofBattleOpen) return;
+    meierhofSelectionKeys[i]?.classList.add("is-visible");
+    const sound=document.querySelector(`#unitKeySound${i+1}`);
+    if (sound) { sound.pause(); sound.currentTime=0; sound.play().catch(()=>{}); }
+    await meierhofDelay(330);
+  }
+}
+async function runMeierhofCountdown() {
+  for (const number of [3,2,1]) {
+    if (!meierhofBattleOpen) return;
+    meierhofCountdown.classList.add("is-active");
+    meierhofCountdown.setAttribute("aria-hidden","false");
+    meierhofCountdownNumber.classList.remove("is-showing");
+    meierhofCountdownNumber.textContent=String(number);
+    void meierhofCountdownNumber.offsetWidth;
+    meierhofCountdownNumber.classList.add("is-showing");
+    await meierhofDelay(1000);
+  }
+  if (!meierhofBattleOpen) return;
+  meierhofCountdownNumber.classList.remove("is-showing");
+  meierhofCountdownNumber.textContent="";
+  meierhofCountdown.classList.remove("is-active");
+  meierhofCountdown.setAttribute("aria-hidden","true");
+  battleStartHorn.pause(); battleStartHorn.currentTime=0; battleStartHorn.volume=.9; battleStartHorn.play().catch(()=>{});
+  meierhofIntroCompleted=true;
+  meierhofIntroRunning=false;
+}
+async function runMeierhofOpeningSequence() {
+  if (meierhofIntroRunning || !meierhofBattleOpen) return;
+  meierhofIntroRunning=true;
+  await revealMeierhofElement(meierhofLord);
+  await revealMeierhofElement(meierhofBanditFlag);
+  await revealMeierhofElement(meierhofCamp);
+  await revealMeierhofElement(meierhofCrossbowDefender);
+  await revealMeierhofElement(meierhofFarmerDefender);
+  await revealMeierhofElement(meierhofSpearmanDefenderOne);
+  await revealMeierhofElement(meierhofSpearmanDefenderTwo);
+  if (!meierhofBattleOpen) return;
+  await revealMeierhofUnitColumn();
+  if (!meierhofBattleOpen) return;
+  await meierhofDelay(250);
+  await runMeierhofCountdown();
+}
+async function startMeierhofBattle() {
+  if (meierhofBattleOpen || meierhofIntroRunning || !meierhofBattleScreen) return;
+  banditEventStartButton?.setAttribute("disabled","");
+  banditEventModal?.classList.remove("is-open");
+  await meierhofDelay(560);
+  resetMeierhofBattleVisuals();
+  meierhofBattleScreen.hidden=false;
+  meierhofBattleOpen=true;
+  meierhofIntroCompleted=false;
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    meierhofBattleScreen.classList.add("is-open");
+    meierhofSurrenderButton?.focus();
+    window.setTimeout(()=>{ if(meierhofBattleOpen) runMeierhofOpeningSequence(); },350);
+  }));
+}
+function returnFromMeierhofBattle() {
+  if (!meierhofBattleOpen) return;
+  clearMeierhofTimers();
+  meierhofBattleOpen=false;
+  meierhofIntroRunning=false;
+  resetMeierhofBattleVisuals();
+  meierhofBattleScreen.classList.remove("is-open");
+  window.setTimeout(()=>{
+    meierhofBattleScreen.hidden=true;
+    banditEventModal?.classList.remove("is-open","is-cinematic");
+    banditEventStartButton?.removeAttribute("disabled");
+  },870);
+}
+meierhofSurrenderButton?.addEventListener("click",returnFromMeierhofBattle);

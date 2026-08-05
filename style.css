@@ -3739,3 +3739,67 @@ body.is-campaign-event-locked .map-screen > *:not(.campaign-event-modal):not(.ro
     line-height: 1.18;
   }
 }
+
+/* V91 – eigenständige Meierhof-Startaufstellung. */
+.meierhof-battle-screen[hidden] { display: none !important; }
+.meierhof-battle-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 240;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #d9cfb8;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 850ms ease;
+}
+.meierhof-battle-screen.is-open { opacity: 1; pointer-events: auto; }
+.meierhof-battle-stage {
+  position: relative;
+  width: min(100vw, calc(100vh * 1.50037));
+  height: min(100vh, calc(100vw / 1.50037));
+  aspect-ratio: 2048 / 1365;
+  overflow: hidden;
+}
+.meierhof-battle-map { position:absolute; inset:0; width:100%; height:100%; object-fit:fill; pointer-events:none; user-select:none; }
+.meierhof-fixed-layer,.meierhof-unit-column,.meierhof-key-layer { position:absolute; inset:0; pointer-events:none; }
+.meierhof-fixed-layer { z-index:242; }
+.meierhof-unit-column,.meierhof-key-layer { z-index:244; }
+.meierhof-fixed-unit,.meierhof-selection-unit {
+  position:absolute; display:block; height:auto; opacity:0; pointer-events:none; user-select:none;
+  transform:translate(-50%,-96%) scale(.94); transform-origin:50% 100%;
+  transition:opacity 420ms ease,transform 420ms ease;
+  filter:drop-shadow(0 3px 3px rgba(0,0,0,.34));
+}
+.meierhof-fixed-unit.is-visible,.meierhof-selection-unit.is-visible { opacity:1; transform:translate(-50%,-100%) scale(1); }
+.meierhof-fixed-unit--lord { left:36.8%; top:47.8%; width:10.2%; }
+.meierhof-fixed-unit--bandit-flag { left:3.9%; top:98.6%; width:7.2%; }
+.meierhof-fixed-unit--camp { left:64.1%; top:100.2%; width:27.5%; }
+.meierhof-fixed-unit--crossbow { left:34.1%; top:22.8%; width:7.2%; }
+.meierhof-fixed-unit--farmer { left:23.3%; top:69.4%; width:7.1%; }
+.meierhof-fixed-unit--spearman-one { left:48.4%; top:56.0%; width:7.0%; }
+.meierhof-fixed-unit--spearman-two { left:75.5%; top:61.3%; width:7.0%; }
+.meierhof-selection-unit { left:4.5%; transform:translate(-50%,8px) scale(.94); transform-origin:50% 50%; transition-duration:360ms; }
+.meierhof-selection-unit.is-visible { transform:translate(-50%,0) scale(1); }
+.meierhof-selection-unit--1 { top:4.5%; height:10.2%; }
+.meierhof-selection-unit--2 { top:13.8%; height:10.2%; }
+.meierhof-selection-unit--3 { left:5.2%; top:23.1%; height:11.2%; }
+.meierhof-selection-unit--4 { top:33.4%; height:10.2%; }
+.meierhof-selection-unit--5 { top:42.7%; height:10.2%; }
+.meierhof-selection-unit--6 { top:52.0%; height:10.2%; }
+.meierhof-selection-unit--7 { top:61.3%; height:8.8%; }
+.meierhof-unit-key {
+  position:absolute; left:8.25%; display:grid; place-items:center; width:30px; height:30px;
+  border:2px solid #777; background:#151515; color:#fff; font:900 19px/1 Georgia,"Times New Roman",serif;
+  box-shadow:0 2px 5px rgba(0,0,0,.48); opacity:0; transform:translateY(8px) scale(.94);
+  transition:opacity 300ms ease,transform 300ms ease;
+}
+.meierhof-unit-key.is-visible { opacity:1; transform:translateY(0) scale(1); }
+.meierhof-unit-key--1 { top:7.6%; }.meierhof-unit-key--2 { top:16.9%; }.meierhof-unit-key--3 { top:26.6%; }
+.meierhof-unit-key--4 { top:36.4%; }.meierhof-unit-key--5 { top:45.7%; }.meierhof-unit-key--6 { top:55.0%; }.meierhof-unit-key--7 { top:64.0%; }
+.meierhof-countdown { position:absolute; inset:0; z-index:250; display:grid; place-items:center; visibility:hidden; pointer-events:none; }
+.meierhof-countdown.is-active { visibility:visible; }
+.meierhof-countdown-number { color:#9e1717; font-family:Georgia,"Times New Roman",serif; font-size:clamp(82px,12vw,190px); font-weight:900; line-height:1; -webkit-text-stroke:1px rgba(55,5,5,.9); text-shadow:0 3px 0 rgba(35,0,0,.92),0 0 10px rgba(185,22,22,.62),0 0 24px rgba(100,0,0,.42); opacity:0; transform:scale(.82); }
+.meierhof-countdown-number.is-showing { animation:battleCountdownFade 900ms ease-in-out forwards; }
+.meierhof-surrender-button { z-index:252 !important; }

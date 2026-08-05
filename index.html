@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#050505">
   <title>Die Herren der Rench</title>
-  <link rel="stylesheet" href="style.css?v=90">
+  <link rel="stylesheet" href="style.css?v=91">
 </head>
 <body>
   <main class="game">
@@ -1122,8 +1122,63 @@
       </audio>
 
     </section>
+
+
+    <section
+      class="meierhof-battle-screen"
+      id="meierhofBattleScreen"
+      aria-label="Gefechtsfeld am Meierhof"
+      hidden
+    >
+      <div class="meierhof-battle-stage" id="meierhofBattleStage">
+        <img
+          class="meierhof-battle-map"
+          src="assets/meierhof-gefecht-karte.png?v=91"
+          alt="Gefechtsfeld am Meierhof"
+          draggable="false"
+        >
+
+        <div class="meierhof-fixed-layer" id="meierhofFixedLayer" aria-hidden="true">
+          <img class="meierhof-fixed-unit meierhof-fixed-unit--lord" id="meierhofLord" src="assets/meierhof-ringelnatz-hofmitte.png?v=91" alt="" draggable="false">
+          <img class="meierhof-fixed-unit meierhof-fixed-unit--bandit-flag" id="meierhofBanditFlag" src="assets/meierhof-banditenflagge.png?v=91" alt="" draggable="false">
+          <img class="meierhof-fixed-unit meierhof-fixed-unit--camp" id="meierhofCamp" src="assets/meierhof-camp-ringelnatz.png?v=91" alt="" draggable="false">
+          <img class="meierhof-fixed-unit meierhof-fixed-unit--crossbow" id="meierhofCrossbowDefender" src="assets/meierhof-ringelnatz-s4.png?v=91" alt="" draggable="false">
+          <img class="meierhof-fixed-unit meierhof-fixed-unit--farmer" id="meierhofFarmerDefender" src="assets/meierhof-ringelnatz-s1.png?v=91" alt="" draggable="false">
+          <img class="meierhof-fixed-unit meierhof-fixed-unit--spearman-one" id="meierhofSpearmanDefenderOne" src="assets/meierhof-ringelnatz-s2.png?v=91" alt="" draggable="false">
+          <img class="meierhof-fixed-unit meierhof-fixed-unit--spearman-two" id="meierhofSpearmanDefenderTwo" src="assets/meierhof-ringelnatz-s2.png?v=91" alt="" draggable="false">
+        </div>
+
+        <div class="meierhof-unit-column" id="meierhofUnitColumn" aria-hidden="true">
+          <img class="meierhof-selection-unit meierhof-selection-unit--1" data-meierhof-unit="1" src="assets/meierhof-ringelnatz-s1.png?v=91" alt="" draggable="false">
+          <img class="meierhof-selection-unit meierhof-selection-unit--2" data-meierhof-unit="2" src="assets/meierhof-ringelnatz-s2.png?v=91" alt="" draggable="false">
+          <img class="meierhof-selection-unit meierhof-selection-unit--3" data-meierhof-unit="3" src="assets/meierhof-ringelnatz-s3.png?v=91" alt="" draggable="false">
+          <img class="meierhof-selection-unit meierhof-selection-unit--4" data-meierhof-unit="4" src="assets/meierhof-ringelnatz-s4.png?v=91" alt="" draggable="false">
+          <img class="meierhof-selection-unit meierhof-selection-unit--5" data-meierhof-unit="5" src="assets/meierhof-ringelnatz-s5.png?v=91" alt="" draggable="false">
+          <img class="meierhof-selection-unit meierhof-selection-unit--6" data-meierhof-unit="6" src="assets/meierhof-ringelnatz-s6.png?v=91" alt="" draggable="false">
+          <img class="meierhof-selection-unit meierhof-selection-unit--7" data-meierhof-unit="7" src="assets/meierhof-soeldner-s7.png?v=91" alt="" draggable="false">
+        </div>
+
+        <div class="meierhof-key-layer" id="meierhofUnitKeyLayer" aria-hidden="true">
+          <div class="meierhof-unit-key meierhof-unit-key--1" data-meierhof-key="1">1</div>
+          <div class="meierhof-unit-key meierhof-unit-key--2" data-meierhof-key="2">2</div>
+          <div class="meierhof-unit-key meierhof-unit-key--3" data-meierhof-key="3">3</div>
+          <div class="meierhof-unit-key meierhof-unit-key--4" data-meierhof-key="4">4</div>
+          <div class="meierhof-unit-key meierhof-unit-key--5" data-meierhof-key="5">5</div>
+          <div class="meierhof-unit-key meierhof-unit-key--6" data-meierhof-key="6">6</div>
+          <div class="meierhof-unit-key meierhof-unit-key--7" data-meierhof-key="7">7</div>
+        </div>
+
+        <div class="meierhof-countdown" id="meierhofCountdown" aria-live="assertive" aria-hidden="true">
+          <span class="meierhof-countdown-number" id="meierhofCountdownNumber"></span>
+        </div>
+      </div>
+
+      <button class="surrender-button meierhof-surrender-button" id="meierhofSurrenderButton" type="button" aria-label="Zur Kampagnenkarte zurückkehren">
+        <span class="white-flag" aria-hidden="true"></span>
+      </button>
+    </section>
   </main>
 
-  <script src="script.js?v=90"></script>
+  <script src="script.js?v=91"></script>
 </body>
 </html>
