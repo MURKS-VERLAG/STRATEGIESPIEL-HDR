@@ -14,6 +14,8 @@ const petronillaPortraitA = document.querySelector("#petronillaPortraitA");
 const petronillaPortraitB = document.querySelector("#petronillaPortraitB");
 const petronillaBlackout = document.querySelector("#petronillaBlackout");
 const petronillaMusic = document.querySelector("#petronillaMusic");
+const petronillaTitleLayer = document.querySelector("#petronillaTitleLayer");
+const petronillaTitleCard = document.querySelector("#petronillaTitleCard");
 
 const mapViewport = document.querySelector("#mapViewport");
 const campaignMap = document.querySelector("#campaignMap");
@@ -358,11 +360,11 @@ let petronillaSequenceRunning = false;
 
 function shufflePetronillaPortraits() {
   const portraits = [
-    "assets/petronilla-p1.png?v=98",
-    "assets/petronilla-p2.png?v=98",
-    "assets/petronilla-p3.png?v=98",
-    "assets/petronilla-p4.png?v=98",
-    "assets/petronilla-p5.png?v=98"
+    "assets/petronilla-p1.png?v=100",
+    "assets/petronilla-p2.png?v=100",
+    "assets/petronilla-p3.png?v=100",
+    "assets/petronilla-p4.png?v=100",
+    "assets/petronilla-p5.png?v=100"
   ];
 
   for (let index = portraits.length - 1; index > 0; index -= 1) {
@@ -392,6 +394,42 @@ async function openCampaignMapAfterPetronilla() {
   }
 }
 
+
+const PETRONILLA_TITLE_CARDS = [
+  "assets/petronilla-titel-stunde-null.png?v=100",
+  "assets/petronilla-titel-im-jahre-des-herrn.png?v=100",
+  "assets/petronilla-titel-1430.png?v=100"
+];
+
+function preloadImageAsset(source) {
+  return new Promise((resolve) => {
+    const image = new Image();
+    image.onload = async () => {
+      try {
+        if (typeof image.decode === "function") {
+          await image.decode();
+        }
+      } catch (_) {}
+      resolve(source);
+    };
+    image.onerror = () => resolve(source);
+    image.src = source;
+  });
+}
+
+async function showPetronillaTitleCard(source, visibleDuration = 2000) {
+  if (!petronillaTitleLayer || !petronillaTitleCard) {
+    return;
+  }
+
+  await preloadImageAsset(source);
+  petronillaTitleCard.src = source;
+  petronillaTitleLayer.classList.add("is-visible");
+  await new Promise((resolve) => window.setTimeout(resolve, visibleDuration));
+  petronillaTitleLayer.classList.remove("is-visible");
+  await new Promise((resolve) => window.setTimeout(resolve, 140));
+}
+
 async function runPetronillaSequence() {
   if (petronillaSequenceRunning) {
     return;
@@ -411,9 +449,19 @@ async function runPetronillaSequence() {
   let shuffledPortraits = shufflePetronillaPortraits();
   let portraitQueueIndex = 0;
 
+  const allPortraitSources = [
+    "assets/petronilla-p1.png?v=100",
+    "assets/petronilla-p2.png?v=100",
+    "assets/petronilla-p3.png?v=100",
+    "assets/petronilla-p4.png?v=100",
+    "assets/petronilla-p5.png?v=100"
+  ];
+  await Promise.all([...allPortraitSources, ...PETRONILLA_TITLE_CARDS].map(preloadImageAsset));
+
   portraitElements[0].src = shuffledPortraits[portraitQueueIndex++];
   portraitElements[0].classList.add("is-visible");
   portraitElements[1].classList.remove("is-visible");
+  petronillaTitleLayer?.classList.remove("is-visible");
 
   window.requestAnimationFrame(() => {
     window.requestAnimationFrame(() => {
@@ -436,23 +484,42 @@ async function runPetronillaSequence() {
     console.warn("Petronilla-Musik wurde vom Browser blockiert:", error);
   }
 
-  const portraitTimer = window.setInterval(() => {
+  let portraitSwapRunning = false;
+  const portraitTimer = window.setInterval(async () => {
+    if (portraitSwapRunning) return;
+    portraitSwapRunning = true;
+
     if (portraitQueueIndex >= shuffledPortraits.length) {
       shuffledPortraits = shufflePetronillaPortraits();
       portraitQueueIndex = 0;
     }
 
     const nextIndex = visibleIndex === 0 ? 1 : 0;
-    portraitElements[nextIndex].src = shuffledPortraits[portraitQueueIndex++];
+    const nextSource = shuffledPortraits[portraitQueueIndex++];
+    await preloadImageAsset(nextSource);
+    portraitElements[nextIndex].src = nextSource;
 
     window.requestAnimationFrame(() => {
       portraitElements[nextIndex].classList.add("is-visible");
-      portraitElements[visibleIndex].classList.remove("is-visible");
-      visibleIndex = nextIndex;
+      window.setTimeout(() => {
+        portraitElements[visibleIndex].classList.remove("is-visible");
+        visibleIndex = nextIndex;
+        portraitSwapRunning = false;
+      }, 55);
     });
   }, 300);
 
+  const titleSequence = (async () => {
+    await new Promise((resolve) => window.setTimeout(resolve, 5000));
+    await showPetronillaTitleCard(PETRONILLA_TITLE_CARDS[0], 2000);
+    await new Promise((resolve) => window.setTimeout(resolve, 2000));
+    await showPetronillaTitleCard(PETRONILLA_TITLE_CARDS[1], 2000);
+    await new Promise((resolve) => window.setTimeout(resolve, 2000));
+    await showPetronillaTitleCard(PETRONILLA_TITLE_CARDS[2], 2000);
+  })();
+
   await new Promise((resolve) => window.setTimeout(resolve, 25000));
+  await titleSequence;
   window.clearInterval(portraitTimer);
 
   petronillaMusic.pause();
@@ -477,6 +544,7 @@ async function runPetronillaSequence() {
   }
 
   portraitElements.forEach((portrait) => portrait.classList.remove("is-visible"));
+  petronillaTitleLayer?.classList.remove("is-visible");
   petronillaBlackout.classList.remove("is-visible");
   document.body.classList.remove("is-petronilla-playing");
   petronillaSequenceRunning = false;

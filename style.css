@@ -4076,3 +4076,50 @@ body.is-campaign-event-locked .map-screen > *:not(.campaign-event-modal):not(.ro
 body.is-petronilla-playing {
   overflow: hidden;
 }
+
+
+/* =================================================================
+   V100 – Petronilla flackerfreie Bildwechsel + historische Titelkarten
+   ================================================================= */
+.petronilla-portrait {
+  opacity: 0;
+  transition: opacity 55ms linear !important;
+  filter: none !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+  will-change: opacity;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+.petronilla-portrait.is-visible {
+  opacity: 1;
+}
+
+.petronilla-title-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 140ms ease;
+  will-change: opacity;
+}
+
+.petronilla-title-layer.is-visible {
+  opacity: 1;
+}
+
+.petronilla-title-card {
+  display: block;
+  width: min(78vw, 1280px);
+  max-height: 56vh;
+  object-fit: contain;
+  filter: none !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+  user-select: none;
+  pointer-events: none;
+}

@@ -1,11 +1,11 @@
-PETRONILLA V99 – VOLLBILD-MINIFIX
+PETRONILLA V100 – MINIFIX
 
-GitHub-Anwendung:
-1. Inhalt dieser ZIP direkt in das Hauptverzeichnis des bestehenden Projekts hochladen.
-2. index.html und style.css überschreiben.
-3. Keine Assets, Sounds oder script.js werden ersetzt.
+Enthalten sind ausschließlich die betroffenen Dateien:
+- index.html
+- style.css
+- script.js
+- 3 neue Titelgrafiken im Ordner assets
 
-Änderung:
-- Gesangskarte füllt den vollständigen Browserbildschirm.
-- Petronilla ist mittig und bleibt bei allen fünf Frames deckungsgleich.
-- Musik, Random-Wechsel, Timing, Intro und Iris bleiben unverändert.
+Installation:
+Alle Dateien und den assets-Ordner in das GitHub-Projekt kopieren und vorhandene Dateien überschreiben.
+Andere bestehende Assets bleiben unverändert.
