@@ -6776,6 +6776,20 @@ function createMeierhofRecruitCrossbowElement() {
   shotImage.alt = "";
   shotImage.draggable = false;
 
+  // V114: Die echte Schussgrafik direkt am erzeugten Element skalieren.
+  // 14,6 % Bühnenbreite innerhalb des 6,4-%-Wrappers = 228,125 %.
+  // Kein transform: scale(), damit der untere Mittelpunkt als Fußanker stabil bleibt.
+  shotImage.style.width = "228.125%";
+  shotImage.style.height = "100%";
+  shotImage.style.maxWidth = "none";
+  shotImage.style.maxHeight = "none";
+  shotImage.style.left = "50%";
+  shotImage.style.bottom = "0";
+  shotImage.style.transform = "translateX(-50%)";
+  shotImage.style.transformOrigin = "50% 100%";
+  shotImage.style.objectFit = "contain";
+  shotImage.style.objectPosition = "center bottom";
+
   const reloadImage = document.createElement("img");
   reloadImage.className = "meierhof-recruit-crossbow-pose meierhof-recruit-crossbow-pose--reload";
   reloadImage.src = marchUnitDefinitions.crossbow.reloadSrc;
@@ -7191,14 +7205,38 @@ function defeatMeierhofUnit(unit) {
   if (!unit || !unit.alive) return;
   unit.alive = false;
   unit.health = 0;
+  unit.defeatedBlocking = true;
+  unit.paused = true;
+
+  const combatPartner = unit.target;
+  if (combatPartner) {
+    // V114: Der besiegte Körper bleibt bis zum tatsächlichen Entfernen
+    // ein harter Blocker. So kann im Kill-Frame niemand durchschnellen.
+    combatPartner.paused = true;
+    if (combatPartner.target !== unit) combatPartner.target = unit;
+  }
+
   updateMeierhofUnitHealth(unit);
   if (unit.isEnemy && unit.lastDamageSource === "garrison-crossbow" && unit.hasPlundered && unit.state === "escaping") {
     recoverMeierhofLoot(unit);
   }
-  releaseMeierhofCombat(unit);
   unit.element?.classList.add("is-defeated");
   unit.healthBar?.classList.add("is-defeated");
-  window.setTimeout(() => { unit.element?.remove(); unit.healthBar?.remove(); }, 420);
+
+  window.setTimeout(() => {
+    unit.element?.remove();
+    unit.healthBar?.remove();
+    unit.defeatedBlocking = false;
+
+    if (combatPartner?.target === unit) {
+      combatPartner.target = null;
+      combatPartner.paused = false;
+    }
+    unit.target = null;
+
+    compactMeierhofFriendlyFormation();
+    enforceMeierhofHardCollision();
+  }, 420);
 }
 function applyMeierhofDamage(target, amount, source = "combat") {
   if (!target?.alive || !Number.isFinite(amount) || amount <= 0 || meierhofBattleWon) return;
@@ -7213,7 +7251,12 @@ function getMeierhofDamage(table, armorClass) {
 function updateMeierhofFriendlyAttacks(now) {
   for (const unit of meierhofMarchingUnits) {
     const enemy = unit?.target;
-    if (!unit?.alive || !enemy?.alive) {
+    if (!unit?.alive) continue;
+    if (!enemy?.alive) {
+      if (enemy?.defeatedBlocking && unit.target === enemy) {
+        unit.paused = true;
+        continue;
+      }
       if (unit?.target) releaseMeierhofCombat(unit);
       continue;
     }
@@ -7420,10 +7463,14 @@ function updateMeierhofEnemies(now) {
       // V105: Während des Ausholens bleibt die Kollision fest. Nur der echte
       // Tod eines Kampfpartners darf die Verbindung lösen und den Marsch fortsetzen.
       if (!target?.alive) {
-        releaseMeierhofCombat(enemy);
-        enemy.state = "walking";
-        enemy.paused = false;
-        setMeierhofEnemySprite(enemy, "walk");
+        if (target?.defeatedBlocking && enemy.target === target) {
+          enemy.paused = true;
+        } else {
+          releaseMeierhofCombat(enemy);
+          enemy.state = "walking";
+          enemy.paused = false;
+          setMeierhofEnemySprite(enemy, "walk");
+        }
       } else {
         if (target.target !== enemy) target.target = enemy;
         target.paused = true;
@@ -7449,10 +7496,14 @@ function updateMeierhofEnemies(now) {
           if (enemy.target.target !== enemy) enemy.target.target = enemy;
         }
       } else if (!enemy.target?.alive) {
-        releaseMeierhofCombat(enemy);
-        enemy.state = "walking";
-        enemy.paused = false;
-        setMeierhofEnemySprite(enemy, "walk");
+        if (enemy.target?.defeatedBlocking) {
+          enemy.paused = true;
+        } else {
+          releaseMeierhofCombat(enemy);
+          enemy.state = "walking";
+          enemy.paused = false;
+          setMeierhofEnemySprite(enemy, "walk");
+        }
       } else {
         enemy.target.paused = true;
         enemy.paused = true;
@@ -7462,9 +7513,14 @@ function updateMeierhofEnemies(now) {
       }
     } else if (enemy.type === "shield" && enemy.state === "engaged") {
       if (!enemy.target?.alive) {
-        enemy.target = null;
-        enemy.state = "walking";
-        setMeierhofEnemySprite(enemy, "walk");
+        if (enemy.target?.defeatedBlocking) {
+          enemy.paused = true;
+        } else {
+          enemy.target = null;
+          enemy.paused = false;
+          enemy.state = "walking";
+          setMeierhofEnemySprite(enemy, "walk");
+        }
       } else if (now >= (enemy.nextAttackAt || 0)) {
         enemy.nextAttackAt = now + 1500;
         triggerMeierhofEnemyImpact(enemy);
