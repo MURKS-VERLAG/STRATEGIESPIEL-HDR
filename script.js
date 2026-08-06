@@ -6961,9 +6961,14 @@ function updateMeierhofUnitHealth(unit) {
 function releaseMeierhofCombat(unit) {
   if (!unit) return;
   const target = unit.target;
+
   unit.target = null;
   unit.paused = false;
-  if (target?.target === unit) target.target = null;
+
+  if (target?.target === unit) {
+    target.target = null;
+    target.paused = false;
+  }
 }
 function defeatMeierhofUnit(unit) {
   if (!unit || !unit.alive) return;
@@ -7223,7 +7228,7 @@ function scheduleNextMeierhofEnemy() {
 }
 function startMeierhofEnemies() {
   clearMeierhofEnemies();
-  meierhofEnemySpawnQueue = ["club", "club", "club", "club", "shield", "shield", "shield", "shield"];
+  meierhofEnemySpawnQueue = ["club", "club", "club", "club", "club", "club", "shield", "shield", "shield", "shield", "shield", "shield"];
   for (let i = meierhofEnemySpawnQueue.length - 1; i > 0; i -= 1) {
     const j = Math.floor(Math.random() * (i + 1));
     [meierhofEnemySpawnQueue[i], meierhofEnemySpawnQueue[j]] = [meierhofEnemySpawnQueue[j], meierhofEnemySpawnQueue[i]];
