@@ -6648,8 +6648,6 @@ const meierhofUnitStock = { ...MEIERHOF_INITIAL_STOCK };
 const MEIERHOF_GARRISON_CROSSBOW_IDLE_ASSET = "assets/meierhof-ringelnatz-s4.png?v=91";
 const MEIERHOF_GARRISON_CROSSBOW_RELOAD_ASSET = "assets/meierhof-armbrust-garnison-nachladen.png?v=101";
 const MEIERHOF_GARRISON_CROSSBOW_SHOT_ASSET = "assets/meierhof-armbrust-garnison-schuss.png?v=101";
-// V109: eigenes, passgenau freigestelltes Schussbild ausschließlich für den rekrutierbaren Schützen.
-const MEIERHOF_RECRUIT_CROSSBOW_SHOT_ASSET = "assets/meierhof-armbrust-rekrut-schuss.png?v=110";
 const MEIERHOF_ENEMY_SPAWN_X = 11.4;
 const MEIERHOF_ENEMY_LINE_TOP = MEIERHOF_BATTLE_LINE_TOP;
 const MEIERHOF_ENEMY_ASSETS = Object.freeze({
@@ -6762,20 +6760,83 @@ function playMeierhofRecruitSound(unitKey) {
   audio.currentTime = 0;
   void audio.play().catch(() => {});
 }
+function createMeierhofRecruitCrossbowElement() {
+  const wrapper = document.createElement("div");
+  wrapper.className = "meierhof-march-unit meierhof-march-unit--4 meierhof-recruit-crossbow";
+
+  const idleImage = document.createElement("img");
+  idleImage.className = "meierhof-recruit-crossbow-pose meierhof-recruit-crossbow-pose--idle is-active";
+  idleImage.src = marchUnitDefinitions.crossbow.idleSrc;
+  idleImage.alt = "";
+  idleImage.draggable = false;
+
+  const shotImage = document.createElement("img");
+  shotImage.className = "meierhof-recruit-crossbow-pose meierhof-recruit-crossbow-pose--shot";
+  shotImage.src = marchUnitDefinitions.crossbow.attackSrc;
+  shotImage.alt = "";
+  shotImage.draggable = false;
+
+  const reloadImage = document.createElement("img");
+  reloadImage.className = "meierhof-recruit-crossbow-pose meierhof-recruit-crossbow-pose--reload";
+  reloadImage.src = marchUnitDefinitions.crossbow.reloadSrc;
+  reloadImage.alt = "";
+  reloadImage.draggable = false;
+
+  wrapper.append(idleImage, shotImage, reloadImage);
+  return { wrapper, idleImage, shotImage, reloadImage };
+}
+
+function setMeierhofRecruitCrossbowPose(unit, pose = "idle") {
+  if (!unit?.element || unit.unitKey !== 4) return;
+  const activePose = ["idle", "reload", "shot"].includes(pose) ? pose : "idle";
+  unit.idleImage?.classList.toggle("is-active", activePose === "idle");
+  unit.reloadImage?.classList.toggle("is-active", activePose === "reload");
+  unit.shotImage?.classList.toggle("is-active", activePose === "shot");
+}
+
+function playMeierhofRecruitCrossbowReloadSound() {
+  const sound = new Audio(ringelnatzCrossbowReloadSound.currentSrc || ringelnatzCrossbowReloadSound.src);
+  sound.volume = ringelnatzCrossbowReloadSound.volume || 1;
+  void sound.play().catch(() => {});
+}
+
+function playMeierhofRecruitCrossbowShotSound() {
+  if (!unitKeySound4) return;
+  const sound = new Audio(unitKeySound4.currentSrc || unitKeySound4.src);
+  sound.volume = unitKeySound4.volume || 1;
+  void sound.play().catch(() => {});
+}
+
 function spawnAndMarchMeierhofUnit(unitKey) {
   const asset = MEIERHOF_UNIT_ASSETS[unitKey];
   if (!asset || !meierhofMarchLayer) return false;
   const slot = reserveMeierhofSlot(unitKey);
-  const unit = document.createElement("img");
-  unit.className = `meierhof-march-unit meierhof-march-unit--${unitKey}`;
-  unit.src = asset;
-  unit.alt = "";
-  unit.draggable = false;
+
+  let unit;
+  let idleImage = null;
+  let shotImage = null;
+  let reloadImage = null;
+
+  if (Number(unitKey) === 4) {
+    const crossbow = createMeierhofRecruitCrossbowElement();
+    unit = crossbow.wrapper;
+    idleImage = crossbow.idleImage;
+    shotImage = crossbow.shotImage;
+    reloadImage = crossbow.reloadImage;
+  } else {
+    unit = document.createElement("img");
+    unit.className = `meierhof-march-unit meierhof-march-unit--${unitKey}`;
+    unit.src = asset;
+    unit.alt = "";
+    unit.draggable = false;
+  }
+
   unit.dataset.meierhofMarchId = String(++meierhofMarchInstanceCounter);
   unit.style.left = `${MEIERHOF_SPAWN_X}%`;
   unit.style.top = `${MEIERHOF_BATTLE_LINE_TOP}%`;
   unit.style.width = `${MEIERHOF_UNIT_WIDTHS[unitKey]}%`;
   meierhofMarchLayer.appendChild(unit);
+
   const healthBar = document.createElement("div");
   healthBar.className = "meierhof-friendly-health";
   const healthFill = document.createElement("div");
@@ -6784,8 +6845,10 @@ function spawnAndMarchMeierhofUnit(unitKey) {
   healthBar.style.left = `${MEIERHOF_SPAWN_X}%`;
   healthBar.style.top = `${MEIERHOF_BATTLE_LINE_TOP}%`;
   meierhofMarchLayer.appendChild(healthBar);
+
   const marchRecord = {
-    element: unit, healthBar, healthElement: healthFill, slotId: slot.id,
+    element: unit, idleImage, shotImage, reloadImage,
+    healthBar, healthElement: healthFill, slotId: slot.id,
     unitKey: Number(unitKey), armorClass: MEIERHOF_ARMOR_BY_UNIT[unitKey] || "light",
     maxHealth: 100, health: 100, x: MEIERHOF_SPAWN_X, paused: false,
     arrived: false, alive: true, target: null, nextAttackAt: 0,
@@ -6793,10 +6856,12 @@ function spawnAndMarchMeierhofUnit(unitKey) {
     rangedStateUntil: 0, rangedTarget: null, rangedShotApplied: false
   };
   meierhofMarchingUnits.push(marchRecord);
+
   requestAnimationFrame(() => {
     unit.classList.add("is-spawned", "is-marching");
     createMeierhofDust(MEIERHOF_SPAWN_X, MEIERHOF_BATTLE_LINE_TOP - .4);
   });
+
   const startX = MEIERHOF_SPAWN_X;
   const targetX = slot.x;
   const distance = Math.abs(startX - targetX);
@@ -6806,12 +6871,9 @@ function spawnAndMarchMeierhofUnit(unitKey) {
   let startedAt = performance.now();
   let lastFrameAt = startedAt;
   let lastDustAt = startedAt;
+
   const move = (now) => {
     if (!meierhofBattleOpen || !unit.isConnected || !marchRecord.alive) return;
-
-    // V107: Pausenzeit darf niemals als Bewegungszeit nachgeholt werden.
-    // Andernfalls springt eine Einheit nach einer Kollision mehrere Prozent
-    // nach links und kann einen Gegner in einem einzelnen Frame durchqueren.
     if (marchRecord.paused) {
       startedAt += Math.max(0, now - lastFrameAt);
       lastFrameAt = now;
@@ -6831,8 +6893,9 @@ function spawnAndMarchMeierhofUnit(unitKey) {
       createMeierhofDust(x, MEIERHOF_BATTLE_LINE_TOP - .35);
       lastDustAt = now;
     }
-    if (progress < 1) requestAnimationFrame(move);
-    else {
+    if (progress < 1) {
+      requestAnimationFrame(move);
+    } else {
       unit.classList.remove("is-marching");
       unit.classList.add("is-arrived");
       marchRecord.arrived = true;
@@ -6846,43 +6909,8 @@ function spawnAndMarchMeierhofUnit(unitKey) {
   return true;
 }
 
-
 const MEIERHOF_AUTO_CROSSBOW_RELOAD_MS = 5000;
 const MEIERHOF_AUTO_CROSSBOW_SHOT_MS = 1500;
-
-// V107 – Die drei Bilder des ausbildbaren Armbrustschützen besitzen
-// unterschiedliche Seitenverhältnisse. Die Pose-Metrik hält Füße und Größe
-// dennoch auf exakt derselben Meierhof-Bodenlinie.
-const MEIERHOF_RECRUIT_CROSSBOW_POSE = Object.freeze({
-  idle: Object.freeze({ width: MEIERHOF_UNIT_WIDTHS[4], top: MEIERHOF_BATTLE_LINE_TOP }),
-
-  // V108: Die beiden Aktionsgrafiken besitzen deutlich mehr transparente
-  // Außenfläche als das Standbild. Deshalb werden sie separat größer gezogen
-  // und tiefer verankert, sodass die sichtbaren Füße exakt auf derselben
-  // Meierhof-Lauflinie stehen.
-  // V109: Nachladen nochmals um ca. 0,15 cm abgesenkt.
-  reload: Object.freeze({ width: 10.8, top: MEIERHOF_BATTLE_LINE_TOP + 1.95 }),
-  // Das neue Schussbild besitzt keine übergroße transparente Außenfläche mehr:
-  // daher exakt in normaler Einheitenbreite und direkt auf der Laufebene.
-  shot: Object.freeze({ width: 14.6, top: MEIERHOF_BATTLE_LINE_TOP })
-});
-
-function setMeierhofRecruitCrossbowPose(unit, pose = "idle") {
-  if (!unit?.element || unit.unitKey !== 4) return;
-  const src = pose === "reload"
-    ? MEIERHOF_GARRISON_CROSSBOW_RELOAD_ASSET
-    : pose === "shot"
-      ? MEIERHOF_RECRUIT_CROSSBOW_SHOT_ASSET
-      : MEIERHOF_GARRISON_CROSSBOW_IDLE_ASSET;
-  if (unit.element.src !== new URL(src, document.baseURI).href) unit.element.src = src;
-
-  const poseMetric = MEIERHOF_RECRUIT_CROSSBOW_POSE[pose] || MEIERHOF_RECRUIT_CROSSBOW_POSE.idle;
-  unit.element.style.width = `${poseMetric.width}%`;
-  unit.element.style.top = `${poseMetric.top}%`;
-
-  unit.element.classList.toggle("is-auto-reloading", pose === "reload");
-  unit.element.classList.toggle("is-auto-shooting", pose === "shot");
-}
 
 function findMeierhofAutoCrossbowTarget() {
   return meierhofEnemies
@@ -6893,9 +6921,9 @@ function findMeierhofAutoCrossbowTarget() {
 function launchMeierhofAutoCrossbowBolt(unit, target) {
   if (!meierhofBattleStage || !unit?.element || !target?.element || !unit.alive || !target.alive) return;
   const stageRect = meierhofBattleStage.getBoundingClientRect();
-  const sourceRect = unit.element.getBoundingClientRect();
+  const sourceRect = (unit.shotImage?.classList.contains("is-active") ? unit.shotImage : unit.element).getBoundingClientRect();
   const targetRect = target.element.getBoundingClientRect();
-  const sourceX = sourceRect.left - stageRect.left + sourceRect.width * 0.35;
+  const sourceX = sourceRect.left - stageRect.left + sourceRect.width * 0.78;
   const sourceY = sourceRect.top - stageRect.top + sourceRect.height * 0.48;
   const targetX = targetRect.left - stageRect.left + targetRect.width * 0.55;
   const targetY = targetRect.top - stageRect.top + targetRect.height * 0.5;
@@ -6926,54 +6954,57 @@ function updateMeierhofAutoCrossbows(now) {
   for (const unit of meierhofMarchingUnits) {
     if (!unit?.alive || unit.unitKey !== 4 || !unit.arrived || !unit.element?.isConnected) continue;
     const availableTarget = findMeierhofAutoCrossbowTarget();
+
     if (!availableTarget) {
       unit.rangedState = "idle";
       unit.rangedStateUntil = 0;
       unit.rangedTarget = null;
-      unit.rangedShotApplied = false;
       setMeierhofRecruitCrossbowPose(unit, "idle");
       continue;
     }
+
     if (unit.rangedState === "idle" || !unit.rangedState) {
       unit.rangedTarget = availableTarget;
       unit.rangedState = "reloading";
       unit.rangedStateUntil = now + MEIERHOF_AUTO_CROSSBOW_RELOAD_MS;
       setMeierhofRecruitCrossbowPose(unit, "reload");
-      // Nur der normale Ladesound; bewusst KEIN Ready-Sound.
-      playRandomMeierhofSound(meierhofCrossbowWindSounds);
+      playMeierhofRecruitCrossbowReloadSound();
       continue;
     }
+
     if (unit.rangedState === "reloading" && now >= unit.rangedStateUntil) {
       unit.rangedTarget = unit.rangedTarget?.alive ? unit.rangedTarget : availableTarget;
+      if (!unit.rangedTarget?.alive) {
+        unit.rangedState = "idle";
+        setMeierhofRecruitCrossbowPose(unit, "idle");
+        continue;
+      }
       unit.rangedState = "shooting";
       unit.rangedStateUntil = now + MEIERHOF_AUTO_CROSSBOW_SHOT_MS;
-      unit.rangedShotApplied = true;
       setMeierhofRecruitCrossbowPose(unit, "shot");
-      // Gleicher zufälliger Schusssound wie beim stationären Schützen.
-      playRandomMeierhofSound(meierhofCrossbowShotSounds);
+      playMeierhofRecruitCrossbowShotSound();
       launchMeierhofAutoCrossbowBolt(unit, unit.rangedTarget);
       continue;
     }
+
     if (unit.rangedState === "shooting" && now >= unit.rangedStateUntil) {
       const nextTarget = findMeierhofAutoCrossbowTarget();
       if (nextTarget) {
         unit.rangedTarget = nextTarget;
         unit.rangedState = "reloading";
         unit.rangedStateUntil = now + MEIERHOF_AUTO_CROSSBOW_RELOAD_MS;
-        unit.rangedShotApplied = false;
         setMeierhofRecruitCrossbowPose(unit, "reload");
-        // Neuer Ladezyklus: nur Wind/Ladesound, niemals Ready-Sound.
-        playRandomMeierhofSound(meierhofCrossbowWindSounds);
+        playMeierhofRecruitCrossbowReloadSound();
       } else {
         unit.rangedState = "idle";
         unit.rangedStateUntil = 0;
         unit.rangedTarget = null;
-        unit.rangedShotApplied = false;
         setMeierhofRecruitCrossbowPose(unit, "idle");
       }
     }
   }
 }
+
 
 function getMeierhofResourceNumber(id) {
   const el = document.querySelector(`#${id}`);
@@ -7503,14 +7534,6 @@ function tryRecruitMeierhofUnit(unitKey) {
   playMeierhofRecruitSound(unitKey);
   startMeierhofCooldown(cooldown);
 
-  // V108: Der ausbildbare Armbrustschütze benutzt denselben gelben
-  // Produktionskreis am Zelt wie jede andere Einheit. Die explizite
-  // Sichtbarkeit verhindert, dass ein unmittelbar beginnender Auto-Pose-
-  // Wechsel den Kreis im ersten Render-Frame verdeckt.
-  if (Number(unitKey) === 4) {
-    meierhofCooldown?.classList.add("is-active");
-    meierhofCooldown?.setAttribute("aria-hidden", "false");
-  }
 }
 function updateMeierhofAimPosition(event) {
   if (!meierhofAimingActive || !meierhofBattleStage || !meierhofAimUi) return;
