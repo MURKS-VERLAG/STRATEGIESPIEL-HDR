@@ -4391,8 +4391,20 @@ body.is-petronilla-playing {
 }
 
 
-/* V112 – ausschließlich Schussbild des rekrutierbaren Meierhof-Armbrustschützen: 200 % Größe. */
+/* V113 – ausschließlich Schussbild des rekrutierbaren Meierhof-Armbrustschützen.
+   Der Wrapper bleibt unverändert bei 6,4 %. Das Schussbild erhält innerhalb
+   dieses Wrappers 228,125 % Breite (= 14,6 % der Meierhof-Bühne) und damit
+   exakt die wirksame Schussbreite des funktionierenden Garnisonsschützen.
+   Keine transform-Skalierung: transparente PNG-Ränder werden nicht länger
+   über ein zweites, konkurrierendes Scale-System behandelt. */
 .meierhof-recruit-crossbow-pose--shot {
-  transform: translateX(-50%) scale(2) !important;
+  width: 228.125% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  left: 50% !important;
+  bottom: 0 !important;
+  scale: 1 !important;
+  transform: translateX(-50%) !important;
   transform-origin: 50% 100% !important;
 }
