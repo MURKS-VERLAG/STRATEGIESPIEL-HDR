@@ -6958,6 +6958,14 @@ function updateMeierhofUnitHealth(unit) {
   const percent = Math.max(0, Math.min(100, (unit.health / unit.maxHealth) * 100));
   unit.healthElement.style.width = `${percent}%`;
 }
+function isMeierhofCombatPair(first, second) {
+  return Boolean(
+    first?.alive &&
+    second?.alive &&
+    first.target === second &&
+    second.target === first
+  );
+}
 function releaseMeierhofCombat(unit) {
   if (!unit) return;
   const target = unit.target;
@@ -6965,6 +6973,8 @@ function releaseMeierhofCombat(unit) {
   unit.target = null;
   unit.paused = false;
 
+  // V105: Nur die wirklich gegenseitige Bindung lösen. Eine inzwischen
+  // anderweitig gebundene Einheit darf niemals freigegeben werden.
   if (target?.target === unit) {
     target.target = null;
     target.paused = false;
@@ -6996,7 +7006,19 @@ function getMeierhofDamage(table, armorClass) {
 function updateMeierhofFriendlyAttacks(now) {
   for (const unit of meierhofMarchingUnits) {
     const enemy = unit?.target;
-    if (!unit?.alive || !enemy?.alive) { if (unit?.target) releaseMeierhofCombat(unit); continue; }
+    if (!unit?.alive || !enemy?.alive) {
+      if (unit?.target) releaseMeierhofCombat(unit);
+      continue;
+    }
+
+    // V105: Schaden nur innerhalb derselben exklusiven Zweierbindung.
+    // So können nachrückende Gegner keine bestehende Kollision überschreiben.
+    if (!isMeierhofCombatPair(unit, enemy)) {
+      releaseMeierhofCombat(unit);
+      continue;
+    }
+
+    unit.paused = true;
     if (now < (unit.nextAttackAt || 0)) continue;
     unit.nextAttackAt = now + (MEIERHOF_FRIENDLY_ATTACK_INTERVAL[unit.unitKey] || 2000);
     const damage = getMeierhofDamage(MEIERHOF_FRIENDLY_DAMAGE[unit.unitKey], enemy.armorClass);
@@ -7074,9 +7096,16 @@ function triggerMeierhofEnemyImpact(enemy) {
   window.setTimeout(() => enemy.element?.classList.remove("is-impacting"), 430);
 }
 function engageMeierhofEnemy(enemy, friendly) {
-  if (!enemy || enemy.state !== "walking") return;
+  if (!enemy || !friendly || enemy.state !== "walking" || !enemy.alive || !friendly.alive) return;
+
+  // V105: Eine lebende bestehende Kampfbindung ist exklusiv und darf weder
+  // durch einen nachrückenden Banditen noch durch eine neue Zielsuche ersetzt werden.
+  if (enemy.target?.alive && enemy.target !== friendly) return;
+  if (friendly.target?.alive && friendly.target !== enemy) return;
+
   enemy.target = friendly;
   friendly.target = enemy;
+  enemy.paused = true;
   friendly.paused = true;
   friendly.nextAttackAt = performance.now() + 250;
   enemy.x = Math.max(MEIERHOF_ENEMY_SPAWN_X, (friendly.x || enemy.x + 4.2) - (enemy.type === "club" ? 4.8 : 4.6));
@@ -7178,21 +7207,48 @@ function updateMeierhofEnemies(now) {
       } else if (now >= enemy.plunderAt) {
         applyMeierhofPlunder(enemy);
       }
-    } else if (enemy.type === "club" && enemy.state === "windup" && now >= enemy.stateUntil) {
-      enemy.state = "striking";
-      enemy.stateUntil = now + 1000;
-      setMeierhofEnemySprite(enemy, "strike");
-      triggerMeierhofEnemyImpact(enemy);
-      if (enemy.target?.alive) {
-        const damage = getMeierhofDamage(MEIERHOF_ENEMY_DAMAGE.club, enemy.target.armorClass);
-        applyMeierhofDamage(enemy.target, damage, "bandit-club");
-      }
-    } else if (enemy.type === "club" && enemy.state === "striking" && now >= enemy.stateUntil) {
-      if (!enemy.target?.alive) {
-        enemy.target = null;
+    } else if (enemy.type === "club" && enemy.state === "windup") {
+      const target = enemy.target;
+
+      // V105: Während des Ausholens bleibt die Kollision fest. Nur der echte
+      // Tod eines Kampfpartners darf die Verbindung lösen und den Marsch fortsetzen.
+      if (!target?.alive) {
+        releaseMeierhofCombat(enemy);
         enemy.state = "walking";
+        enemy.paused = false;
         setMeierhofEnemySprite(enemy, "walk");
       } else {
+        if (target.target !== enemy) target.target = enemy;
+        target.paused = true;
+        enemy.paused = true;
+
+        if (now >= enemy.stateUntil) {
+          enemy.state = "striking";
+          enemy.stateUntil = now + 1000;
+          setMeierhofEnemySprite(enemy, "strike");
+          triggerMeierhofEnemyImpact(enemy);
+
+          // Schaden entsteht exakt einmal beim sichtbaren Schlagbild.
+          const damage = getMeierhofDamage(MEIERHOF_ENEMY_DAMAGE.club, target.armorClass);
+          applyMeierhofDamage(target, damage, "bandit-club");
+        }
+      }
+    } else if (enemy.type === "club" && enemy.state === "striking") {
+      // Das Schlagbild bleibt unabhängig vom Treffer exakt eine Sekunde sichtbar.
+      if (now < enemy.stateUntil) {
+        enemy.paused = true;
+        if (enemy.target?.alive) {
+          enemy.target.paused = true;
+          if (enemy.target.target !== enemy) enemy.target.target = enemy;
+        }
+      } else if (!enemy.target?.alive) {
+        releaseMeierhofCombat(enemy);
+        enemy.state = "walking";
+        enemy.paused = false;
+        setMeierhofEnemySprite(enemy, "walk");
+      } else {
+        enemy.target.paused = true;
+        enemy.paused = true;
         enemy.state = "windup";
         enemy.stateUntil = now + 3000;
         setMeierhofEnemySprite(enemy, "windup");
@@ -7220,7 +7276,7 @@ function scheduleNextMeierhofEnemy() {
   if (!meierhofBattleOpen || !meierhofIntroCompleted || meierhofBattleWon || !meierhofEnemySpawnQueue.length) return;
   const type = meierhofEnemySpawnQueue.shift();
   createMeierhofEnemy(type);
-  const cooldown = type === "club" ? 5500 : 3000;
+  const cooldown = type === "club" ? 6000 : 3000;
   meierhofEnemySpawnTimer = window.setTimeout(() => {
     meierhofEnemySpawnTimer = null;
     scheduleNextMeierhofEnemy();
