@@ -7322,7 +7322,11 @@ function setMeierhofGarrisonCrossbowPose(pose = "idle") {
   meierhofCrossbowDefender.src = src;
   meierhofCrossbowDefender.style.left = "43.2%";
   meierhofCrossbowDefender.style.top = "62.2%";
-  meierhofCrossbowDefender.style.width = "7.2%";
+  // V119: Nur die Schusspose der festen Garnison benötigt wegen ihrer
+  // transparenten PNG-Fläche eine eigene Darstellungsbreite.
+  // Idle und Reload bleiben exakt bei 7,2 %.
+  meierhofCrossbowDefender.style.width =
+    activePose === "shot" ? "14.6%" : "7.2%";
   meierhofCrossbowDefender.style.height = "auto";
   meierhofCrossbowDefender.style.maxWidth = "none";
   meierhofCrossbowDefender.style.maxHeight = "none";
@@ -7895,6 +7899,7 @@ function beginMeierhofReload() {
   }
   meierhofReloadActive = true;
   meierhofReloadComplete = false;
+  meierhofReloadRing?.style.setProperty("--meierhof-reload-progress", "0deg");
   meierhofReloadStartedAt = performance.now();
   setMeierhofGarrisonCrossbowPose("reload");
   if (meierhofFastReloadActive && meierhofFastReloadSound) {

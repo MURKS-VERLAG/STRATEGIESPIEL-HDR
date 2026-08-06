@@ -11,21 +11,40 @@
     /* V117 – isoliertes Schnellnachladen-Feature. Keine Einheiten-/Truppenregeln. */
 
     /* Der bestehende Nachladekreis am Cursor ist ab jetzt gelb. */
+    #meierhofReloadIndicator {
+      opacity: 0 !important;
+      visibility: hidden !important;
+    }
+
+    #meierhofReloadIndicator.is-visible,
+    #meierhofReloadIndicator.is-complete {
+      opacity: 1 !important;
+      visibility: visible !important;
+    }
+
     #meierhofReloadRing {
-      border-color: #ffd21f !important;
+      border: 0 !important;
       background:
-        radial-gradient(circle at center, transparent 0 54%, rgba(9, 9, 9, .92) 56% 62%, transparent 64%),
         conic-gradient(
           #ffd21f 0 var(--meierhof-reload-progress),
-          rgba(255, 210, 31, .16) var(--meierhof-reload-progress) 360deg
+          transparent var(--meierhof-reload-progress) 360deg
         ) !important;
-      box-shadow:
-        0 0 0 1px rgba(48, 34, 0, .95),
-        0 0 6px rgba(255, 210, 31, .92),
-        inset 0 0 7px rgba(255, 210, 31, .32) !important;
+      -webkit-mask:
+        radial-gradient(
+          farthest-side,
+          transparent calc(100% - 7px),
+          #000 calc(100% - 6px)
+        ) !important;
+      mask:
+        radial-gradient(
+          farthest-side,
+          transparent calc(100% - 7px),
+          #000 calc(100% - 6px)
+        ) !important;
+      box-shadow: none !important;
       filter:
-        drop-shadow(0 0 3px rgba(255, 210, 31, .95))
-        drop-shadow(0 0 7px rgba(255, 210, 31, .55)) !important;
+        drop-shadow(0 0 2px rgba(255, 210, 31, 1))
+        drop-shadow(0 0 5px rgba(255, 210, 31, .72)) !important;
     }
 
     .meierhof-fast-reload-hud {
@@ -1403,6 +1422,6 @@
     </section>
   </main>
 
-  <script src="script.js?v=118"></script>
+  <script src="script.js?v=119"></script>
 </body>
 </html>
