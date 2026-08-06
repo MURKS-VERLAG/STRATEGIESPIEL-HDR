@@ -6580,6 +6580,7 @@ const meierhofCountdown = document.querySelector("#meierhofCountdown");
 const meierhofCountdownNumber = document.querySelector("#meierhofCountdownNumber");
 const meierhofSurrenderButton = document.querySelector("#meierhofSurrenderButton");
 const meierhofMarchLayer = document.querySelector("#meierhofMarchLayer");
+const meierhofEnemyLayer = document.querySelector("#meierhofEnemyLayer");
 const meierhofCooldown = document.querySelector("#meierhofCooldown");
 const meierhofCooldownRing = document.querySelector("#meierhofCooldownRing");
 const meierhofBattleStage = document.querySelector("#meierhofBattleStage");
@@ -6590,6 +6591,11 @@ const meierhofCrossbowWindSounds = [document.querySelector("#meierhofCrossbowWin
 const meierhofCrossbowReadySounds = [document.querySelector("#meierhofCrossbowReady1"), document.querySelector("#meierhofCrossbowReady2")].filter(Boolean);
 const meierhofCrossbowShotSounds = [document.querySelector("#meierhofCrossbowShot1"), document.querySelector("#meierhofCrossbowShot2")].filter(Boolean);
 let meierhofActiveReloadSound = null;
+let meierhofActiveReadySound = null;
+let meierhofReloadAudioToken = 0;
+let meierhofShotPoseTimer = null;
+let meierhofShotPoseActive = false;
+let meierhofQueuedReloadAfterShot = false;
 
 let meierhofBattleOpen = false;
 let meierhofIntroRunning = false;
@@ -6604,11 +6610,15 @@ let meierhofReloadComplete = false;
 let meierhofReloadStartedAt = 0;
 let meierhofReloadAnimationFrame = null;
 let meierhofControlHeld = false;
-const MEIERHOF_RELOAD_DURATION = 5000;
+const MEIERHOF_RELOAD_DURATION = 4000;
 let meierhofMarchInstanceCounter = 0;
 const meierhofMarchingUnits = [];
 const meierhofOccupiedFormationSlots = new Set();
 const meierhofTimers = new Set();
+let meierhofEnemyAnimationFrame = null;
+let meierhofEnemyLastFrameAt = 0;
+let meierhofEnemyInstanceCounter = 0;
+const meierhofEnemies = [];
 
 const MEIERHOF_RECRUITMENT_COOLDOWNS = Object.freeze({ 1: 2000, 2: 3500, 4: 6000, 7: 8000 });
 const MEIERHOF_UNIT_ASSETS = Object.freeze({
@@ -6624,6 +6634,28 @@ const MEIERHOF_SPAWN_X = 64.1;
 const MEIERHOF_BATTLE_LINE_TOP = 99.35;
 const MEIERHOF_INITIAL_STOCK = Object.freeze({ 1: 5, 2: 3, 3: 0, 4: 1, 5: 0, 6: 0, 7: 1 });
 const meierhofUnitStock = { ...MEIERHOF_INITIAL_STOCK };
+
+const MEIERHOF_GARRISON_CROSSBOW_IDLE_ASSET = "assets/meierhof-ringelnatz-s4.png?v=91";
+const MEIERHOF_GARRISON_CROSSBOW_RELOAD_ASSET = "assets/meierhof-armbrust-garnison-nachladen.png?v=101";
+const MEIERHOF_GARRISON_CROSSBOW_SHOT_ASSET = "assets/meierhof-armbrust-garnison-schuss.png?v=101";
+const MEIERHOF_ENEMY_SPAWN_X = 11.4;
+const MEIERHOF_ENEMY_LINE_TOP = MEIERHOF_BATTLE_LINE_TOP;
+const MEIERHOF_ENEMY_ASSETS = Object.freeze({
+  club: Object.freeze({
+    walk: "assets/meierhof-bandit-keule-laufen.png?v=101",
+    windup: "assets/meierhof-bandit-keule-ausholen.png?v=101",
+    strike: "assets/meierhof-bandit-keule-schlagen.png?v=101"
+  }),
+  shield: Object.freeze({
+    walk: "assets/meierhof-bandit-schild-laufen.png?v=101",
+    attack: "assets/meierhof-bandit-schild-angriff.png?v=101"
+  })
+});
+const MEIERHOF_ENEMY_SPEEDS = Object.freeze({
+  club: 3.0,
+  shield: 4.35
+});
+
 
 function meierhofDelay(ms) {
   return new Promise((resolve) => {
@@ -6720,7 +6752,8 @@ function spawnAndMarchMeierhofUnit(unitKey) {
   unit.style.top = `${MEIERHOF_BATTLE_LINE_TOP}%`;
   unit.style.width = `${MEIERHOF_UNIT_WIDTHS[unitKey]}%`;
   meierhofMarchLayer.appendChild(unit);
-  meierhofMarchingUnits.push({ element: unit, slotId: slot.id });
+  const marchRecord = { element: unit, slotId: slot.id, unitKey: Number(unitKey), x: MEIERHOF_SPAWN_X, paused: false, arrived: false, alive: true };
+  meierhofMarchingUnits.push(marchRecord);
   requestAnimationFrame(() => {
     unit.classList.add("is-spawned", "is-marching");
     createMeierhofDust(MEIERHOF_SPAWN_X, MEIERHOF_BATTLE_LINE_TOP - .4);
@@ -6734,10 +6767,12 @@ function spawnAndMarchMeierhofUnit(unitKey) {
   const startedAt = performance.now();
   let lastDustAt = startedAt;
   const move = (now) => {
-    if (!meierhofBattleOpen || !unit.isConnected) return;
+    if (!meierhofBattleOpen || !unit.isConnected || !marchRecord.alive) return;
+    if (marchRecord.paused) { requestAnimationFrame(move); return; }
     const progress = Math.min(1, (now - startedAt) / duration);
     const eased = 1 - Math.pow(1 - progress, 2);
     const x = startX + (targetX - startX) * eased;
+    marchRecord.x = x;
     unit.style.left = `${x}%`;
     unit.style.top = `${MEIERHOF_BATTLE_LINE_TOP}%`;
     if (now - lastDustAt > 430) {
@@ -6748,6 +6783,8 @@ function spawnAndMarchMeierhofUnit(unitKey) {
     else {
       unit.classList.remove("is-marching");
       unit.classList.add("is-arrived");
+      marchRecord.arrived = true;
+      marchRecord.x = targetX;
       unit.style.left = `${targetX}%`;
       createMeierhofDust(targetX, MEIERHOF_BATTLE_LINE_TOP - .35);
     }
@@ -6756,10 +6793,182 @@ function spawnAndMarchMeierhofUnit(unitKey) {
   return true;
 }
 
+
+function setMeierhofGarrisonCrossbowPose(pose = "idle") {
+  if (!meierhofCrossbowDefender) return;
+  const src = pose === "reload"
+    ? MEIERHOF_GARRISON_CROSSBOW_RELOAD_ASSET
+    : pose === "shot"
+      ? MEIERHOF_GARRISON_CROSSBOW_SHOT_ASSET
+      : MEIERHOF_GARRISON_CROSSBOW_IDLE_ASSET;
+  meierhofCrossbowDefender.src = src;
+  meierhofCrossbowDefender.classList.toggle("is-combat-pose", pose !== "idle");
+  meierhofCrossbowDefender.classList.toggle("is-reloading-pose", pose === "reload");
+  meierhofCrossbowDefender.classList.toggle("is-shot-pose", pose === "shot");
+}
+function clearMeierhofShotPoseTimer() {
+  if (meierhofShotPoseTimer !== null) window.clearTimeout(meierhofShotPoseTimer);
+  meierhofShotPoseTimer = null;
+  meierhofShotPoseActive = false;
+  meierhofQueuedReloadAfterShot = false;
+}
+function beginMeierhofShotPose() {
+  clearMeierhofShotPoseTimer();
+  meierhofShotPoseActive = true;
+  setMeierhofGarrisonCrossbowPose("shot");
+  meierhofShotPoseTimer = window.setTimeout(() => {
+    meierhofShotPoseTimer = null;
+    meierhofShotPoseActive = false;
+    if (!meierhofBattleOpen) return;
+    if (meierhofControlHeld || meierhofQueuedReloadAfterShot) {
+      meierhofQueuedReloadAfterShot = false;
+      beginMeierhofReload();
+    } else {
+      setMeierhofGarrisonCrossbowPose("idle");
+    }
+  }, 1500);
+}
+function getMeierhofFriendlyCollisionTarget(enemy) {
+  let best = null;
+  let bestDistance = Infinity;
+  for (const unit of meierhofMarchingUnits) {
+    if (!unit?.element?.isConnected || !unit.alive) continue;
+    const x = Number.isFinite(unit.x) ? unit.x : parseFloat(unit.element.style.left) || 0;
+    if (x < enemy.x - .5) continue;
+    const distance = x - enemy.x;
+    if (distance < bestDistance) { bestDistance = distance; best = unit; }
+  }
+  return best ? { unit: best, distance: bestDistance } : null;
+}
+function setMeierhofEnemySprite(enemy, state) {
+  if (!enemy?.sprite) return;
+  const assets = MEIERHOF_ENEMY_ASSETS[enemy.type];
+  const next = assets?.[state];
+  if (next && enemy.sprite.src !== new URL(next, document.baseURI).href) enemy.sprite.src = next;
+}
+function createMeierhofImpactDust(x) {
+  if (!meierhofEnemyLayer) return;
+  const dust = document.createElement("span");
+  dust.className = "meierhof-impact-dust";
+  dust.style.left = `${x}%`;
+  dust.style.top = `${MEIERHOF_ENEMY_LINE_TOP - 1.2}%`;
+  meierhofEnemyLayer.appendChild(dust);
+  dust.addEventListener("animationend", () => dust.remove(), { once: true });
+}
+function triggerMeierhofEnemyImpact(enemy) {
+  if (!enemy?.element) return;
+  enemy.element.classList.remove("is-impacting");
+  void enemy.element.offsetWidth;
+  enemy.element.classList.add("is-impacting");
+  createMeierhofImpactDust(enemy.x + 2.5);
+  window.setTimeout(() => enemy.element?.classList.remove("is-impacting"), 430);
+}
+function engageMeierhofEnemy(enemy, friendly) {
+  if (!enemy || enemy.state !== "walking") return;
+  enemy.target = friendly;
+  friendly.paused = true;
+  enemy.x = Math.max(MEIERHOF_ENEMY_SPAWN_X, (friendly.x || enemy.x + 4.2) - (enemy.type === "club" ? 4.8 : 4.6));
+  enemy.element.style.left = `${enemy.x}%`;
+  if (enemy.type === "club") {
+    enemy.state = "windup";
+    enemy.stateUntil = performance.now() + 3000;
+    setMeierhofEnemySprite(enemy, "windup");
+  } else {
+    enemy.state = "engaged";
+    enemy.stateUntil = Infinity;
+    setMeierhofEnemySprite(enemy, "attack");
+  }
+}
+function createMeierhofEnemy(type) {
+  if (!meierhofEnemyLayer || !MEIERHOF_ENEMY_ASSETS[type]) return null;
+  const element = document.createElement("div");
+  element.className = `meierhof-enemy-unit meierhof-enemy-unit--${type}`;
+  element.style.left = `${MEIERHOF_ENEMY_SPAWN_X}%`;
+  element.style.top = `${MEIERHOF_ENEMY_LINE_TOP}%`;
+  const wrap = document.createElement("div");
+  wrap.className = "meierhof-enemy-sprite-wrap";
+  const sprite = document.createElement("img");
+  sprite.className = "meierhof-enemy-sprite";
+  sprite.src = MEIERHOF_ENEMY_ASSETS[type].walk;
+  sprite.alt = "";
+  sprite.draggable = false;
+  const health = document.createElement("div");
+  health.className = "meierhof-enemy-health";
+  const fill = document.createElement("div");
+  fill.className = "meierhof-enemy-health-fill";
+  health.appendChild(fill);
+  wrap.appendChild(sprite);
+  element.append(wrap, health);
+  meierhofEnemyLayer.appendChild(element);
+  const enemy = {
+    id: ++meierhofEnemyInstanceCounter,
+    type,
+    element,
+    sprite,
+    healthElement: fill,
+    x: MEIERHOF_ENEMY_SPAWN_X,
+    speed: MEIERHOF_ENEMY_SPEEDS[type],
+    state: "walking",
+    stateUntil: 0,
+    target: null,
+    maxHealth: 100,
+    health: 100,
+    collisionWidth: type === "club" ? 4.7 : 4.5,
+    alive: true
+  };
+  meierhofEnemies.push(enemy);
+  requestAnimationFrame(() => element.classList.add("is-visible"));
+  return enemy;
+}
+function updateMeierhofEnemies(now) {
+  if (!meierhofBattleOpen) { meierhofEnemyAnimationFrame = null; return; }
+  const delta = meierhofEnemyLastFrameAt ? Math.min(.05, (now - meierhofEnemyLastFrameAt) / 1000) : 0;
+  meierhofEnemyLastFrameAt = now;
+  for (const enemy of meierhofEnemies) {
+    if (!enemy.alive || !enemy.element?.isConnected) continue;
+    if (enemy.state === "walking") {
+      enemy.x += enemy.speed * delta;
+      enemy.element.style.left = `${enemy.x}%`;
+      const target = getMeierhofFriendlyCollisionTarget(enemy);
+      if (target && target.distance <= enemy.collisionWidth) engageMeierhofEnemy(enemy, target.unit);
+    } else if (enemy.type === "club" && enemy.state === "windup" && now >= enemy.stateUntil) {
+      enemy.state = "striking";
+      enemy.stateUntil = now + 1000;
+      setMeierhofEnemySprite(enemy, "strike");
+      triggerMeierhofEnemyImpact(enemy);
+    } else if (enemy.type === "club" && enemy.state === "striking" && now >= enemy.stateUntil) {
+      enemy.state = "windup";
+      enemy.stateUntil = now + 3000;
+      setMeierhofEnemySprite(enemy, "windup");
+    }
+  }
+  meierhofEnemyAnimationFrame = requestAnimationFrame(updateMeierhofEnemies);
+}
+function startMeierhofEnemies() {
+  clearMeierhofEnemies();
+  createMeierhofEnemy("club");
+  const secondTimer = window.setTimeout(() => {
+    meierhofTimers.delete(secondTimer);
+    if (meierhofBattleOpen && meierhofIntroCompleted) createMeierhofEnemy("shield");
+  }, 950);
+  meierhofTimers.add(secondTimer);
+  meierhofEnemyLastFrameAt = 0;
+  meierhofEnemyAnimationFrame = requestAnimationFrame(updateMeierhofEnemies);
+}
+function clearMeierhofEnemies() {
+  if (meierhofEnemyAnimationFrame !== null) cancelAnimationFrame(meierhofEnemyAnimationFrame);
+  meierhofEnemyAnimationFrame = null;
+  meierhofEnemyLastFrameAt = 0;
+  meierhofEnemies.splice(0).forEach((enemy) => enemy.element?.remove());
+  meierhofEnemyLayer?.querySelectorAll(".meierhof-impact-dust").forEach((el) => el.remove());
+  meierhofMarchingUnits.forEach((unit) => { if (unit) unit.paused = false; });
+}
+
 function clearMeierhofDynamicUnits() {
   meierhofMarchingUnits.splice(0).forEach(({ element }) => element?.remove());
   meierhofOccupiedFormationSlots.clear();
   meierhofMarchLayer?.querySelectorAll(".meierhof-dust-puff").forEach((el) => el.remove());
+  clearMeierhofEnemies();
 }
 function tryRecruitMeierhofUnit(unitKey) {
   if (!meierhofBattleOpen || !meierhofIntroCompleted || !meierhofProductionUnlocked) return;
@@ -6782,13 +6991,13 @@ function updateMeierhofAimPosition(event) {
 }
 function stopMeierhofReload(resetProgress = true) {
   if (meierhofReloadAnimationFrame !== null) cancelAnimationFrame(meierhofReloadAnimationFrame);
-  if (meierhofActiveReloadSound) {
-    stopAndResetMeierhofAudio(meierhofActiveReloadSound);
-    meierhofActiveReloadSound = null;
-  }
+  meierhofReloadAudioToken += 1;
+  if (meierhofActiveReloadSound) { stopAndResetMeierhofAudio(meierhofActiveReloadSound); meierhofActiveReloadSound = null; }
+  if (meierhofActiveReadySound) { stopAndResetMeierhofAudio(meierhofActiveReadySound); meierhofActiveReadySound = null; }
   meierhofReloadAnimationFrame = null;
   meierhofReloadActive = false;
   meierhofControlHeld = false;
+  if (!meierhofShotPoseActive) setMeierhofGarrisonCrossbowPose("idle");
   if (resetProgress && !meierhofReloadComplete) {
     meierhofReloadRing?.style.setProperty("--meierhof-reload-progress", "0deg");
     meierhofReloadIndicator?.classList.remove("is-visible", "is-complete");
@@ -6798,6 +7007,8 @@ function stopMeierhofReload(resetProgress = true) {
 function resetMeierhofAiming() {
   stopMeierhofReload(true);
   stopAllMeierhofCrossbowSounds();
+  clearMeierhofShotPoseTimer();
+  setMeierhofGarrisonCrossbowPose("idle");
   meierhofBattleStage?.querySelectorAll(".meierhof-crossbow-bolt").forEach((bolt) => bolt.remove());
   meierhofAimingActive = false;
   meierhofPlayerWeaponLoaded = true;
@@ -6824,6 +7035,8 @@ function stopAndResetMeierhofAudio(audio) {
 function stopAllMeierhofCrossbowSounds() {
   [...meierhofCrossbowWindSounds, ...meierhofCrossbowReadySounds, ...meierhofCrossbowShotSounds].forEach(stopAndResetMeierhofAudio);
   meierhofActiveReloadSound = null;
+  meierhofActiveReadySound = null;
+  meierhofReloadAudioToken += 1;
 }
 function playRandomMeierhofSound(pool) {
   if (!pool.length) return null;
@@ -6833,6 +7046,21 @@ function playRandomMeierhofSound(pool) {
   void audio.play().catch(() => {});
   return audio;
 }
+
+function startMeierhofReloadAudioChain() {
+  const token = ++meierhofReloadAudioToken;
+  meierhofActiveReloadSound = playRandomMeierhofSound(meierhofCrossbowWindSounds);
+  const wind = meierhofActiveReloadSound;
+  if (!wind) return;
+  const onEnded = () => {
+    wind.removeEventListener("ended", onEnded);
+    if (token !== meierhofReloadAudioToken || !meierhofControlHeld || !meierhofBattleOpen) return;
+    meierhofActiveReloadSound = null;
+    meierhofActiveReadySound = playRandomMeierhofSound(meierhofCrossbowReadySounds);
+  };
+  wind.addEventListener("ended", onEnded, { once: true });
+}
+
 function fireMeierhofPlayerShot(targetX, targetY) {
   if (!meierhofBattleStage) return;
   playRandomMeierhofSound(meierhofCrossbowShotSounds);
@@ -6868,11 +7096,16 @@ function fireMeierhofPlayerShot(targetX, targetY) {
 }
 function beginMeierhofReload() {
   if (!meierhofAimingActive || meierhofPlayerWeaponLoaded || meierhofReloadActive) return;
+  meierhofControlHeld = true;
+  if (meierhofShotPoseActive) {
+    meierhofQueuedReloadAfterShot = true;
+    return;
+  }
   meierhofReloadActive = true;
   meierhofReloadComplete = false;
-  meierhofControlHeld = true;
   meierhofReloadStartedAt = performance.now();
-  meierhofActiveReloadSound = playRandomMeierhofSound(meierhofCrossbowWindSounds);
+  setMeierhofGarrisonCrossbowPose("reload");
+  startMeierhofReloadAudioChain();
   meierhofReloadIndicator?.classList.add("is-visible");
   meierhofReloadIndicator?.classList.remove("is-complete");
   meierhofReloadIndicator?.setAttribute("aria-hidden", "false");
@@ -6886,18 +7119,21 @@ function beginMeierhofReload() {
       meierhofReloadActive = false;
       meierhofReloadComplete = true;
       meierhofPlayerWeaponLoaded = true;
-      if (meierhofActiveReloadSound) {
-        stopAndResetMeierhofAudio(meierhofActiveReloadSound);
-        meierhofActiveReloadSound = null;
-      }
-      playRandomMeierhofSound(meierhofCrossbowReadySounds);
+      setMeierhofGarrisonCrossbowPose("idle");
       meierhofReloadIndicator?.classList.add("is-complete");
     }
   };
   meierhofReloadAnimationFrame = requestAnimationFrame(draw);
 }
 function cancelMeierhofReloadOnRelease() {
-  if (!meierhofReloadActive) { meierhofControlHeld = false; return; }
+  meierhofQueuedReloadAfterShot = false;
+  if (!meierhofReloadActive) {
+    meierhofControlHeld = false;
+    meierhofReloadAudioToken += 1;
+    if (meierhofActiveReloadSound) { stopAndResetMeierhofAudio(meierhofActiveReloadSound); meierhofActiveReloadSound = null; }
+    if (meierhofActiveReadySound) { stopAndResetMeierhofAudio(meierhofActiveReadySound); meierhofActiveReadySound = null; }
+    return;
+  }
   meierhofReloadComplete = false;
   stopMeierhofReload(true);
 }
@@ -7008,6 +7244,7 @@ async function runMeierhofCountdown() {
   meierhofIntroCompleted=true;
   meierhofProductionUnlocked=true;
   activateMeierhofAiming();
+  startMeierhofEnemies();
   meierhofIntroRunning=false;
 }
 async function runMeierhofOpeningSequence() {
@@ -7072,6 +7309,7 @@ meierhofBattleStage?.addEventListener("pointerdown", (event) => {
   if (event.target.closest("button")) return;
   const rect = meierhofBattleStage.getBoundingClientRect();
   fireMeierhofPlayerShot(event.clientX - rect.left, event.clientY - rect.top);
+  beginMeierhofShotPose();
   meierhofPlayerWeaponLoaded = false;
   meierhofReloadComplete = false;
   meierhofReloadIndicator?.classList.remove("is-visible", "is-complete");

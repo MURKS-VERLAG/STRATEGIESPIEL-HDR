@@ -4123,3 +4123,100 @@ body.is-petronilla-playing {
   user-select: none;
   pointer-events: none;
 }
+
+
+/* V101 – Meierhof: sichtbare Garnisonsarmbrust und zwei Banditen. */
+.meierhof-enemy-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 246;
+  pointer-events: none;
+  overflow: visible;
+}
+.meierhof-enemy-unit {
+  position: absolute;
+  left: 0;
+  top: 99.35%;
+  transform: translate(-50%, -100%);
+  transform-origin: 50% 100%;
+  opacity: 0;
+  transition: opacity 240ms ease;
+  will-change: left;
+}
+.meierhof-enemy-unit.is-visible { opacity: 1; }
+.meierhof-enemy-sprite-wrap {
+  position: relative;
+  width: 100%;
+  transform-origin: 50% 100%;
+}
+.meierhof-enemy-sprite {
+  display: block;
+  width: 100%;
+  height: auto;
+  user-select: none;
+  pointer-events: none;
+}
+.meierhof-enemy-unit--club { width: 7.05%; }
+.meierhof-enemy-unit--shield { width: 14.2%; }
+.meierhof-enemy-health {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 2px);
+  width: 72%;
+  height: 6px;
+  transform: translateX(-50%);
+  box-sizing: border-box;
+  border: 2px solid #9b1717;
+  background: #050505;
+  box-shadow: 0 1px 2px rgba(0,0,0,.9);
+  overflow: hidden;
+}
+.meierhof-enemy-health-fill {
+  width: 100%;
+  height: 100%;
+  background: #050505;
+  transform-origin: left center;
+}
+.meierhof-enemy-unit.is-impacting .meierhof-enemy-sprite-wrap {
+  animation: meierhofEnemyImpact 360ms cubic-bezier(.2,.9,.35,1) both;
+}
+@keyframes meierhofEnemyImpact {
+  0%,100% { transform: translateX(0) rotate(0); }
+  18% { transform: translateX(-8px) rotate(-1.8deg); }
+  38% { transform: translateX(7px) rotate(1.4deg); }
+  58% { transform: translateX(-5px) rotate(-1deg); }
+  78% { transform: translateX(3px) rotate(.6deg); }
+}
+.meierhof-impact-dust {
+  position: absolute;
+  width: 9.2%;
+  aspect-ratio: 1;
+  z-index: 247;
+  transform: translate(-50%,-50%);
+  border-radius: 50%;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 33% 60%, rgba(115,91,57,.66) 0 12%, transparent 13%),
+    radial-gradient(circle at 57% 43%, rgba(130,105,68,.63) 0 15%, transparent 16%),
+    radial-gradient(circle at 72% 64%, rgba(92,72,48,.55) 0 11%, transparent 12%);
+  filter: blur(.2px);
+  animation: meierhofImpactDust 650ms ease-out forwards;
+}
+@keyframes meierhofImpactDust {
+  0% { opacity: 0; transform: translate(-50%,-45%) scale(.35); }
+  20% { opacity: .92; }
+  100% { opacity: 0; transform: translate(-50%,-72%) scale(1.55); }
+}
+.meierhof-fixed-unit--crossbow.is-combat-pose {
+  transition: opacity 90ms linear, transform 110ms ease;
+}
+.meierhof-fixed-unit--crossbow.is-reloading-pose {
+  width: 7.2%;
+  left: 43.2%;
+  top: 62.2%;
+}
+.meierhof-fixed-unit--crossbow.is-shot-pose {
+  width: 14.6%;
+  left: 43.2%;
+  top: 62.2%;
+}
