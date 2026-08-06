@@ -1,11 +1,9 @@
-PETRONILLA V100 – MINIFIX
+MEIERHOF V115 – MINIFIX REKRUTIERBARER ARMBRUSTSCHÜTZE
 
-Enthalten sind ausschließlich die betroffenen Dateien:
-- index.html
-- style.css
-- script.js
-- 3 neue Titelgrafiken im Ordner assets
-
-Installation:
-Alle Dateien und den assets-Ordner in das GitHub-Projekt kopieren und vorhandene Dateien überschreiben.
-Andere bestehende Assets bleiben unverändert.
+Geändert:
+- Schussgröße bleibt exakt wie in V114.
+- Schussbild wird ausschließlich horizontal nach links gespiegelt.
+- Nachladebild wird wieder auf dieselbe sichtbare Größe wie das Schussbild gesetzt.
+- Nachladebild sitzt zusätzlich 0,15 cm tiefer.
+- Idle, Garnison, Kollision, Sounds, Timings, Schaden und alle anderen Einheiten bleiben unverändert.
+- Cache-Version in index.html auf V115 erhöht.

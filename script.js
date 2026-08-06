@@ -6785,7 +6785,8 @@ function createMeierhofRecruitCrossbowElement() {
   shotImage.style.maxHeight = "none";
   shotImage.style.left = "50%";
   shotImage.style.bottom = "0";
-  shotImage.style.transform = "translateX(-50%)";
+  // V115: Der rekrutierbare Schütze feuert nach links.
+  shotImage.style.transform = "translateX(-50%) scaleX(-1)";
   shotImage.style.transformOrigin = "50% 100%";
   shotImage.style.objectFit = "contain";
   shotImage.style.objectPosition = "center bottom";
@@ -6795,6 +6796,20 @@ function createMeierhofRecruitCrossbowElement() {
   reloadImage.src = marchUnitDefinitions.crossbow.reloadSrc;
   reloadImage.alt = "";
   reloadImage.draggable = false;
+
+  // V115: Nur das Nachladebild des rekrutierbaren Meierhof-Schützen
+  // wieder auf dieselbe sichtbare Charaktergröße wie das korrigierte Schussbild bringen.
+  // Der Fußanker bleibt unten mittig; zusätzlich exakt 0,15 cm nach unten.
+  reloadImage.style.width = "228.125%";
+  reloadImage.style.height = "100%";
+  reloadImage.style.maxWidth = "none";
+  reloadImage.style.maxHeight = "none";
+  reloadImage.style.left = "50%";
+  reloadImage.style.bottom = "0";
+  reloadImage.style.transform = "translateX(-50%) translateY(0.15cm)";
+  reloadImage.style.transformOrigin = "50% 100%";
+  reloadImage.style.objectFit = "contain";
+  reloadImage.style.objectPosition = "center bottom";
 
   wrapper.append(idleImage, shotImage, reloadImage);
   return { wrapper, idleImage, shotImage, reloadImage };
