@@ -7768,6 +7768,7 @@ function stopMeierhofFastReloadFeature() {
 
 function finishMeierhofFastReloadFeature() {
   if (!meierhofFastReloadActive) return;
+  console.debug("[Meierhof] Schnellnachladen beendet");
   meierhofFastReloadActive = false;
   stopMeierhofFastReloadAudio();
   meierhofFastReloadHud?.classList.remove("is-visible");
@@ -7779,7 +7780,13 @@ function finishMeierhofFastReloadFeature() {
 }
 
 function activateMeierhofFastReloadFeature() {
-  if (!meierhofBattleOpen || !meierhofIntroCompleted || meierhofBattleWon) return;
+  if (!meierhofBattleOpen) {
+    console.debug("[Meierhof] Schnellnachladen nicht aktiviert: Gefecht geschlossen");
+    return;
+  }
+  if (meierhofFastReloadActive) return;
+
+  console.debug("[Meierhof] Schnellnachladen aktiviert");
   meierhofFastReloadActive = true;
   meierhofFastReloadStartedAt = performance.now();
   showMeierhofFastReloadGeneral();
@@ -7814,6 +7821,7 @@ function activateMeierhofFastReloadFeature() {
 
 function scheduleMeierhofFastReloadFeature() {
   stopMeierhofFastReloadFeature();
+  console.debug("[Meierhof] Schnellnachladen geplant");
   meierhofFastReloadUnlockTimer = window.setTimeout(() => {
     meierhofFastReloadUnlockTimer = null;
     activateMeierhofFastReloadFeature();
@@ -8038,6 +8046,7 @@ async function runMeierhofCountdown() {
   meierhofProductionUnlocked=true;
   activateMeierhofAiming();
   startMeierhofEnemies();
+  stopMeierhofFastReloadFeature();
   scheduleMeierhofFastReloadFeature();
   meierhofIntroRunning=false;
 }

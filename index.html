@@ -13,6 +13,16 @@
     /* Der bestehende Nachladekreis am Cursor ist ab jetzt gelb. */
     #meierhofReloadRing {
       border-color: #ffd21f !important;
+      background:
+        radial-gradient(circle at center, transparent 0 54%, rgba(9, 9, 9, .92) 56% 62%, transparent 64%),
+        conic-gradient(
+          #ffd21f 0 var(--meierhof-reload-progress),
+          rgba(255, 210, 31, .16) var(--meierhof-reload-progress) 360deg
+        ) !important;
+      box-shadow:
+        0 0 0 1px rgba(48, 34, 0, .95),
+        0 0 6px rgba(255, 210, 31, .92),
+        inset 0 0 7px rgba(255, 210, 31, .32) !important;
       filter:
         drop-shadow(0 0 3px rgba(255, 210, 31, .95))
         drop-shadow(0 0 7px rgba(255, 210, 31, .55)) !important;
@@ -1393,6 +1403,6 @@
     </section>
   </main>
 
-  <script src="script.js?v=117"></script>
+  <script src="script.js?v=118"></script>
 </body>
 </html>
