@@ -6801,11 +6801,22 @@ function spawnAndMarchMeierhofUnit(unitKey) {
   const baseDuration = Math.max(1250, distance * 42);
   const speedDurationMultiplier = Number(unitKey) === 1 ? 2 : Number(unitKey) === 2 ? 2.3 : Number(unitKey) === 7 ? 12 : 1;
   const duration = baseDuration * speedDurationMultiplier;
-  const startedAt = performance.now();
+  let startedAt = performance.now();
+  let lastFrameAt = startedAt;
   let lastDustAt = startedAt;
   const move = (now) => {
     if (!meierhofBattleOpen || !unit.isConnected || !marchRecord.alive) return;
-    if (marchRecord.paused) { requestAnimationFrame(move); return; }
+
+    // V107: Pausenzeit darf niemals als Bewegungszeit nachgeholt werden.
+    // Andernfalls springt eine Einheit nach einer Kollision mehrere Prozent
+    // nach links und kann einen Gegner in einem einzelnen Frame durchqueren.
+    if (marchRecord.paused) {
+      startedAt += Math.max(0, now - lastFrameAt);
+      lastFrameAt = now;
+      requestAnimationFrame(move);
+      return;
+    }
+    lastFrameAt = now;
     const progress = Math.min(1, (now - startedAt) / duration);
     const eased = 1 - Math.pow(1 - progress, 2);
     const x = startX + (targetX - startX) * eased;
@@ -6837,6 +6848,15 @@ function spawnAndMarchMeierhofUnit(unitKey) {
 const MEIERHOF_AUTO_CROSSBOW_RELOAD_MS = 5000;
 const MEIERHOF_AUTO_CROSSBOW_SHOT_MS = 1500;
 
+// V107 – Die drei Bilder des ausbildbaren Armbrustschützen besitzen
+// unterschiedliche Seitenverhältnisse. Die Pose-Metrik hält Füße und Größe
+// dennoch auf exakt derselben Meierhof-Bodenlinie.
+const MEIERHOF_RECRUIT_CROSSBOW_POSE = Object.freeze({
+  idle: Object.freeze({ width: MEIERHOF_UNIT_WIDTHS[4], top: MEIERHOF_BATTLE_LINE_TOP }),
+  reload: Object.freeze({ width: MEIERHOF_UNIT_WIDTHS[4], top: MEIERHOF_BATTLE_LINE_TOP - 0.20 }),
+  shot: Object.freeze({ width: 16.2, top: MEIERHOF_BATTLE_LINE_TOP - 0.10 })
+});
+
 function setMeierhofRecruitCrossbowPose(unit, pose = "idle") {
   if (!unit?.element || unit.unitKey !== 4) return;
   const src = pose === "reload"
@@ -6845,6 +6865,11 @@ function setMeierhofRecruitCrossbowPose(unit, pose = "idle") {
       ? MEIERHOF_GARRISON_CROSSBOW_SHOT_ASSET
       : MEIERHOF_GARRISON_CROSSBOW_IDLE_ASSET;
   if (unit.element.src !== new URL(src, document.baseURI).href) unit.element.src = src;
+
+  const poseMetric = MEIERHOF_RECRUIT_CROSSBOW_POSE[pose] || MEIERHOF_RECRUIT_CROSSBOW_POSE.idle;
+  unit.element.style.width = `${poseMetric.width}%`;
+  unit.element.style.top = `${poseMetric.top}%`;
+
   unit.element.classList.toggle("is-auto-reloading", pose === "reload");
   unit.element.classList.toggle("is-auto-shooting", pose === "shot");
 }
@@ -7025,6 +7050,40 @@ function resetMeierhofOutcomeUi() {
   ensureMeierhofBannerUi();
   updateMeierhofBannerUi();
 }
+// V107 – Letzte harte Kollisionssicherung. Sie läuft in jedem Kampfframe
+// nach der Bewegung und verhindert Überlappung selbst bei kurzen Frame-Einbrüchen.
+function enforceMeierhofHardCollision() {
+  const melee = meierhofMarchingUnits
+    .filter((unit) => unit?.alive && unit.unitKey !== 4 && unit.element?.isConnected)
+    .sort((a, b) => a.x - b.x);
+
+  for (let index = 1; index < melee.length; index += 1) {
+    const ahead = melee[index - 1];
+    const behind = melee[index];
+    if (isMeierhofCombatPair(ahead, ahead.target) || isMeierhofCombatPair(behind, behind.target)) continue;
+    const minimumX = ahead.x + MEIERHOF_FRIENDLY_SPACING;
+    if (behind.x < minimumX) {
+      behind.x = minimumX;
+      behind.element.style.left = `${behind.x}%`;
+      behind.healthBar.style.left = `${behind.x}%`;
+    }
+  }
+
+  for (const enemy of meierhofEnemies) {
+    if (!enemy?.alive || !enemy.element?.isConnected || enemy.state === "escaping") continue;
+    const target = getMeierhofFriendlyCollisionTarget(enemy);
+    if (!target?.unit?.alive) continue;
+    const hardDistance = enemy.type === "club" ? 4.8 : 4.6;
+    if (target.distance <= hardDistance || enemy.x > target.unit.x) {
+      enemy.x = Math.max(MEIERHOF_ENEMY_SPAWN_X, target.unit.x - hardDistance);
+      enemy.element.style.left = `${enemy.x}%`;
+      if (enemy.state === "walking" || enemy.state === "plunder-wait") {
+        engageMeierhofEnemy(enemy, target.unit);
+      }
+    }
+  }
+}
+
 function compactMeierhofFriendlyFormation() {
   const melee = meierhofMarchingUnits
     .filter((unit) => unit?.alive && unit.unitKey !== 4 && unit.element?.isConnected)
@@ -7369,6 +7428,7 @@ function updateMeierhofEnemies(now) {
   }
 
   compactMeierhofFriendlyFormation();
+  enforceMeierhofHardCollision();
   updateMeierhofFriendlyAttacks(now);
   updateMeierhofAutoCrossbows(now);
   updateMeierhofBannerAttacks(now);
