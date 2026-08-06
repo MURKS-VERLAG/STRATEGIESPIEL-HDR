@@ -6663,7 +6663,7 @@ const MEIERHOF_ENEMY_ASSETS = Object.freeze({
 });
 const MEIERHOF_ENEMY_SPEEDS = Object.freeze({
   club: 1.5, // V102: schwere Keule exakt 100 % langsamer
-  shield: 4.35
+  shield: 2.175 // V106: exakt 50 % langsamer
 });
 const MEIERHOF_ARMOR_BY_UNIT = Object.freeze({ 1: "light", 2: "light", 4: "medium", 7: "heavy" });
 const MEIERHOF_FRIENDLY_DAMAGE = Object.freeze({
@@ -6674,7 +6674,7 @@ const MEIERHOF_FRIENDLY_DAMAGE = Object.freeze({
 });
 const MEIERHOF_ENEMY_DAMAGE = Object.freeze({
   club: Object.freeze({ light: 100, medium: 50, heavy: 25 }),
-  shield: Object.freeze({ light: 20, medium: 10, heavy: 5 })
+  shield: Object.freeze({ light: 35, medium: 25, heavy: 15 })
 });
 const MEIERHOF_FRIENDLY_ATTACK_INTERVAL = Object.freeze({ 1: 2000, 2: 1800, 4: 2400, 7: 1600 });
 
@@ -6786,7 +6786,9 @@ function spawnAndMarchMeierhofUnit(unitKey) {
     element: unit, healthBar, healthElement: healthFill, slotId: slot.id,
     unitKey: Number(unitKey), armorClass: MEIERHOF_ARMOR_BY_UNIT[unitKey] || "light",
     maxHealth: 100, health: 100, x: MEIERHOF_SPAWN_X, paused: false,
-    arrived: false, alive: true, target: null, nextAttackAt: 0
+    arrived: false, alive: true, target: null, nextAttackAt: 0,
+    rangedState: Number(unitKey) === 4 ? "idle" : null,
+    rangedStateUntil: 0, rangedTarget: null, rangedShotApplied: false
   };
   meierhofMarchingUnits.push(marchRecord);
   requestAnimationFrame(() => {
@@ -6797,7 +6799,7 @@ function spawnAndMarchMeierhofUnit(unitKey) {
   const targetX = slot.x;
   const distance = Math.abs(startX - targetX);
   const baseDuration = Math.max(1250, distance * 42);
-  const speedDurationMultiplier = Number(unitKey) === 1 ? 2 : Number(unitKey) === 2 ? 2.3 : Number(unitKey) === 7 ? 3 : 1;
+  const speedDurationMultiplier = Number(unitKey) === 1 ? 2 : Number(unitKey) === 2 ? 2.3 : Number(unitKey) === 7 ? 12 : 1;
   const duration = baseDuration * speedDurationMultiplier;
   const startedAt = performance.now();
   let lastDustAt = startedAt;
@@ -6832,6 +6834,105 @@ function spawnAndMarchMeierhofUnit(unitKey) {
 }
 
 
+const MEIERHOF_AUTO_CROSSBOW_RELOAD_MS = 5000;
+const MEIERHOF_AUTO_CROSSBOW_SHOT_MS = 1500;
+
+function setMeierhofRecruitCrossbowPose(unit, pose = "idle") {
+  if (!unit?.element || unit.unitKey !== 4) return;
+  const src = pose === "reload"
+    ? MEIERHOF_GARRISON_CROSSBOW_RELOAD_ASSET
+    : pose === "shot"
+      ? MEIERHOF_GARRISON_CROSSBOW_SHOT_ASSET
+      : MEIERHOF_GARRISON_CROSSBOW_IDLE_ASSET;
+  if (unit.element.src !== new URL(src, document.baseURI).href) unit.element.src = src;
+  unit.element.classList.toggle("is-auto-reloading", pose === "reload");
+  unit.element.classList.toggle("is-auto-shooting", pose === "shot");
+}
+
+function findMeierhofAutoCrossbowTarget() {
+  return meierhofEnemies
+    .filter((enemy) => enemy?.alive && enemy.element?.isConnected && enemy.x < MEIERHOF_ENEMY_EXIT_X)
+    .sort((a, b) => b.x - a.x || a.id - b.id)[0] || null;
+}
+
+function launchMeierhofAutoCrossbowBolt(unit, target) {
+  if (!meierhofBattleStage || !unit?.element || !target?.element || !unit.alive || !target.alive) return;
+  const stageRect = meierhofBattleStage.getBoundingClientRect();
+  const sourceRect = unit.element.getBoundingClientRect();
+  const targetRect = target.element.getBoundingClientRect();
+  const sourceX = sourceRect.left - stageRect.left + sourceRect.width * 0.35;
+  const sourceY = sourceRect.top - stageRect.top + sourceRect.height * 0.48;
+  const targetX = targetRect.left - stageRect.left + targetRect.width * 0.55;
+  const targetY = targetRect.top - stageRect.top + targetRect.height * 0.5;
+  const dx = targetX - sourceX;
+  const dy = targetY - sourceY;
+  const distance = Math.hypot(dx, dy);
+  const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+  const bolt = document.createElement("span");
+  bolt.className = "meierhof-crossbow-bolt meierhof-crossbow-bolt--auto";
+  bolt.style.left = `${sourceX}px`;
+  bolt.style.top = `${sourceY}px`;
+  bolt.style.transform = `translateY(-50%) rotate(${angle}deg)`;
+  meierhofBattleStage.appendChild(bolt);
+  const duration = Math.max(220, Math.min(650, distance * 0.62));
+  requestAnimationFrame(() => {
+    bolt.style.transition = `transform ${duration}ms linear`;
+    bolt.style.transform = `translate(${dx}px, ${dy}px) translateY(-50%) rotate(${angle}deg)`;
+  });
+  window.setTimeout(() => {
+    bolt.remove();
+    if (!unit.alive || !target.alive || meierhofBattleWon) return;
+    const damage = getMeierhofDamage(MEIERHOF_FRIENDLY_DAMAGE[4], target.armorClass);
+    applyMeierhofDamage(target, damage, "recruited-crossbow");
+  }, duration);
+}
+
+function updateMeierhofAutoCrossbows(now) {
+  for (const unit of meierhofMarchingUnits) {
+    if (!unit?.alive || unit.unitKey !== 4 || !unit.arrived || !unit.element?.isConnected) continue;
+    const availableTarget = findMeierhofAutoCrossbowTarget();
+    if (!availableTarget) {
+      unit.rangedState = "idle";
+      unit.rangedStateUntil = 0;
+      unit.rangedTarget = null;
+      unit.rangedShotApplied = false;
+      setMeierhofRecruitCrossbowPose(unit, "idle");
+      continue;
+    }
+    if (unit.rangedState === "idle" || !unit.rangedState) {
+      unit.rangedTarget = availableTarget;
+      unit.rangedState = "reloading";
+      unit.rangedStateUntil = now + MEIERHOF_AUTO_CROSSBOW_RELOAD_MS;
+      setMeierhofRecruitCrossbowPose(unit, "reload");
+      continue;
+    }
+    if (unit.rangedState === "reloading" && now >= unit.rangedStateUntil) {
+      unit.rangedTarget = unit.rangedTarget?.alive ? unit.rangedTarget : availableTarget;
+      unit.rangedState = "shooting";
+      unit.rangedStateUntil = now + MEIERHOF_AUTO_CROSSBOW_SHOT_MS;
+      unit.rangedShotApplied = true;
+      setMeierhofRecruitCrossbowPose(unit, "shot");
+      launchMeierhofAutoCrossbowBolt(unit, unit.rangedTarget);
+      continue;
+    }
+    if (unit.rangedState === "shooting" && now >= unit.rangedStateUntil) {
+      const nextTarget = findMeierhofAutoCrossbowTarget();
+      if (nextTarget) {
+        unit.rangedTarget = nextTarget;
+        unit.rangedState = "reloading";
+        unit.rangedStateUntil = now + MEIERHOF_AUTO_CROSSBOW_RELOAD_MS;
+        unit.rangedShotApplied = false;
+        setMeierhofRecruitCrossbowPose(unit, "reload");
+      } else {
+        unit.rangedState = "idle";
+        unit.rangedStateUntil = 0;
+        unit.rangedTarget = null;
+        unit.rangedShotApplied = false;
+        setMeierhofRecruitCrossbowPose(unit, "idle");
+      }
+    }
+  }
+}
 
 function getMeierhofResourceNumber(id) {
   const el = document.querySelector(`#${id}`);
@@ -7152,7 +7253,7 @@ function createMeierhofEnemy(type) {
     state: "walking",
     stateUntil: 0,
     target: null,
-    armorClass: type === "club" ? "light" : "medium",
+    armorClass: "medium",
     maxHealth: 100,
     health: 100,
     nextAttackAt: 0,
@@ -7269,6 +7370,7 @@ function updateMeierhofEnemies(now) {
 
   compactMeierhofFriendlyFormation();
   updateMeierhofFriendlyAttacks(now);
+  updateMeierhofAutoCrossbows(now);
   updateMeierhofBannerAttacks(now);
   meierhofEnemyAnimationFrame = requestAnimationFrame(updateMeierhofEnemies);
 }
@@ -7276,7 +7378,7 @@ function scheduleNextMeierhofEnemy() {
   if (!meierhofBattleOpen || !meierhofIntroCompleted || meierhofBattleWon || !meierhofEnemySpawnQueue.length) return;
   const type = meierhofEnemySpawnQueue.shift();
   createMeierhofEnemy(type);
-  const cooldown = type === "club" ? 6000 : 3000;
+  const cooldown = type === "club" ? 6000 : 4500;
   meierhofEnemySpawnTimer = window.setTimeout(() => {
     meierhofEnemySpawnTimer = null;
     scheduleNextMeierhofEnemy();
