@@ -6649,7 +6649,7 @@ const MEIERHOF_GARRISON_CROSSBOW_IDLE_ASSET = "assets/meierhof-ringelnatz-s4.png
 const MEIERHOF_GARRISON_CROSSBOW_RELOAD_ASSET = "assets/meierhof-armbrust-garnison-nachladen.png?v=101";
 const MEIERHOF_GARRISON_CROSSBOW_SHOT_ASSET = "assets/meierhof-armbrust-garnison-schuss.png?v=101";
 // V109: eigenes, passgenau freigestelltes Schussbild ausschließlich für den rekrutierbaren Schützen.
-const MEIERHOF_RECRUIT_CROSSBOW_SHOT_ASSET = "assets/meierhof-armbrust-rekrut-schuss.png?v=109";
+const MEIERHOF_RECRUIT_CROSSBOW_SHOT_ASSET = "assets/meierhof-armbrust-rekrut-schuss.png?v=110";
 const MEIERHOF_ENEMY_SPAWN_X = 11.4;
 const MEIERHOF_ENEMY_LINE_TOP = MEIERHOF_BATTLE_LINE_TOP;
 const MEIERHOF_ENEMY_ASSETS = Object.freeze({
@@ -6861,10 +6861,10 @@ const MEIERHOF_RECRUIT_CROSSBOW_POSE = Object.freeze({
   // und tiefer verankert, sodass die sichtbaren Füße exakt auf derselben
   // Meierhof-Lauflinie stehen.
   // V109: Nachladen nochmals um ca. 0,15 cm abgesenkt.
-  reload: Object.freeze({ width: 10.8, top: MEIERHOF_BATTLE_LINE_TOP + 1.75 }),
+  reload: Object.freeze({ width: 10.8, top: MEIERHOF_BATTLE_LINE_TOP + 1.95 }),
   // Das neue Schussbild besitzt keine übergroße transparente Außenfläche mehr:
   // daher exakt in normaler Einheitenbreite und direkt auf der Laufebene.
-  shot: Object.freeze({ width: MEIERHOF_UNIT_WIDTHS[4], top: MEIERHOF_BATTLE_LINE_TOP })
+  shot: Object.freeze({ width: 14.6, top: MEIERHOF_BATTLE_LINE_TOP })
 });
 
 function setMeierhofRecruitCrossbowPose(unit, pose = "idle") {
