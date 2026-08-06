@@ -3970,4 +3970,109 @@ body.is-campaign-event-locked .map-screen > *:not(.campaign-event-modal):not(.ro
   border-bottom: 4px solid transparent;
   border-left: 9px solid #e1e5e8;
 }
-\n\n/* =================================================================\n   V98 – Petronilla-Gesang zwischen Intro und Kampagnenkarte\n   ================================================================= */\n\n.petronilla-screen {\n  position: fixed;\n  inset: 0;\n  z-index: 10020;\n  display: block;\n  overflow: hidden;\n  background: #000;\n  opacity: 0;\n  pointer-events: none;\n  transition: opacity 360ms ease;\n}\n\n.petronilla-screen[hidden] {\n  display: none;\n}\n\n.petronilla-screen.is-active {\n  opacity: 1;\n}\n\n.petronilla-stage {\n  position: absolute;\n  inset: 0;\n  overflow: hidden;\n  background: #000;\n}\n\n.petronilla-background {\n  position: absolute;\n  inset: 0;\n  width: 100%;\n  height: 100%;\n  object-fit: fill;\n  user-select: none;\n  pointer-events: none;\n}\n\n.petronilla-portrait-layer {\n  position: absolute;\n  left: 31.9%;\n  top: 11.8%;\n  width: 36.2%;\n  height: 76.8%;\n  overflow: visible;\n  pointer-events: none;\n}\n\n.petronilla-portrait {\n  position: absolute;\n  inset: 0;\n  width: 100%;\n  height: 100%;\n  object-fit: contain;\n  object-position: center bottom;\n  opacity: 0;\n  transition: opacity 120ms linear;\n  user-select: none;\n  pointer-events: none;\n}\n\n.petronilla-portrait.is-visible {\n  opacity: 1;\n}\n\n.petronilla-blackout {\n  position: absolute;\n  inset: 0;\n  z-index: 5;\n  background: #000;\n  opacity: 0;\n  pointer-events: none;\n  transition: opacity 220ms ease;\n}\n\n.petronilla-blackout.is-visible {\n  opacity: 1;\n}\n\nbody.is-petronilla-playing {\n  overflow: hidden;\n}\n
+
+/* =================================================================
+   V99 – Petronilla Vollbild-Minifix
+   Nur Vollbildkarte und exakte Portrait-Zentrierung.
+   ================================================================= */
+
+.petronilla-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 10020;
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 360ms ease;
+}
+
+.petronilla-screen[hidden] {
+  display: none;
+}
+
+.petronilla-screen.is-active {
+  opacity: 1;
+}
+
+.petronilla-stage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: #000;
+}
+
+.petronilla-background {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  object-fit: fill;
+  object-position: center;
+  user-select: none;
+  pointer-events: none;
+}
+
+.petronilla-portrait-layer {
+  position: absolute;
+  left: 32%;
+  top: 12.5%;
+  width: 36%;
+  height: 73%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.petronilla-portrait {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  object-fit: contain;
+  object-position: center bottom;
+  opacity: 0;
+  transform: none;
+  transition: opacity 120ms linear;
+  user-select: none;
+  pointer-events: none;
+}
+
+.petronilla-portrait.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+.petronilla-blackout {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 220ms ease;
+}
+
+.petronilla-blackout.is-visible {
+  opacity: 1;
+}
+
+body.is-petronilla-playing {
+  overflow: hidden;
+}
