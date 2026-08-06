@@ -9,6 +9,11 @@ const mapMusic = document.querySelector("#mapMusic");
 const startOverlay = document.querySelector("#startOverlay");
 const startButton = document.querySelector("#startButton");
 const introControl = document.querySelector("#introControl");
+const petronillaScreen = document.querySelector("#petronillaScreen");
+const petronillaPortraitA = document.querySelector("#petronillaPortraitA");
+const petronillaPortraitB = document.querySelector("#petronillaPortraitB");
+const petronillaBlackout = document.querySelector("#petronillaBlackout");
+const petronillaMusic = document.querySelector("#petronillaMusic");
 
 const mapViewport = document.querySelector("#mapViewport");
 const campaignMap = document.querySelector("#campaignMap");
@@ -349,16 +354,28 @@ async function startIntro() {
   }
 }
 
-async function switchToMap() {
-  stopIntro();
-  introControl.hidden = true;
+let petronillaSequenceRunning = false;
 
-  fadeAudio(introMusic, 0, TRANSITION_DURATION, true);
+function shufflePetronillaPortraits() {
+  const portraits = [
+    "assets/petronilla-p1.png?v=98",
+    "assets/petronilla-p2.png?v=98",
+    "assets/petronilla-p3.png?v=98",
+    "assets/petronilla-p4.png?v=98",
+    "assets/petronilla-p5.png?v=98"
+  ];
 
+  for (let index = portraits.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1));
+    [portraits[index], portraits[randomIndex]] = [portraits[randomIndex], portraits[index]];
+  }
+
+  return portraits;
+}
+
+async function openCampaignMapAfterPetronilla() {
   mapScreen.classList.add("is-active");
-  introScreen.classList.add("is-leaving");
 
-  // Erst nach dem Sichtbarmachen messen und immer sauber zentrieren.
   window.requestAnimationFrame(() => {
     initializeMap();
   });
@@ -373,10 +390,100 @@ async function switchToMap() {
   } catch (error) {
     console.warn("Kartenmusik wurde vom Browser blockiert:", error);
   }
+}
+
+async function runPetronillaSequence() {
+  if (petronillaSequenceRunning) {
+    return;
+  }
+
+  petronillaSequenceRunning = true;
+  stopIntro();
+  introControl.hidden = true;
+  fadeAudio(introMusic, 0, 260, true);
+
+  document.body.classList.add("is-petronilla-playing");
+  petronillaScreen.hidden = false;
+  petronillaBlackout.classList.remove("is-visible");
+
+  const portraitElements = [petronillaPortraitA, petronillaPortraitB];
+  let visibleIndex = 0;
+  let shuffledPortraits = shufflePetronillaPortraits();
+  let portraitQueueIndex = 0;
+
+  portraitElements[0].src = shuffledPortraits[portraitQueueIndex++];
+  portraitElements[0].classList.add("is-visible");
+  portraitElements[1].classList.remove("is-visible");
+
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
+      petronillaScreen.classList.add("is-active");
+      introScreen.classList.add("is-leaving");
+    });
+  });
 
   window.setTimeout(() => {
     introScreen.classList.remove("is-active", "is-leaving");
   }, TRANSITION_DURATION);
+
+  petronillaMusic.pause();
+  petronillaMusic.currentTime = 4;
+  petronillaMusic.volume = 1;
+
+  try {
+    await petronillaMusic.play();
+  } catch (error) {
+    console.warn("Petronilla-Musik wurde vom Browser blockiert:", error);
+  }
+
+  const portraitTimer = window.setInterval(() => {
+    if (portraitQueueIndex >= shuffledPortraits.length) {
+      shuffledPortraits = shufflePetronillaPortraits();
+      portraitQueueIndex = 0;
+    }
+
+    const nextIndex = visibleIndex === 0 ? 1 : 0;
+    portraitElements[nextIndex].src = shuffledPortraits[portraitQueueIndex++];
+
+    window.requestAnimationFrame(() => {
+      portraitElements[nextIndex].classList.add("is-visible");
+      portraitElements[visibleIndex].classList.remove("is-visible");
+      visibleIndex = nextIndex;
+    });
+  }, 300);
+
+  await new Promise((resolve) => window.setTimeout(resolve, 25000));
+  window.clearInterval(portraitTimer);
+
+  petronillaMusic.pause();
+  petronillaBlackout.classList.add("is-visible");
+  await new Promise((resolve) => window.setTimeout(resolve, 220));
+
+  await openCampaignMapAfterPetronilla();
+
+  if (roundTransitionIris) {
+    roundTransitionIris.classList.add("is-active", "is-closed");
+    await new Promise((resolve) => window.setTimeout(resolve, 40));
+
+    petronillaScreen.classList.remove("is-active");
+    petronillaScreen.hidden = true;
+
+    roundTransitionIris.classList.remove("is-closed");
+    await new Promise((resolve) => window.setTimeout(resolve, 300));
+    roundTransitionIris.classList.remove("is-active");
+  } else {
+    petronillaScreen.classList.remove("is-active");
+    petronillaScreen.hidden = true;
+  }
+
+  portraitElements.forEach((portrait) => portrait.classList.remove("is-visible"));
+  petronillaBlackout.classList.remove("is-visible");
+  document.body.classList.remove("is-petronilla-playing");
+  petronillaSequenceRunning = false;
+}
+
+async function switchToMap() {
+  await runPetronillaSequence();
 }
 
 startButton.addEventListener("click", startIntro);

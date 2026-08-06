@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#050505">
   <title>Die Herren der Rench</title>
-  <link rel="stylesheet" href="style.css?v=97">
+  <link rel="stylesheet" href="style.css?v=98">
 </head>
 <body>
   <main class="game">
@@ -79,6 +79,29 @@
           Intro überspringen
         </button>
       </div>
+    </section>
+
+
+    <section class="petronilla-screen" id="petronillaScreen" aria-label="Gesang Petronilla" hidden>
+      <div class="petronilla-stage" id="petronillaStage">
+        <img
+          class="petronilla-background"
+          src="assets/petronilla-gesangskarte.jpg?v=98"
+          alt="Verzierte Gesangskarte Petronillas"
+          draggable="false"
+        >
+
+        <div class="petronilla-portrait-layer" aria-hidden="true">
+          <img class="petronilla-portrait petronilla-portrait--a" id="petronillaPortraitA" src="assets/petronilla-p1.png?v=98" alt="" draggable="false">
+          <img class="petronilla-portrait petronilla-portrait--b" id="petronillaPortraitB" src="assets/petronilla-p2.png?v=98" alt="" draggable="false">
+        </div>
+
+        <div class="petronilla-blackout" id="petronillaBlackout" aria-hidden="true"></div>
+      </div>
+
+      <audio id="petronillaMusic" preload="auto">
+        <source src="assets/petronilla-gesang.mp3?v=98" type="audio/mpeg">
+      </audio>
     </section>
 
     <section class="map-screen" id="mapScreen" aria-label="Diplomatiekarte">
@@ -1212,6 +1235,6 @@
     </section>
   </main>
 
-  <script src="script.js?v=97"></script>
+  <script src="script.js?v=98"></script>
 </body>
 </html>
