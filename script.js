@@ -7293,15 +7293,29 @@ function updateMeierhofFriendlyAttacks(now) {
 
 function setMeierhofGarrisonCrossbowPose(pose = "idle") {
   if (!meierhofCrossbowDefender) return;
-  const src = pose === "reload"
+
+  const activePose = ["idle", "reload", "shot"].includes(pose) ? pose : "idle";
+  const src = activePose === "reload"
     ? MEIERHOF_GARRISON_CROSSBOW_RELOAD_ASSET
-    : pose === "shot"
+    : activePose === "shot"
       ? MEIERHOF_GARRISON_CROSSBOW_SHOT_ASSET
       : MEIERHOF_GARRISON_CROSSBOW_IDLE_ASSET;
+
+  // V116: Ausschließlich die feste Garnison absichern.
+  // Der rekrutierbare Armbrustschütze und seine drei Posen bleiben unangetastet.
   meierhofCrossbowDefender.src = src;
-  meierhofCrossbowDefender.classList.toggle("is-combat-pose", pose !== "idle");
-  meierhofCrossbowDefender.classList.toggle("is-reloading-pose", pose === "reload");
-  meierhofCrossbowDefender.classList.toggle("is-shot-pose", pose === "shot");
+  meierhofCrossbowDefender.style.left = "43.2%";
+  meierhofCrossbowDefender.style.top = "62.2%";
+  meierhofCrossbowDefender.style.width = "7.2%";
+  meierhofCrossbowDefender.style.height = "auto";
+  meierhofCrossbowDefender.style.maxWidth = "none";
+  meierhofCrossbowDefender.style.maxHeight = "none";
+  meierhofCrossbowDefender.style.objectFit = "contain";
+  meierhofCrossbowDefender.style.objectPosition = "center bottom";
+
+  meierhofCrossbowDefender.classList.toggle("is-combat-pose", activePose !== "idle");
+  meierhofCrossbowDefender.classList.toggle("is-reloading-pose", activePose === "reload");
+  meierhofCrossbowDefender.classList.toggle("is-shot-pose", activePose === "shot");
 }
 function clearMeierhofShotPoseTimer() {
   if (meierhofShotPoseTimer !== null) window.clearTimeout(meierhofShotPoseTimer);

@@ -1,9 +1,14 @@
-MEIERHOF V115 – MINIFIX REKRUTIERBARER ARMBRUSTSCHÜTZE
+MEIERHOF V116 – GARNISON WIEDERHERGESTELLT
 
-Geändert:
-- Schussgröße bleibt exakt wie in V114.
-- Schussbild wird ausschließlich horizontal nach links gespiegelt.
-- Nachladebild wird wieder auf dieselbe sichtbare Größe wie das Schussbild gesetzt.
-- Nachladebild sitzt zusätzlich 0,15 cm tiefer.
-- Idle, Garnison, Kollision, Sounds, Timings, Schaden und alle anderen Einheiten bleiben unverändert.
-- Cache-Version in index.html auf V115 erhöht.
+Geändert wurde ausschließlich der feste Garnisonsarmbrustschütze:
+- Idle-, Nachlade- und Schuss-Asset werden wieder sicher gewechselt.
+- Garnisonsgröße bleibt in allen drei Zuständen fest bei 7,2 %.
+- Position bleibt fest bei left 43,2 % / top 62,2 %.
+- Alte CSS-Regeln können die Garnison nicht mehr riesig skalieren.
+
+Unverändert:
+- rekrutierbarer Armbrustschütze inklusive aller Größen, Richtung, Sounds und Timings
+- komplette style.css
+- Banditen, Kollision, Schaden, Cooldowns und alle übrigen Systeme
+
+Für GitHub nur index.html und script.js ersetzen. style.css nicht ersetzen.
