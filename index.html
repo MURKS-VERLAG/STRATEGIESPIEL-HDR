@@ -6,6 +6,131 @@
   <meta name="theme-color" content="#050505">
   <title>Die Herren der Rench</title>
   <link rel="stylesheet" href="style.css?v=115">
+
+  <style id="meierhofFastReloadFeatureStyles">
+    /* V117 – isoliertes Schnellnachladen-Feature. Keine Einheiten-/Truppenregeln. */
+
+    /* Der bestehende Nachladekreis am Cursor ist ab jetzt gelb. */
+    #meierhofReloadRing {
+      border-color: #ffd21f !important;
+      filter:
+        drop-shadow(0 0 3px rgba(255, 210, 31, .95))
+        drop-shadow(0 0 7px rgba(255, 210, 31, .55)) !important;
+    }
+
+    .meierhof-fast-reload-hud {
+      --meierhof-fast-reload-progress: 360deg;
+      position: absolute;
+      z-index: 190;
+      top: 3.2%;
+      right: 2.4%;
+      display: flex;
+      align-items: center;
+      gap: 1.1rem;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transform: translateY(-10px);
+      transition: opacity .28s ease, transform .28s ease, visibility 0s linear .28s;
+    }
+
+    .meierhof-fast-reload-hud.is-visible {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+      transition-delay: 0s;
+    }
+
+    .meierhof-fast-reload-label {
+      color: #ffd21f;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(15px, 1.35vw, 29px);
+      font-weight: 900;
+      letter-spacing: .055em;
+      white-space: nowrap;
+      text-shadow:
+        0 2px 0 #2d2100,
+        0 0 5px rgba(255, 210, 31, .95),
+        0 0 12px rgba(255, 210, 31, .62);
+      animation: meierhofFastReloadPulse 1s ease-in-out infinite;
+    }
+
+    .meierhof-fast-reload-timer {
+      position: relative;
+      width: clamp(62px, 5.2vw, 104px);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at center, rgba(18, 15, 8, .94) 0 54%, transparent 56%),
+        conic-gradient(
+          #ffd21f 0 var(--meierhof-fast-reload-progress),
+          rgba(255, 210, 31, .14) var(--meierhof-fast-reload-progress) 360deg
+        );
+      box-shadow:
+        0 0 0 2px rgba(30, 22, 4, .95),
+        0 0 9px rgba(255, 210, 31, .9),
+        inset 0 0 9px rgba(255, 210, 31, .35);
+    }
+
+    .meierhof-fast-reload-bolt {
+      position: absolute;
+      top: 12%;
+      color: #ffd21f;
+      font-size: clamp(22px, 2vw, 40px);
+      line-height: 1;
+      transform: rotate(-18deg);
+      text-shadow: 0 0 7px rgba(255, 210, 31, .9);
+    }
+
+    .meierhof-fast-reload-time {
+      position: absolute;
+      bottom: 16%;
+      color: #ffd21f;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(14px, 1.2vw, 24px);
+      font-weight: 900;
+      text-shadow: 0 0 6px rgba(255, 210, 31, .9);
+    }
+
+    .meierhof-fast-reload-general {
+      position: absolute;
+      z-index: 185;
+      right: -3.5%;
+      bottom: -1.5%;
+      width: min(30%, 470px);
+      height: auto;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transform: translateX(115%) scale(.98);
+      transform-origin: 100% 100%;
+      filter: drop-shadow(-8px 8px 10px rgba(0, 0, 0, .56));
+      transition:
+        opacity .38s ease,
+        transform .56s cubic-bezier(.2, .78, .24, 1),
+        visibility 0s linear .56s;
+    }
+
+    .meierhof-fast-reload-general.is-visible {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(0) scale(1.02);
+      transition-delay: 0s;
+    }
+
+    @keyframes meierhofFastReloadPulse {
+      0%, 100% { opacity: .88; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.025); }
+    }
+
+    @media (max-width: 850px) {
+      .meierhof-fast-reload-hud { gap: .55rem; right: 1.5%; }
+      .meierhof-fast-reload-general { width: 36%; }
+    }
+  </style>
+
 </head>
 <body>
   <main class="game">
@@ -1220,6 +1345,25 @@
           <span class="meierhof-countdown-number" id="meierhofCountdownNumber"></span>
         </div>
 
+
+        <!-- V117 – Schnellnachladen: ausschließlich UI/Einspieler, keine Truppenänderung -->
+        <div class="meierhof-fast-reload-hud" id="meierhofFastReloadHud" aria-hidden="true">
+          <div class="meierhof-fast-reload-label">SCHNELLES NACHLADEN</div>
+          <div class="meierhof-fast-reload-timer" id="meierhofFastReloadTimer">
+            <span class="meierhof-fast-reload-bolt" aria-hidden="true">➶</span>
+            <span class="meierhof-fast-reload-time">1s</span>
+          </div>
+        </div>
+
+        <img
+          class="meierhof-fast-reload-general"
+          id="meierhofFastReloadGeneral"
+          src="assets/meierhof-general-schnellladen.png?v=117"
+          alt=""
+          draggable="false"
+          aria-hidden="true"
+        >
+
         <div class="meierhof-aim-ui" id="meierhofAimUi" aria-hidden="true">
           <div class="meierhof-aim-reticle" aria-hidden="true"></div>
           <div class="meierhof-reload-indicator" id="meierhofReloadIndicator" aria-hidden="true">
@@ -1232,6 +1376,14 @@
         <span class="white-flag" aria-hidden="true"></span>
       </button>
 
+
+      <audio id="meierhofFastReloadSound" preload="auto">
+        <source src="assets/meierhof-schnellladen.mp3?v=117" type="audio/mpeg">
+      </audio>
+      <audio id="meierhofFastReloadGeneralSound" preload="auto">
+        <source src="assets/meierhof-general-schnellladen.mp3?v=117" type="audio/mpeg">
+      </audio>
+
       <audio id="meierhofCrossbowWind1" preload="auto"><source src="assets/meierhof-crossbow-wind-1.mp3?v=97" type="audio/mpeg"></audio>
       <audio id="meierhofCrossbowWind2" preload="auto"><source src="assets/meierhof-crossbow-wind-2.mp3?v=97" type="audio/mpeg"></audio>
       <audio id="meierhofCrossbowReady1" preload="auto"><source src="assets/meierhof-crossbow-ready-1.mp3?v=97" type="audio/mpeg"></audio>
@@ -1241,6 +1393,6 @@
     </section>
   </main>
 
-  <script src="script.js?v=116"></script>
+  <script src="script.js?v=117"></script>
 </body>
 </html>

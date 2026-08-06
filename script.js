@@ -6587,6 +6587,11 @@ const meierhofBattleStage = document.querySelector("#meierhofBattleStage");
 const meierhofAimUi = document.querySelector("#meierhofAimUi");
 const meierhofReloadIndicator = document.querySelector("#meierhofReloadIndicator");
 const meierhofReloadRing = document.querySelector("#meierhofReloadRing");
+const meierhofFastReloadHud = document.querySelector("#meierhofFastReloadHud");
+const meierhofFastReloadTimer = document.querySelector("#meierhofFastReloadTimer");
+const meierhofFastReloadGeneral = document.querySelector("#meierhofFastReloadGeneral");
+const meierhofFastReloadSound = document.querySelector("#meierhofFastReloadSound");
+const meierhofFastReloadGeneralSound = document.querySelector("#meierhofFastReloadGeneralSound");
 const meierhofCrossbowWindSounds = [document.querySelector("#meierhofCrossbowWind1"), document.querySelector("#meierhofCrossbowWind2")].filter(Boolean);
 const meierhofCrossbowReadySounds = [document.querySelector("#meierhofCrossbowReady1"), document.querySelector("#meierhofCrossbowReady2")].filter(Boolean);
 const meierhofCrossbowShotSounds = [document.querySelector("#meierhofCrossbowShot1"), document.querySelector("#meierhofCrossbowShot2")].filter(Boolean);
@@ -6611,6 +6616,17 @@ let meierhofReloadStartedAt = 0;
 let meierhofReloadAnimationFrame = null;
 let meierhofControlHeld = false;
 const MEIERHOF_RELOAD_DURATION = 4000;
+
+/* V117 – Schnellnachladen: nur Spieler-Cursor/Nachladezeit/UI. */
+const MEIERHOF_FAST_RELOAD_UNLOCK_DELAY = 20000;
+const MEIERHOF_FAST_RELOAD_ACTIVE_DURATION = 20000;
+const MEIERHOF_FAST_RELOAD_DURATION = 1000;
+let meierhofFastReloadUnlockTimer = null;
+let meierhofFastReloadEndTimer = null;
+let meierhofFastReloadHudFrame = null;
+let meierhofFastReloadGeneralHideTimer = null;
+let meierhofFastReloadActive = false;
+let meierhofFastReloadStartedAt = 0;
 let meierhofMarchInstanceCounter = 0;
 const meierhofMarchingUnits = [];
 const meierhofOccupiedFormationSlots = new Set();
@@ -7686,6 +7702,124 @@ function playRandomMeierhofSound(pool) {
   return audio;
 }
 
+
+function stopMeierhofFastReloadAudio() {
+  if (!meierhofFastReloadSound) return;
+  meierhofFastReloadSound.pause();
+  meierhofFastReloadSound.currentTime = 0;
+}
+
+function getMeierhofCurrentReloadDuration() {
+  return meierhofFastReloadActive
+    ? MEIERHOF_FAST_RELOAD_DURATION
+    : MEIERHOF_RELOAD_DURATION;
+}
+
+function hideMeierhofFastReloadGeneral() {
+  if (meierhofFastReloadGeneralHideTimer !== null) {
+    clearTimeout(meierhofFastReloadGeneralHideTimer);
+    meierhofFastReloadGeneralHideTimer = null;
+  }
+  meierhofFastReloadGeneral?.classList.remove("is-visible");
+  meierhofFastReloadGeneral?.setAttribute("aria-hidden", "true");
+}
+
+function showMeierhofFastReloadGeneral() {
+  hideMeierhofFastReloadGeneral();
+  if (meierhofFastReloadGeneralSound) {
+    meierhofFastReloadGeneralSound.pause();
+    meierhofFastReloadGeneralSound.currentTime = 0;
+    meierhofFastReloadGeneralSound.volume = 1;
+    void meierhofFastReloadGeneralSound.play().catch(() => {});
+  }
+  meierhofFastReloadGeneral?.classList.add("is-visible");
+  meierhofFastReloadGeneral?.setAttribute("aria-hidden", "false");
+  meierhofFastReloadGeneralHideTimer = window.setTimeout(() => {
+    meierhofFastReloadGeneralHideTimer = null;
+    hideMeierhofFastReloadGeneral();
+  }, 2400);
+}
+
+function stopMeierhofFastReloadFeature() {
+  if (meierhofFastReloadUnlockTimer !== null) {
+    clearTimeout(meierhofFastReloadUnlockTimer);
+    meierhofFastReloadUnlockTimer = null;
+  }
+  if (meierhofFastReloadEndTimer !== null) {
+    clearTimeout(meierhofFastReloadEndTimer);
+    meierhofFastReloadEndTimer = null;
+  }
+  if (meierhofFastReloadHudFrame !== null) {
+    cancelAnimationFrame(meierhofFastReloadHudFrame);
+    meierhofFastReloadHudFrame = null;
+  }
+  meierhofFastReloadActive = false;
+  meierhofFastReloadStartedAt = 0;
+  stopMeierhofFastReloadAudio();
+  if (meierhofFastReloadGeneralSound) {
+    meierhofFastReloadGeneralSound.pause();
+    meierhofFastReloadGeneralSound.currentTime = 0;
+  }
+  hideMeierhofFastReloadGeneral();
+  meierhofFastReloadHud?.classList.remove("is-visible");
+  meierhofFastReloadHud?.setAttribute("aria-hidden", "true");
+  meierhofFastReloadTimer?.style.setProperty("--meierhof-fast-reload-progress", "360deg");
+}
+
+function finishMeierhofFastReloadFeature() {
+  if (!meierhofFastReloadActive) return;
+  meierhofFastReloadActive = false;
+  stopMeierhofFastReloadAudio();
+  meierhofFastReloadHud?.classList.remove("is-visible");
+  meierhofFastReloadHud?.setAttribute("aria-hidden", "true");
+  if (meierhofFastReloadHudFrame !== null) {
+    cancelAnimationFrame(meierhofFastReloadHudFrame);
+    meierhofFastReloadHudFrame = null;
+  }
+}
+
+function activateMeierhofFastReloadFeature() {
+  if (!meierhofBattleOpen || !meierhofIntroCompleted || meierhofBattleWon) return;
+  meierhofFastReloadActive = true;
+  meierhofFastReloadStartedAt = performance.now();
+  showMeierhofFastReloadGeneral();
+  meierhofFastReloadHud?.classList.add("is-visible");
+  meierhofFastReloadHud?.setAttribute("aria-hidden", "false");
+
+  const drawFastReloadTimer = (now) => {
+    if (!meierhofFastReloadActive || !meierhofBattleOpen) {
+      meierhofFastReloadHudFrame = null;
+      return;
+    }
+    const elapsed = now - meierhofFastReloadStartedAt;
+    const remaining = Math.max(0, 1 - elapsed / MEIERHOF_FAST_RELOAD_ACTIVE_DURATION);
+    meierhofFastReloadTimer?.style.setProperty(
+      "--meierhof-fast-reload-progress",
+      `${remaining * 360}deg`
+    );
+    if (remaining > 0) {
+      meierhofFastReloadHudFrame = requestAnimationFrame(drawFastReloadTimer);
+    } else {
+      meierhofFastReloadHudFrame = null;
+      finishMeierhofFastReloadFeature();
+    }
+  };
+  meierhofFastReloadHudFrame = requestAnimationFrame(drawFastReloadTimer);
+
+  meierhofFastReloadEndTimer = window.setTimeout(() => {
+    meierhofFastReloadEndTimer = null;
+    finishMeierhofFastReloadFeature();
+  }, MEIERHOF_FAST_RELOAD_ACTIVE_DURATION);
+}
+
+function scheduleMeierhofFastReloadFeature() {
+  stopMeierhofFastReloadFeature();
+  meierhofFastReloadUnlockTimer = window.setTimeout(() => {
+    meierhofFastReloadUnlockTimer = null;
+    activateMeierhofFastReloadFeature();
+  }, MEIERHOF_FAST_RELOAD_UNLOCK_DELAY);
+}
+
 function startMeierhofReloadAudioChain() {
   const token = ++meierhofReloadAudioToken;
   meierhofActiveReloadSound = playRandomMeierhofSound(meierhofCrossbowWindSounds);
@@ -7755,13 +7889,19 @@ function beginMeierhofReload() {
   meierhofReloadComplete = false;
   meierhofReloadStartedAt = performance.now();
   setMeierhofGarrisonCrossbowPose("reload");
-  startMeierhofReloadAudioChain();
+  if (meierhofFastReloadActive && meierhofFastReloadSound) {
+    stopMeierhofFastReloadAudio();
+    meierhofFastReloadSound.volume = 1;
+    void meierhofFastReloadSound.play().catch(() => {});
+  } else {
+    startMeierhofReloadAudioChain();
+  }
   meierhofReloadIndicator?.classList.add("is-visible");
   meierhofReloadIndicator?.classList.remove("is-complete");
   meierhofReloadIndicator?.setAttribute("aria-hidden", "false");
   const draw = (now) => {
     if (!meierhofReloadActive || !meierhofControlHeld || !meierhofBattleOpen) return;
-    const progress = Math.min(1, (now - meierhofReloadStartedAt) / MEIERHOF_RELOAD_DURATION);
+    const progress = Math.min(1, (now - meierhofReloadStartedAt) / getMeierhofCurrentReloadDuration());
     meierhofReloadRing?.style.setProperty("--meierhof-reload-progress", `${progress * 360}deg`);
     if (progress < 1) meierhofReloadAnimationFrame = requestAnimationFrame(draw);
     else {
@@ -7777,6 +7917,7 @@ function beginMeierhofReload() {
 }
 function cancelMeierhofReloadOnRelease() {
   meierhofQueuedReloadAfterShot = false;
+  stopMeierhofFastReloadAudio();
   if (!meierhofReloadActive) {
     meierhofControlHeld = false;
     meierhofReloadAudioToken += 1;
@@ -7788,6 +7929,7 @@ function cancelMeierhofReloadOnRelease() {
   stopMeierhofReload(true);
 }
 function resetMeierhofBattleVisuals() {
+  stopMeierhofFastReloadFeature();
   resetMeierhofAiming();
   resetMeierhofOutcomeUi();
   meierhofProductionUnlocked=false;
@@ -7896,6 +8038,7 @@ async function runMeierhofCountdown() {
   meierhofProductionUnlocked=true;
   activateMeierhofAiming();
   startMeierhofEnemies();
+  scheduleMeierhofFastReloadFeature();
   meierhofIntroRunning=false;
 }
 async function runMeierhofOpeningSequence() {
@@ -7935,6 +8078,7 @@ async function startMeierhofBattle() {
 }
 function returnFromMeierhofBattle() {
   if (!meierhofBattleOpen) return;
+  stopMeierhofFastReloadFeature();
   clearMeierhofTimers();
   meierhofBattleOpen=false;
   meierhofIntroRunning=false;

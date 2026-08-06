@@ -1,14 +1,18 @@
-MEIERHOF V116 – GARNISON WIEDERHERGESTELLT
+MEIERHOF V117 – SCHNELLES NACHLADEN
 
-Geändert wurde ausschließlich der feste Garnisonsarmbrustschütze:
-- Idle-, Nachlade- und Schuss-Asset werden wieder sicher gewechselt.
-- Garnisonsgröße bleibt in allen drei Zuständen fest bei 7,2 %.
-- Position bleibt fest bei left 43,2 % / top 62,2 %.
-- Alte CSS-Regeln können die Garnison nicht mehr riesig skalieren.
+Enthalten sind ausschließlich die für dieses Feature erforderlichen Dateien:
+- index.html
+- script.js
+- assets/meierhof-schnellladen.mp3
+- assets/meierhof-general-schnellladen.mp3
+- assets/meierhof-general-schnellladen.png
 
-Unverändert:
-- rekrutierbarer Armbrustschütze inklusive aller Größen, Richtung, Sounds und Timings
-- komplette style.css
-- Banditen, Kollision, Schaden, Cooldowns und alle übrigen Systeme
-
-Für GitHub nur index.html und script.js ersetzen. style.css nicht ersetzen.
+Umgesetzt:
+- Nachladekreis neben dem Cursor ist gelb.
+- 20 Sekunden nach Kampfbeginn erscheint der General unten rechts mit eigenem Sound.
+- Gleichzeitig startet für 20 Sekunden „SCHNELLES NACHLADEN“.
+- Oben rechts: gelber Timer-Kreis, Bolzensymbol, „1s“ und pulsierender Text.
+- Während des Bonus dauert das STRG-Nachladen 1 Sekunde.
+- Während des Bonus ersetzt der neue Sound ausschließlich den normalen Nachladesound.
+- Nach 20 Sekunden kehrt automatisch die normale Nachladezeit zurück.
+- Keine Truppen-, Einheiten-, Kollisions-, Schadens- oder Spawnlogik wurde verändert.
