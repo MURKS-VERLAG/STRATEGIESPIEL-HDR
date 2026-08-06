@@ -4343,3 +4343,9 @@ body.is-petronilla-playing {
   70% { opacity: 1; transform: scale(1.04); filter: brightness(1.45); }
   100% { opacity: 1; transform: scale(1); filter: brightness(1); }
 }
+
+/* V108 – ausschließlich ausbildbarer Meierhof-Armbrustschütze. */
+.meierhof-march-unit--4.is-auto-reloading,
+.meierhof-march-unit--4.is-auto-shooting {
+  transform-origin: 50% 100%;
+}

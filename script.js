@@ -6853,8 +6853,13 @@ const MEIERHOF_AUTO_CROSSBOW_SHOT_MS = 1500;
 // dennoch auf exakt derselben Meierhof-Bodenlinie.
 const MEIERHOF_RECRUIT_CROSSBOW_POSE = Object.freeze({
   idle: Object.freeze({ width: MEIERHOF_UNIT_WIDTHS[4], top: MEIERHOF_BATTLE_LINE_TOP }),
-  reload: Object.freeze({ width: MEIERHOF_UNIT_WIDTHS[4], top: MEIERHOF_BATTLE_LINE_TOP - 0.20 }),
-  shot: Object.freeze({ width: 16.2, top: MEIERHOF_BATTLE_LINE_TOP - 0.10 })
+
+  // V108: Die beiden Aktionsgrafiken besitzen deutlich mehr transparente
+  // Außenfläche als das Standbild. Deshalb werden sie separat größer gezogen
+  // und tiefer verankert, sodass die sichtbaren Füße exakt auf derselben
+  // Meierhof-Lauflinie stehen.
+  reload: Object.freeze({ width: 10.8, top: MEIERHOF_BATTLE_LINE_TOP + 1.10 }),
+  shot: Object.freeze({ width: 27.5, top: MEIERHOF_BATTLE_LINE_TOP + 2.05 })
 });
 
 function setMeierhofRecruitCrossbowPose(unit, pose = "idle") {
@@ -7486,6 +7491,15 @@ function tryRecruitMeierhofUnit(unitKey) {
   updateMeierhofStockDisplay(unitKey);
   playMeierhofRecruitSound(unitKey);
   startMeierhofCooldown(cooldown);
+
+  // V108: Der ausbildbare Armbrustschütze benutzt denselben gelben
+  // Produktionskreis am Zelt wie jede andere Einheit. Die explizite
+  // Sichtbarkeit verhindert, dass ein unmittelbar beginnender Auto-Pose-
+  // Wechsel den Kreis im ersten Render-Frame verdeckt.
+  if (Number(unitKey) === 4) {
+    meierhofCooldown?.classList.add("is-active");
+    meierhofCooldown?.setAttribute("aria-hidden", "false");
+  }
 }
 function updateMeierhofAimPosition(event) {
   if (!meierhofAimingActive || !meierhofBattleStage || !meierhofAimUi) return;
