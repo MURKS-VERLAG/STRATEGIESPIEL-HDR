@@ -6648,6 +6648,8 @@ const meierhofUnitStock = { ...MEIERHOF_INITIAL_STOCK };
 const MEIERHOF_GARRISON_CROSSBOW_IDLE_ASSET = "assets/meierhof-ringelnatz-s4.png?v=91";
 const MEIERHOF_GARRISON_CROSSBOW_RELOAD_ASSET = "assets/meierhof-armbrust-garnison-nachladen.png?v=101";
 const MEIERHOF_GARRISON_CROSSBOW_SHOT_ASSET = "assets/meierhof-armbrust-garnison-schuss.png?v=101";
+// V109: eigenes, passgenau freigestelltes Schussbild ausschließlich für den rekrutierbaren Schützen.
+const MEIERHOF_RECRUIT_CROSSBOW_SHOT_ASSET = "assets/meierhof-armbrust-rekrut-schuss.png?v=109";
 const MEIERHOF_ENEMY_SPAWN_X = 11.4;
 const MEIERHOF_ENEMY_LINE_TOP = MEIERHOF_BATTLE_LINE_TOP;
 const MEIERHOF_ENEMY_ASSETS = Object.freeze({
@@ -6858,8 +6860,11 @@ const MEIERHOF_RECRUIT_CROSSBOW_POSE = Object.freeze({
   // Außenfläche als das Standbild. Deshalb werden sie separat größer gezogen
   // und tiefer verankert, sodass die sichtbaren Füße exakt auf derselben
   // Meierhof-Lauflinie stehen.
-  reload: Object.freeze({ width: 10.8, top: MEIERHOF_BATTLE_LINE_TOP + 1.10 }),
-  shot: Object.freeze({ width: 27.5, top: MEIERHOF_BATTLE_LINE_TOP + 2.05 })
+  // V109: Nachladen nochmals um ca. 0,15 cm abgesenkt.
+  reload: Object.freeze({ width: 10.8, top: MEIERHOF_BATTLE_LINE_TOP + 1.75 }),
+  // Das neue Schussbild besitzt keine übergroße transparente Außenfläche mehr:
+  // daher exakt in normaler Einheitenbreite und direkt auf der Laufebene.
+  shot: Object.freeze({ width: MEIERHOF_UNIT_WIDTHS[4], top: MEIERHOF_BATTLE_LINE_TOP })
 });
 
 function setMeierhofRecruitCrossbowPose(unit, pose = "idle") {
@@ -6867,7 +6872,7 @@ function setMeierhofRecruitCrossbowPose(unit, pose = "idle") {
   const src = pose === "reload"
     ? MEIERHOF_GARRISON_CROSSBOW_RELOAD_ASSET
     : pose === "shot"
-      ? MEIERHOF_GARRISON_CROSSBOW_SHOT_ASSET
+      ? MEIERHOF_RECRUIT_CROSSBOW_SHOT_ASSET
       : MEIERHOF_GARRISON_CROSSBOW_IDLE_ASSET;
   if (unit.element.src !== new URL(src, document.baseURI).href) unit.element.src = src;
 
@@ -6934,6 +6939,8 @@ function updateMeierhofAutoCrossbows(now) {
       unit.rangedState = "reloading";
       unit.rangedStateUntil = now + MEIERHOF_AUTO_CROSSBOW_RELOAD_MS;
       setMeierhofRecruitCrossbowPose(unit, "reload");
+      // Nur der normale Ladesound; bewusst KEIN Ready-Sound.
+      playRandomMeierhofSound(meierhofCrossbowWindSounds);
       continue;
     }
     if (unit.rangedState === "reloading" && now >= unit.rangedStateUntil) {
@@ -6942,6 +6949,8 @@ function updateMeierhofAutoCrossbows(now) {
       unit.rangedStateUntil = now + MEIERHOF_AUTO_CROSSBOW_SHOT_MS;
       unit.rangedShotApplied = true;
       setMeierhofRecruitCrossbowPose(unit, "shot");
+      // Gleicher zufälliger Schusssound wie beim stationären Schützen.
+      playRandomMeierhofSound(meierhofCrossbowShotSounds);
       launchMeierhofAutoCrossbowBolt(unit, unit.rangedTarget);
       continue;
     }
@@ -6953,6 +6962,8 @@ function updateMeierhofAutoCrossbows(now) {
         unit.rangedStateUntil = now + MEIERHOF_AUTO_CROSSBOW_RELOAD_MS;
         unit.rangedShotApplied = false;
         setMeierhofRecruitCrossbowPose(unit, "reload");
+        // Neuer Ladezyklus: nur Wind/Ladesound, niemals Ready-Sound.
+        playRandomMeierhofSound(meierhofCrossbowWindSounds);
       } else {
         unit.rangedState = "idle";
         unit.rangedStateUntil = 0;

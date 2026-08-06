@@ -4344,7 +4344,7 @@ body.is-petronilla-playing {
   100% { opacity: 1; transform: scale(1); filter: brightness(1); }
 }
 
-/* V108 – ausschließlich ausbildbarer Meierhof-Armbrustschütze. */
+/* V109 – ausschließlich ausbildbarer Meierhof-Armbrustschütze: passgenaues Schussbild und Bodenanker. */
 .meierhof-march-unit--4.is-auto-reloading,
 .meierhof-march-unit--4.is-auto-shooting {
   transform-origin: 50% 100%;
