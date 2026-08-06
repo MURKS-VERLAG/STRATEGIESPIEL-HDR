@@ -4245,3 +4245,101 @@ body.is-petronilla-playing {
   left: 43.2%;
   top: 62.2%;
 }
+
+
+/* V103 – Meierhof: Plünderung, Bannerziel und Sieg */
+.meierhof-banner-health-ui {
+  position: absolute;
+  left: 9.3%;
+  top: 84.4%;
+  width: 8.4%;
+  z-index: 31;
+  pointer-events: none;
+}
+.meierhof-banner-health-frame {
+  height: .72vh;
+  min-height: 5px;
+  overflow: hidden;
+  border: 2px solid #8f1d1d;
+  border-radius: 999px;
+  background: #050505;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.8), 0 2px 5px rgba(0,0,0,.7);
+}
+.meierhof-banner-health-fill {
+  width: 100%;
+  height: 100%;
+  background: #f0f0ec;
+  transition: width .16s linear;
+}
+.meierhof-fixed-unit--bandit-flag.is-banner-hit {
+  animation: meierhofBannerHit .28s ease-out;
+}
+@keyframes meierhofBannerHit {
+  0%,100% { transform: translateX(-50%) translateY(-100%); }
+  30% { transform: translateX(calc(-50% - 4px)) translateY(-100%) rotate(-1.8deg); }
+  60% { transform: translateX(calc(-50% + 3px)) translateY(-100%) rotate(1.3deg); }
+}
+.meierhof-resource-float {
+  position: absolute;
+  z-index: 70;
+  display: flex;
+  gap: .75rem;
+  align-items: center;
+  transform: translate(-50%, -50%);
+  color: #cf2020;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(18px, 2vw, 36px);
+  font-weight: 900;
+  text-shadow: 0 2px 1px #000, 0 0 5px #000;
+  pointer-events: none;
+  animation: meierhofResourceFloat 1.25s ease-out forwards;
+}
+.meierhof-resource-float.is-recovered { color: #42d46b; }
+.meierhof-resource-item { display: inline-flex; align-items: center; gap: .2em; }
+.meierhof-resource-icon { font-size: 1.15em; filter: drop-shadow(0 2px 2px #000); }
+@keyframes meierhofResourceFloat {
+  0% { opacity: 0; transform: translate(-50%, -25%) scale(.88); }
+  18% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  72% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -105%) scale(1.03); }
+}
+.meierhof-victory {
+  position: absolute;
+  inset: 0;
+  z-index: 95;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+}
+.meierhof-victory.is-visible { opacity: 1; }
+.meierhof-victory-swords {
+  color: #e7e9ec;
+  font-size: clamp(80px, 13vw, 230px);
+  line-height: .8;
+  text-shadow: 0 4px 0 #34373c, 0 0 12px #fff, 0 12px 24px rgba(0,0,0,.8);
+  transform: scale(.45) rotate(-18deg);
+  animation: meierhofVictorySwords .62s cubic-bezier(.2,.8,.2,1) forwards;
+}
+.meierhof-victory-text {
+  margin-top: -.12em;
+  color: #e6bd35;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(70px, 11vw, 190px);
+  font-weight: 900;
+  letter-spacing: .06em;
+  text-shadow: 0 4px 0 #4d2d00, 0 0 12px #ffd75c, 0 12px 24px rgba(0,0,0,.88);
+  opacity: 0;
+  transform: scale(.9);
+  animation: meierhofVictoryText .45s .48s ease-out forwards;
+}
+@keyframes meierhofVictorySwords {
+  70% { transform: scale(1.08) rotate(2deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+@keyframes meierhofVictoryText {
+  0% { opacity: 0; transform: scale(.9); filter: brightness(1); }
+  70% { opacity: 1; transform: scale(1.04); filter: brightness(1.45); }
+  100% { opacity: 1; transform: scale(1); filter: brightness(1); }
+}
