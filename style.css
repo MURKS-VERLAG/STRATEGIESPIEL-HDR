@@ -4389,3 +4389,10 @@ body.is-petronilla-playing {
   scale: 1 !important;
   rotate: 0deg !important;
 }
+
+
+/* V112 – ausschließlich Schussbild des rekrutierbaren Meierhof-Armbrustschützen: 200 % Größe. */
+.meierhof-recruit-crossbow-pose--shot {
+  transform: translateX(-50%) scale(2) !important;
+  transform-origin: 50% 100% !important;
+}
