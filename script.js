@@ -6652,9 +6652,21 @@ const MEIERHOF_ENEMY_ASSETS = Object.freeze({
   })
 });
 const MEIERHOF_ENEMY_SPEEDS = Object.freeze({
-  club: 3.0,
+  club: 1.5, // V102: schwere Keule exakt 100 % langsamer
   shield: 4.35
 });
+const MEIERHOF_ARMOR_BY_UNIT = Object.freeze({ 1: "light", 2: "light", 4: "medium", 7: "heavy" });
+const MEIERHOF_FRIENDLY_DAMAGE = Object.freeze({
+  1: Object.freeze({ light: 20, medium: 10, heavy: 5 }),
+  2: Object.freeze({ light: 50, medium: 25, heavy: 10 }),
+  4: Object.freeze({ light: 100, medium: 35, heavy: 15 }),
+  7: Object.freeze({ light: 100, medium: 35, heavy: 25 })
+});
+const MEIERHOF_ENEMY_DAMAGE = Object.freeze({
+  club: Object.freeze({ light: 100, medium: 50, heavy: 25 }),
+  shield: Object.freeze({ light: 20, medium: 10, heavy: 5 })
+});
+const MEIERHOF_FRIENDLY_ATTACK_INTERVAL = Object.freeze({ 1: 2000, 2: 1800, 4: 2400, 7: 1600 });
 
 
 function meierhofDelay(ms) {
@@ -6752,7 +6764,20 @@ function spawnAndMarchMeierhofUnit(unitKey) {
   unit.style.top = `${MEIERHOF_BATTLE_LINE_TOP}%`;
   unit.style.width = `${MEIERHOF_UNIT_WIDTHS[unitKey]}%`;
   meierhofMarchLayer.appendChild(unit);
-  const marchRecord = { element: unit, slotId: slot.id, unitKey: Number(unitKey), x: MEIERHOF_SPAWN_X, paused: false, arrived: false, alive: true };
+  const healthBar = document.createElement("div");
+  healthBar.className = "meierhof-friendly-health";
+  const healthFill = document.createElement("div");
+  healthFill.className = "meierhof-friendly-health-fill";
+  healthBar.appendChild(healthFill);
+  healthBar.style.left = `${MEIERHOF_SPAWN_X}%`;
+  healthBar.style.top = `${MEIERHOF_BATTLE_LINE_TOP}%`;
+  meierhofMarchLayer.appendChild(healthBar);
+  const marchRecord = {
+    element: unit, healthBar, healthElement: healthFill, slotId: slot.id,
+    unitKey: Number(unitKey), armorClass: MEIERHOF_ARMOR_BY_UNIT[unitKey] || "light",
+    maxHealth: 100, health: 100, x: MEIERHOF_SPAWN_X, paused: false,
+    arrived: false, alive: true, target: null, nextAttackAt: 0
+  };
   meierhofMarchingUnits.push(marchRecord);
   requestAnimationFrame(() => {
     unit.classList.add("is-spawned", "is-marching");
@@ -6775,6 +6800,8 @@ function spawnAndMarchMeierhofUnit(unitKey) {
     marchRecord.x = x;
     unit.style.left = `${x}%`;
     unit.style.top = `${MEIERHOF_BATTLE_LINE_TOP}%`;
+    healthBar.style.left = `${x}%`;
+    healthBar.style.top = `${MEIERHOF_BATTLE_LINE_TOP}%`;
     if (now - lastDustAt > 430) {
       createMeierhofDust(x, MEIERHOF_BATTLE_LINE_TOP - .35);
       lastDustAt = now;
@@ -6786,6 +6813,7 @@ function spawnAndMarchMeierhofUnit(unitKey) {
       marchRecord.arrived = true;
       marchRecord.x = targetX;
       unit.style.left = `${targetX}%`;
+      healthBar.style.left = `${targetX}%`;
       createMeierhofDust(targetX, MEIERHOF_BATTLE_LINE_TOP - .35);
     }
   };
@@ -6793,6 +6821,48 @@ function spawnAndMarchMeierhofUnit(unitKey) {
   return true;
 }
 
+
+function updateMeierhofUnitHealth(unit) {
+  if (!unit?.healthElement) return;
+  const percent = Math.max(0, Math.min(100, (unit.health / unit.maxHealth) * 100));
+  unit.healthElement.style.width = `${percent}%`;
+}
+function releaseMeierhofCombat(unit) {
+  if (!unit) return;
+  const target = unit.target;
+  unit.target = null;
+  unit.paused = false;
+  if (target?.target === unit) target.target = null;
+}
+function defeatMeierhofUnit(unit) {
+  if (!unit || !unit.alive) return;
+  unit.alive = false;
+  unit.health = 0;
+  updateMeierhofUnitHealth(unit);
+  releaseMeierhofCombat(unit);
+  unit.element?.classList.add("is-defeated");
+  unit.healthBar?.classList.add("is-defeated");
+  window.setTimeout(() => { unit.element?.remove(); unit.healthBar?.remove(); }, 420);
+}
+function applyMeierhofDamage(target, amount) {
+  if (!target?.alive || !Number.isFinite(amount) || amount <= 0) return;
+  target.health = Math.max(0, target.health - amount);
+  updateMeierhofUnitHealth(target);
+  if (target.health <= 0) defeatMeierhofUnit(target);
+}
+function getMeierhofDamage(table, armorClass) {
+  return Number(table?.[armorClass]) || 0;
+}
+function updateMeierhofFriendlyAttacks(now) {
+  for (const unit of meierhofMarchingUnits) {
+    const enemy = unit?.target;
+    if (!unit?.alive || !enemy?.alive) { if (unit?.target) releaseMeierhofCombat(unit); continue; }
+    if (now < (unit.nextAttackAt || 0)) continue;
+    unit.nextAttackAt = now + (MEIERHOF_FRIENDLY_ATTACK_INTERVAL[unit.unitKey] || 2000);
+    const damage = getMeierhofDamage(MEIERHOF_FRIENDLY_DAMAGE[unit.unitKey], enemy.armorClass);
+    applyMeierhofDamage(enemy, damage);
+  }
+}
 
 function setMeierhofGarrisonCrossbowPose(pose = "idle") {
   if (!meierhofCrossbowDefender) return;
@@ -6866,7 +6936,9 @@ function triggerMeierhofEnemyImpact(enemy) {
 function engageMeierhofEnemy(enemy, friendly) {
   if (!enemy || enemy.state !== "walking") return;
   enemy.target = friendly;
+  friendly.target = enemy;
   friendly.paused = true;
+  friendly.nextAttackAt = performance.now() + 250;
   enemy.x = Math.max(MEIERHOF_ENEMY_SPAWN_X, (friendly.x || enemy.x + 4.2) - (enemy.type === "club" ? 4.8 : 4.6));
   enemy.element.style.left = `${enemy.x}%`;
   if (enemy.type === "club") {
@@ -6911,8 +6983,10 @@ function createMeierhofEnemy(type) {
     state: "walking",
     stateUntil: 0,
     target: null,
+    armorClass: type === "club" ? "light" : "medium",
     maxHealth: 100,
     health: 100,
+    nextAttackAt: 0,
     collisionWidth: type === "club" ? 4.7 : 4.5,
     alive: true
   };
@@ -6936,22 +7010,50 @@ function updateMeierhofEnemies(now) {
       enemy.stateUntil = now + 1000;
       setMeierhofEnemySprite(enemy, "strike");
       triggerMeierhofEnemyImpact(enemy);
+      if (enemy.target?.alive) {
+        const damage = getMeierhofDamage(MEIERHOF_ENEMY_DAMAGE.club, enemy.target.armorClass);
+        applyMeierhofDamage(enemy.target, damage);
+      }
     } else if (enemy.type === "club" && enemy.state === "striking" && now >= enemy.stateUntil) {
+      if (!enemy.target?.alive) {
+        enemy.target = null;
+        enemy.state = "walking";
+        setMeierhofEnemySprite(enemy, "walk");
+        continue;
+      }
       enemy.state = "windup";
       enemy.stateUntil = now + 3000;
       setMeierhofEnemySprite(enemy, "windup");
+    } else if (enemy.type === "shield" && enemy.state === "engaged") {
+      if (!enemy.target?.alive) {
+        enemy.target = null;
+        enemy.state = "walking";
+        setMeierhofEnemySprite(enemy, "walk");
+      } else if (now >= (enemy.nextAttackAt || 0)) {
+        enemy.nextAttackAt = now + 1500;
+        triggerMeierhofEnemyImpact(enemy);
+        const damage = getMeierhofDamage(MEIERHOF_ENEMY_DAMAGE.shield, enemy.target.armorClass);
+        applyMeierhofDamage(enemy.target, damage);
+      }
     }
   }
+  updateMeierhofFriendlyAttacks(now);
   meierhofEnemyAnimationFrame = requestAnimationFrame(updateMeierhofEnemies);
 }
 function startMeierhofEnemies() {
   clearMeierhofEnemies();
-  createMeierhofEnemy("club");
-  const secondTimer = window.setTimeout(() => {
-    meierhofTimers.delete(secondTimer);
-    if (meierhofBattleOpen && meierhofIntroCompleted) createMeierhofEnemy("shield");
-  }, 950);
-  meierhofTimers.add(secondTimer);
+  const pool = ["club", "club", "club", "club", "shield", "shield", "shield", "shield"];
+  for (let i = pool.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  pool.forEach((type, index) => {
+    const timer = window.setTimeout(() => {
+      meierhofTimers.delete(timer);
+      if (meierhofBattleOpen && meierhofIntroCompleted) createMeierhofEnemy(type);
+    }, index * 1700);
+    meierhofTimers.add(timer);
+  });
   meierhofEnemyLastFrameAt = 0;
   meierhofEnemyAnimationFrame = requestAnimationFrame(updateMeierhofEnemies);
 }
@@ -6959,13 +7061,16 @@ function clearMeierhofEnemies() {
   if (meierhofEnemyAnimationFrame !== null) cancelAnimationFrame(meierhofEnemyAnimationFrame);
   meierhofEnemyAnimationFrame = null;
   meierhofEnemyLastFrameAt = 0;
-  meierhofEnemies.splice(0).forEach((enemy) => enemy.element?.remove());
+  meierhofEnemies.splice(0).forEach((enemy) => {
+    if (enemy?.target) releaseMeierhofCombat(enemy.target);
+    enemy.element?.remove();
+  });
   meierhofEnemyLayer?.querySelectorAll(".meierhof-impact-dust").forEach((el) => el.remove());
   meierhofMarchingUnits.forEach((unit) => { if (unit) unit.paused = false; });
 }
 
 function clearMeierhofDynamicUnits() {
-  meierhofMarchingUnits.splice(0).forEach(({ element }) => element?.remove());
+  meierhofMarchingUnits.splice(0).forEach(({ element, healthBar }) => { element?.remove(); healthBar?.remove(); });
   meierhofOccupiedFormationSlots.clear();
   meierhofMarchLayer?.querySelectorAll(".meierhof-dust-puff").forEach((el) => el.remove());
   clearMeierhofEnemies();
@@ -7090,7 +7195,18 @@ function fireMeierhofPlayerShot(targetX, targetY) {
     bolt.style.top = `${y}px`;
     bolt.style.opacity = String(progress > .86 ? Math.max(0, 1 - (progress - .86) / .14) : 1);
     if (progress < 1) requestAnimationFrame(fly);
-    else bolt.remove();
+    else {
+      const clickXPercent = (targetX / rect.width) * 100;
+      let target = null;
+      let best = Infinity;
+      for (const enemy of meierhofEnemies) {
+        if (!enemy.alive) continue;
+        const d = Math.abs(enemy.x - clickXPercent);
+        if (d < best && d <= 5.5) { best = d; target = enemy; }
+      }
+      if (target) applyMeierhofDamage(target, getMeierhofDamage(MEIERHOF_FRIENDLY_DAMAGE[4], target.armorClass));
+      bolt.remove();
+    }
   };
   requestAnimationFrame(fly);
 }
