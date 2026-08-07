@@ -1071,15 +1071,68 @@ const brownArmyTargetRegion = {
   attackable: true
 };
 
-/* V121 – ausschließlich der gelb markierte Burgturm.
-   Die beiden orangefarbenen Soldaten und der grüne Hover-Ritter verwenden
-   wieder ihre bereits vorhandenen, präzisen Original-Hitboxen. */
+/* V122 – ausschließlich die markierten Kartenbereiche.
+   Der alte orange Orts-Hotspot bleibt separat erhalten.
+   Unten liegen Soldat und Burgturm direkt nebeneinander, ohne Überlappung. */
+
+const orangeLocationTargetRegion = {
+  id: "orangeLocation",
+  minX: 0.455,
+  maxX: 0.492,
+  minY: 0.445,
+  maxY: 0.565,
+  soundIds: ["hoverKastelberg"],
+  attackable: false
+};
+
+const orangeSoldierNorthTargetRegion = {
+  id: "orangeSoldierNorth",
+  minX: 0.466,
+  maxX: 0.507,
+  minY: 0.252,
+  maxY: 0.391,
+  soundIds: ["hoverSchauenburgRitter"],
+  attackable: true
+};
+
+const greenKnightHoverOnlyTargetRegion = {
+  id: "greenKnightHoverOnly",
+  minX: 0.338,
+  maxX: 0.376,
+  minY: 0.432,
+  maxY: 0.523,
+  soundIds: ["hoverKastelberg"],
+  attackable: true
+};
+
+const redCastleImageTargetRegion = {
+  id: "redCastleImage",
+  minX: 0.491,
+  maxX: 0.570,
+  minY: 0.354,
+  maxY: 0.474,
+  soundIds: ["hoverKastelberg"],
+  attackable: true
+};
+
+/* Unterer Bereich:
+   links exakt der orange Soldat, rechts direkt anschließend der Burgturm. */
+const orangeSoldierSouthTargetRegion = {
+  id: "orangeSoldierSouth",
+  minX: 0.535,
+  maxX: 0.572,
+  minY: 0.610,
+  maxY: 0.759,
+  soundIds: ["hoverSchauenburgRitter"],
+  attackable: true
+};
+
 const yellowCastleTowerTargetRegion = {
   id: "yellowCastleTower",
-  minX: 0.553,
-  maxX: 0.596,
-  minY: 0.622,
-  maxY: 0.746,
+  minX: 0.572,
+  maxX: 0.610,
+  minY: 0.610,
+  maxY: 0.759,
   soundIds: ["scrollSound"],
   attackable: false
 };
@@ -1107,7 +1160,15 @@ const merchantTargetRegion = {
 
 const mainMapHotspotRegions = [
   merchantTargetRegion,
+
+  /* Präzise V122-Regionen immer vor größeren Bestandsregionen prüfen. */
+  orangeSoldierNorthTargetRegion,
+  orangeSoldierSouthTargetRegion,
   yellowCastleTowerTargetRegion,
+  greenKnightHoverOnlyTargetRegion,
+  redCastleImageTargetRegion,
+  orangeLocationTargetRegion,
+
   neuensteinTroopSelectionTargetRegion,
   troopSelectionTargetRegion,
   kastelbergTargetRegion,
@@ -1275,13 +1336,21 @@ const CAMPAIGN_LOCATION_IMAGES = Object.freeze({
     src: "assets/ort-hellblau.jpg?v=120",
     alt: "Steinbruch Ringelbach – Gebhard Neuenstein"
   },
+  orange: {
+    src: "assets/ort-orange.jpg?v=120",
+    alt: "Schauenburg – Georg von Schauenburg"
+  },
   orangeSoldiers: {
-    src: "assets/ort-orange-soldaten.png?v=121",
+    src: "assets/ort-orange-soldaten.png?v=122",
     alt: "Truppen der Schauenburg"
   },
   gruen: {
     src: "assets/ort-gruen.jpg?v=120",
     alt: "Hubackerhof – Adam Neuenstein"
+  },
+  redCastle: {
+    src: "assets/ort-rot.jpg?v=120",
+    alt: "Schauenburg"
   }
 });
 
@@ -2117,9 +2186,26 @@ mapViewport.addEventListener("click", (event) => {
         openCampaignLocationImage("hellblau");
         return;
 
+      case "orangeLocation":
+        openCampaignLocationImage("orange");
+        return;
+
+      case "orangeSoldierNorth":
+      case "orangeSoldierSouth":
+        openCampaignLocationImage("orangeSoldiers");
+        return;
+
       case "yellowCastleTower":
         playRandomHoverAudio(["scrollSound"]);
         openCampaignLocationImage("gruen");
+        return;
+
+      case "greenKnightHoverOnly":
+        // Hover und Schriftrolleneffekt bleiben; beim Klick geschieht nichts.
+        return;
+
+      case "redCastleImage":
+        openCampaignLocationImage("redCastle");
         return;
 
       case "ringelnatzTroops":
@@ -2139,16 +2225,11 @@ mapViewport.addEventListener("click", (event) => {
         return;
 
       case "schauenburgKnight":
-      case "schauenburgSouthKnight":
-        openCampaignLocationImage("orangeSoldiers");
-        return;
-
       case "schauenburgBanner":
-        // V121: markierter grüner Ritter bleibt reiner Hover-Hotspot.
-        return;
-
       case "schauenburgCastle":
-        // Nur die markierte weiße Burg öffnet das rote Schauenburg-Bild.
+      case "schauenburgSouthKnight":
+        // Ursprüngliche gemeinsame Schauenburg-Aktion bleibt außerhalb
+        // der präzisen V122-Hitboxen vollständig erhalten.
         openSchauenburgKnightModal();
         return;
 
