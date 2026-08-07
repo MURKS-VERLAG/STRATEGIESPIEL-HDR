@@ -1,25 +1,27 @@
-KAMPAGNENKARTE V122 – PRÄZISE HITBOXEN
+KAMPAGNENKARTE V123 – FÜNF NEUE BURG-HOTSPOTS
 
-Geändert:
-- alter orangefarbener Orts-Hotspot aus V120 wiederhergestellt
-- oberer orange markierter Soldat besitzt eigene isolierte Hitbox
-- unterer orange markierter Soldat besitzt eigene isolierte Hitbox
-- gelber Burgturm liegt direkt rechts daneben
-- unterer Soldat endet bei X=0,572; Turm beginnt exakt bei X=0,572
-- keine Überlappung und kein Zwischenraum zwischen beiden unteren Hitboxen
-- grüner Ritter behält Hover und Sound, Klick bleibt wirkungslos
-- nur die markierte rote Burg öffnet das rote Bild
-- generische Schauenburg-Funktionen außerhalb der kleinen Zielbereiche
-  wurden auf ihr ursprüngliches Verhalten zurückgesetzt
+Ausschließlich ergänzt:
+- GELB: Burg Rodeck -> assets/karte-burg-rodeck.jpg
+- ORANGE: Brigittenschloss -> assets/karte-brigittenschloss.jpg
+- LILA: Bosenstein -> assets/karte-bosenstein.jpg
+- ROSA/PINK: Ullenburg -> assets/karte-ullenburg.jpg
+- GRÜN: Burg Neuenstein -> assets/karte-burg-neuenstein.jpg
 
-Unverändert:
-- Dunkelblau, Hellblau und Lila
-- alle anderen Kartenorte und Hotspots
-- Kartenzoom, Kamera, Nebel, Musik und Ressourcen
-- Meierhof, Kastelberg-Kampf, Einheiten und sämtliche Kampfsysteme
+Verhalten aller fünf neuen Hitboxen:
+- bestehender Karten-Hover-/Schriftrolleneffekt
+- vorhandener Zugbrücken-/Burgtor-Sound über scrollSound
+- Klick öffnet das zugehörige Ortsbild im bestehenden campaignLocationImageModal
+
+WICHTIG:
+- keine bestehende Hitbox entfernt
+- keine bestehende Hitbox ersetzt
+- keine bestehende Hitbox verschmolzen
+- keine bestehende Klickaktion verändert
+- alle V122-Hotspots bleiben erhalten
+- Kampf-, Meierhof-, Diplomatie-, Ressourcen-, Zoom-, Kamera- und Soundsysteme bleiben unverändert
 
 Enthalten:
 - index.html
 - script.js
-- assets/ort-orange-soldaten.png
+- fünf neue JPG-Assets
 - README.txt

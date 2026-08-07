@@ -1158,8 +1158,69 @@ const merchantTargetRegion = {
   attackable: false
 };
 
+/* V123 – fünf zusätzliche, vollständig isolierte Burg-Hotspots.
+   Keine bestehende Region wird ersetzt, verschmolzen oder umgebogen.
+   Alle fünf verwenden beim Hover den vorhandenen Zugbrücken-/Burgtor-Sound. */
+
+const burgRodeckTargetRegion = {
+  id: "burgRodeck",
+  minX: 0.606,
+  maxX: 0.635,
+  minY: 0.030,
+  maxY: 0.124,
+  soundIds: ["scrollSound"],
+  attackable: false
+};
+
+const brigittenschlossTargetRegion = {
+  id: "brigittenschloss",
+  minX: 0.700,
+  maxX: 0.760,
+  minY: 0.030,
+  maxY: 0.105,
+  soundIds: ["scrollSound"],
+  attackable: false
+};
+
+const bosensteinTargetRegion = {
+  id: "bosenstein",
+  minX: 0.649,
+  maxX: 0.721,
+  minY: 0.328,
+  maxY: 0.432,
+  soundIds: ["scrollSound"],
+  attackable: false
+};
+
+const ullenburgTargetRegion = {
+  id: "ullenburg",
+  minX: 0.405,
+  maxX: 0.441,
+  minY: 0.285,
+  maxY: 0.378,
+  soundIds: ["scrollSound"],
+  attackable: false
+};
+
+const burgNeuensteinTargetRegion = {
+  id: "burgNeuenstein",
+  minX: 0.539,
+  maxX: 0.579,
+  minY: 0.532,
+  maxY: 0.615,
+  soundIds: ["scrollSound"],
+  attackable: false
+};
+
 const mainMapHotspotRegions = [
   merchantTargetRegion,
+
+  /* V123: ausschließlich neue, zusätzliche Burg-Hitboxen. */
+  burgRodeckTargetRegion,
+  brigittenschlossTargetRegion,
+  bosensteinTargetRegion,
+  ullenburgTargetRegion,
+  burgNeuensteinTargetRegion,
 
   /* Präzise V122-Regionen immer vor größeren Bestandsregionen prüfen. */
   orangeSoldierNorthTargetRegion,
@@ -1332,6 +1393,26 @@ function openBrownArmyModal() {
 }
 
 const CAMPAIGN_LOCATION_IMAGES = Object.freeze({
+  burgRodeck: {
+    src: "assets/karte-burg-rodeck.jpg?v=123",
+    alt: "Burg Rodeck – Kappelrodeck"
+  },
+  brigittenschloss: {
+    src: "assets/karte-brigittenschloss.jpg?v=123",
+    alt: "Brigittenschloss – Sasbachwalden"
+  },
+  bosenstein: {
+    src: "assets/karte-bosenstein.jpg?v=123",
+    alt: "Bosenstein"
+  },
+  ullenburg: {
+    src: "assets/karte-ullenburg.jpg?v=123",
+    alt: "Ullenburg"
+  },
+  burgNeuenstein: {
+    src: "assets/karte-burg-neuenstein.jpg?v=123",
+    alt: "Burg Neuenstein"
+  },
   hellblau: {
     src: "assets/ort-hellblau.jpg?v=120",
     alt: "Steinbruch Ringelbach – Gebhard Neuenstein"
@@ -2180,6 +2261,26 @@ mapViewport.addEventListener("click", (event) => {
 
     switch (hotspot.id) {
       case "niccoloMerchant":
+        return;
+
+      case "burgRodeck":
+        openCampaignLocationImage("burgRodeck");
+        return;
+
+      case "brigittenschloss":
+        openCampaignLocationImage("brigittenschloss");
+        return;
+
+      case "bosenstein":
+        openCampaignLocationImage("bosenstein");
+        return;
+
+      case "ullenburg":
+        openCampaignLocationImage("ullenburg");
+        return;
+
+      case "burgNeuenstein":
+        openCampaignLocationImage("burgNeuenstein");
         return;
 
       case "neuensteinTroops":
