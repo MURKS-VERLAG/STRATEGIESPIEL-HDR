@@ -160,6 +160,32 @@
     }
   </style>
 
+  <style id="mapResourceUpdateV124Styles">
+    /* V124 – ausschließlich neue Karten-Ressourcensymbole und zusätzliche Kühe. */
+    .map-resource-symbol,
+    .map-extra-cow {
+      position: absolute;
+      z-index: 8;
+      width: 3.2%;
+      height: auto;
+      display: block;
+      object-fit: contain;
+      pointer-events: none;
+      user-select: none;
+      transform: translate(-50%, -50%);
+      transform-origin: 50% 50%;
+      filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.34));
+    }
+
+    #mapPitch { left: 55.41%; top: 51.64%; }
+    #mapStone { left: 44.15%; top: 26.40%; }
+    #mapBeer { left: 31.92%; top: 20.49%; }
+    #purpleCowNorth { left: 50.93%; top: 4.65%; }
+    #purpleCowEast { left: 66.29%; top: 24.39%; }
+    #purpleCowCenter { left: 47.87%; top: 39.70%; }
+    #yellowCow { left: 58.46%; top: 56.49%; }
+  </style>
+
 </head>
 <body>
   <main class="game">
@@ -317,6 +343,14 @@
             draggable="false"
             aria-hidden="true"
           >
+          <!-- V124: Pech / Stein / Bier + vier zusätzliche Kühe. -->
+          <img class="map-resource-symbol" id="mapPitch" src="assets/map-resource-pech.png?v=124" alt="" draggable="false" aria-hidden="true">
+          <img class="map-resource-symbol" id="mapStone" src="assets/map-resource-stone.png?v=124" alt="" draggable="false" aria-hidden="true">
+          <img class="map-resource-symbol" id="mapBeer" src="assets/map-resource-beer.png?v=124" alt="" draggable="false" aria-hidden="true">
+          <img class="map-extra-cow" id="purpleCowNorth" src="assets/kuh-lachersgut.png?v=60" alt="" draggable="false" aria-hidden="true">
+          <img class="map-extra-cow" id="purpleCowEast" src="assets/kuh-lachersgut.png?v=60" alt="" draggable="false" aria-hidden="true">
+          <img class="map-extra-cow" id="purpleCowCenter" src="assets/kuh-lachersgut.png?v=60" alt="" draggable="false" aria-hidden="true">
+          <img class="map-extra-cow" id="yellowCow" src="assets/kuh-lachersgut.png?v=60" alt="" draggable="false" aria-hidden="true">
           <img
             class="map-merchant"
             id="mapMerchant"
@@ -1417,6 +1451,6 @@
     </section>
   </main>
 
-  <script src="script.js?v=123"></script>
+  <script src="script.js?v=124"></script>
 </body>
 </html>

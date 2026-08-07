@@ -1,27 +1,21 @@
-KAMPAGNENKARTE V123 – FÜNF NEUE BURG-HOTSPOTS
+KAMPAGNENKARTE V124 – RESSOURCEN + KUH-HOTSPOTS
 
-Ausschließlich ergänzt:
-- GELB: Burg Rodeck -> assets/karte-burg-rodeck.jpg
-- ORANGE: Brigittenschloss -> assets/karte-brigittenschloss.jpg
-- LILA: Bosenstein -> assets/karte-bosenstein.jpg
-- ROSA/PINK: Ullenburg -> assets/karte-ullenburg.jpg
-- GRÜN: Burg Neuenstein -> assets/karte-burg-neuenstein.jpg
+Direkt über den bestehenden GitHub-Projektstand V123 kopieren.
 
-Verhalten aller fünf neuen Hitboxen:
-- bestehender Karten-Hover-/Schriftrolleneffekt
-- vorhandener Zugbrücken-/Burgtor-Sound über scrollSound
-- Klick öffnet das zugehörige Ortsbild im bestehenden campaignLocationImageModal
+NEU:
+- Pechsymbol am pinken REF13-Kreis: Hover-Leuchteffekt, kein Sound, Klick ohne Funktion.
+- Steinquader am roten REF13-Rechteck: Hover-Leuchteffekt, kein Sound, Klick ohne Funktion.
+- Bierfass am hellblauen REF13-Kreis: Hover-Leuchteffekt, kein Sound, Klick ohne Funktion.
+- Kuh an allen drei lila REF13-Kreisen: bestehender Kuh-Hoversound + Highlight, Klick ohne Funktion.
+- Kuh am kleinen gelben REF13-Kreis: bestehender Kuh-Hoversound + Highlight; Klick öffnet das bisherige brownArmyModal.
+- Der groß gelb markierte Ritter behält Hover und Brown-Army-Sounds; sein Klick öffnet nichts mehr.
 
-WICHTIG:
-- keine bestehende Hitbox entfernt
-- keine bestehende Hitbox ersetzt
-- keine bestehende Hitbox verschmolzen
-- keine bestehende Klickaktion verändert
-- alle V122-Hotspots bleiben erhalten
-- Kampf-, Meierhof-, Diplomatie-, Ressourcen-, Zoom-, Kamera- und Soundsysteme bleiben unverändert
+UNVERÄNDERT:
+- V123-Burgen-Hotspots und V122-Hitboxen
+- bestehende Original-Kuh und deren Klick
+- Händler, Zoom, WASD, Nebel, Musik, Ressourcen, Diplomatie, Kämpfe usw.
 
-Enthalten:
-- index.html
-- script.js
-- fünf neue JPG-Assets
-- README.txt
+Neue Assets:
+assets/map-resource-pech.png
+assets/map-resource-stone.png
+assets/map-resource-beer.png

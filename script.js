@@ -1148,6 +1148,37 @@ const cowTargetRegion = {
   attackable: true
 };
 
+/* V124 – neue Ressourcen-Symbole und zusätzliche Kuh-Hotspots nach REF13.
+   Kleine Regionen stehen später vor den großen Bestandsregionen. */
+const pitchTargetRegion = {
+  id: "mapPitch", minX: 0.538, maxX: 0.570, minY: 0.493, maxY: 0.540,
+  soundIds: [], attackable: false
+};
+const stoneTargetRegion = {
+  id: "mapStone", minX: 0.425, maxX: 0.458, minY: 0.244, maxY: 0.286,
+  soundIds: [], attackable: false
+};
+const beerTargetRegion = {
+  id: "mapBeer", minX: 0.303, maxX: 0.335, minY: 0.183, maxY: 0.226,
+  soundIds: [], attackable: false
+};
+const purpleCowNorthTargetRegion = {
+  id: "purpleCowNorth", minX: 0.493, maxX: 0.525, minY: 0.025, maxY: 0.069,
+  soundIds: ["hoverCowSound"], attackable: false
+};
+const purpleCowEastTargetRegion = {
+  id: "purpleCowEast", minX: 0.647, maxX: 0.679, minY: 0.222, maxY: 0.266,
+  soundIds: ["hoverCowSound"], attackable: false
+};
+const purpleCowCenterTargetRegion = {
+  id: "purpleCowCenter", minX: 0.463, maxX: 0.495, minY: 0.375, maxY: 0.419,
+  soundIds: ["hoverCowSound"], attackable: false
+};
+const yellowCowTargetRegion = {
+  id: "yellowCow", minX: 0.568, maxX: 0.601, minY: 0.542, maxY: 0.587,
+  soundIds: ["hoverCowSound"], attackable: false
+};
+
 const merchantTargetRegion = {
   id: "niccoloMerchant",
   minX: 0.004,
@@ -1214,6 +1245,15 @@ const burgNeuensteinTargetRegion = {
 
 const mainMapHotspotRegions = [
   merchantTargetRegion,
+
+  /* V124: kleine neue Symbole zuerst prüfen. */
+  pitchTargetRegion,
+  stoneTargetRegion,
+  beerTargetRegion,
+  purpleCowNorthTargetRegion,
+  purpleCowEastTargetRegion,
+  purpleCowCenterTargetRegion,
+  yellowCowTargetRegion,
 
   /* V123: ausschließlich neue, zusätzliche Burg-Hitboxen. */
   burgRodeckTargetRegion,
@@ -2334,8 +2374,22 @@ mapViewport.addEventListener("click", (event) => {
         openSchauenburgKnightModal();
         return;
 
-      case "brownArmy":
+      case "mapPitch":
+      case "mapStone":
+      case "mapBeer":
+      case "purpleCowNorth":
+      case "purpleCowEast":
+      case "purpleCowCenter":
+        // V124: Hover aktiv, Klick bewusst noch ohne Funktion.
+        return;
+
+      case "yellowCow":
+        // V124-Sonderregel: übernimmt das bisherige Bild des gelb markierten Ritters.
         openBrownArmyModal();
+        return;
+
+      case "brownArmy":
+        // V124: Ritter behält Hover/Sounds, Klick ist bewusst deaktiviert.
         return;
     }
   }
