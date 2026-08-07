@@ -1,26 +1,9 @@
-KAMPAGNENKARTE V120 – ORTSBILDER UND NEUE HOTSPOTS
+KAMPAGNENKARTE V121 – MARKIERTE HITBOXEN MINIFIX
 
-Enthalten:
-- index.html
-- script.js
-- style.css
-- sechs neue Ortsbilder im Ordner assets
-
-Zuordnung:
-- Dunkelblauer Kreis: ort-dunkelblau.jpg
-- Hellblauer Kreis: ort-hellblau.jpg
-- Roter Kreis: ort-rot.jpg
-- Lila Kreis: ort-lila.jpg
-- Neuer orangefarbener Hotspot: ort-orange.jpg
-- Neuer grüner Hotspot: ort-gruen.jpg
-
-Orange und Grün:
-- erhalten den bestehenden Karten-Hovereffekt
-- verwenden den vorhandenen Burgtor-/Kastelberg-Hoversound
-- öffnen beim Klick das zugehörige Ortsbild
-
-Unverändert:
-- Kampagnenkarten-Zoom und Kamerabewegung
-- Nebel, Musik und Ressourcen
-- Charakter-Hoversounds
-- alle Kampf-, Meierhof-, Garnisons- und Einheitensysteme
+- Nur die rot markierte weiße Burg öffnet das rote Schauenburg-Bild.
+- Beide orange markierten Soldaten behalten ihren Soldaten-Hoversound und
+  öffnen assets/ort-orange-soldaten.png.
+- Der grün markierte Ritter behält Hover und Sound; Klick bleibt ohne Aktion.
+- Der gelb markierte Burgturm öffnet assets/ort-gruen.jpg und verwendet
+  den vorhandenen Zugbrücken-/Burgtor-Sound.
+- Alle nicht markierten Kartenorte und sämtliche Kampfsysteme bleiben unverändert.

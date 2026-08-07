@@ -1071,24 +1071,16 @@ const brownArmyTargetRegion = {
   attackable: true
 };
 
-/* V120 – zwei neue, ausschließlich auf der Kampagnenkarte aktive Orts-Hotspots. */
-const orangeLocationTargetRegion = {
-  id: "orangeLocation",
-  minX: 0.455,
-  maxX: 0.492,
-  minY: 0.445,
-  maxY: 0.565,
-  soundIds: ["hoverKastelberg"],
-  attackable: false
-};
-
-const greenLocationTargetRegion = {
-  id: "greenLocation",
+/* V121 – ausschließlich der gelb markierte Burgturm.
+   Die beiden orangefarbenen Soldaten und der grüne Hover-Ritter verwenden
+   wieder ihre bereits vorhandenen, präzisen Original-Hitboxen. */
+const yellowCastleTowerTargetRegion = {
+  id: "yellowCastleTower",
   minX: 0.553,
   maxX: 0.596,
   minY: 0.622,
   maxY: 0.746,
-  soundIds: ["hoverKastelberg"],
+  soundIds: ["scrollSound"],
   attackable: false
 };
 
@@ -1115,8 +1107,7 @@ const merchantTargetRegion = {
 
 const mainMapHotspotRegions = [
   merchantTargetRegion,
-  orangeLocationTargetRegion,
-  greenLocationTargetRegion,
+  yellowCastleTowerTargetRegion,
   neuensteinTroopSelectionTargetRegion,
   troopSelectionTargetRegion,
   kastelbergTargetRegion,
@@ -1284,9 +1275,9 @@ const CAMPAIGN_LOCATION_IMAGES = Object.freeze({
     src: "assets/ort-hellblau.jpg?v=120",
     alt: "Steinbruch Ringelbach – Gebhard Neuenstein"
   },
-  orange: {
-    src: "assets/ort-orange.jpg?v=120",
-    alt: "Schauenburg – Georg von Schauenburg"
+  orangeSoldiers: {
+    src: "assets/ort-orange-soldaten.png?v=121",
+    alt: "Truppen der Schauenburg"
   },
   gruen: {
     src: "assets/ort-gruen.jpg?v=120",
@@ -2126,11 +2117,8 @@ mapViewport.addEventListener("click", (event) => {
         openCampaignLocationImage("hellblau");
         return;
 
-      case "orangeLocation":
-        openCampaignLocationImage("orange");
-        return;
-
-      case "greenLocation":
+      case "yellowCastleTower":
+        playRandomHoverAudio(["scrollSound"]);
         openCampaignLocationImage("gruen");
         return;
 
@@ -2151,9 +2139,16 @@ mapViewport.addEventListener("click", (event) => {
         return;
 
       case "schauenburgKnight":
-      case "schauenburgBanner":
-      case "schauenburgCastle":
       case "schauenburgSouthKnight":
+        openCampaignLocationImage("orangeSoldiers");
+        return;
+
+      case "schauenburgBanner":
+        // V121: markierter grüner Ritter bleibt reiner Hover-Hotspot.
+        return;
+
+      case "schauenburgCastle":
+        // Nur die markierte weiße Burg öffnet das rote Schauenburg-Bild.
         openSchauenburgKnightModal();
         return;
 
