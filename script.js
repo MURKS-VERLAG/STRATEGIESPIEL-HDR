@@ -136,6 +136,10 @@ const schauenburgKnightModal =
   document.querySelector("#schauenburgKnightModal");
 const brownArmyModal =
   document.querySelector("#brownArmyModal");
+const campaignLocationImageModal =
+  document.querySelector("#campaignLocationImageModal");
+const campaignLocationImage =
+  document.querySelector("#campaignLocationImage");
 const kastelbergPanelFeudButton =
   document.querySelector("#kastelbergPanelFeudButton");
 const hoverCowSound =
@@ -229,6 +233,7 @@ let meierhofModalOpen = false;
 let kastelbergOverviewModalOpen = false;
 let schauenburgKnightModalOpen = false;
 let brownArmyModalOpen = false;
+let campaignLocationImageModalOpen = false;
 let darkTriadModalOpen = false;
 let feudConfirmationOpen = false;
 let feudSequenceInProgress = false;
@@ -1066,6 +1071,27 @@ const brownArmyTargetRegion = {
   attackable: true
 };
 
+/* V120 – zwei neue, ausschließlich auf der Kampagnenkarte aktive Orts-Hotspots. */
+const orangeLocationTargetRegion = {
+  id: "orangeLocation",
+  minX: 0.455,
+  maxX: 0.492,
+  minY: 0.445,
+  maxY: 0.565,
+  soundIds: ["hoverKastelberg"],
+  attackable: false
+};
+
+const greenLocationTargetRegion = {
+  id: "greenLocation",
+  minX: 0.553,
+  maxX: 0.596,
+  minY: 0.622,
+  maxY: 0.746,
+  soundIds: ["hoverKastelberg"],
+  attackable: false
+};
+
 /* Die Kuh bleibt als einzige Hitbox exakt unverändert. */
 const cowTargetRegion = {
   id: "lachersgutCow",
@@ -1089,6 +1115,8 @@ const merchantTargetRegion = {
 
 const mainMapHotspotRegions = [
   merchantTargetRegion,
+  orangeLocationTargetRegion,
+  greenLocationTargetRegion,
   neuensteinTroopSelectionTargetRegion,
   troopSelectionTargetRegion,
   kastelbergTargetRegion,
@@ -1178,6 +1206,7 @@ function closeMapLocationModals() {
   kastelbergOverviewModalOpen = false;
   schauenburgKnightModalOpen = false;
   brownArmyModalOpen = false;
+  campaignLocationImageModalOpen = false;
   darkTriadModalOpen = false;
 
   const locationModals = [
@@ -1186,6 +1215,7 @@ function closeMapLocationModals() {
     kastelbergOverviewModal,
     schauenburgKnightModal,
     brownArmyModal,
+    campaignLocationImageModal,
     darkTriadModal
   ];
 
@@ -1222,6 +1252,7 @@ function openExclusiveLocationModal(modal, stateName) {
   if (stateName === "kastelberg") kastelbergOverviewModalOpen = true;
   if (stateName === "schauenburg") schauenburgKnightModalOpen = true;
   if (stateName === "brownArmy") brownArmyModalOpen = true;
+  if (stateName === "campaignLocation") campaignLocationImageModalOpen = true;
   if (stateName === "darkTriad") darkTriadModalOpen = true;
 
   modal?.classList.add("is-open");
@@ -1246,6 +1277,35 @@ function openSchauenburgKnightModal() {
 
 function openBrownArmyModal() {
   openExclusiveLocationModal(brownArmyModal, "brownArmy");
+}
+
+const CAMPAIGN_LOCATION_IMAGES = Object.freeze({
+  hellblau: {
+    src: "assets/ort-hellblau.jpg?v=120",
+    alt: "Steinbruch Ringelbach – Gebhard Neuenstein"
+  },
+  orange: {
+    src: "assets/ort-orange.jpg?v=120",
+    alt: "Schauenburg – Georg von Schauenburg"
+  },
+  gruen: {
+    src: "assets/ort-gruen.jpg?v=120",
+    alt: "Hubackerhof – Adam Neuenstein"
+  }
+});
+
+function openCampaignLocationImage(imageKey) {
+  const location = CAMPAIGN_LOCATION_IMAGES[imageKey];
+  if (!location || !campaignLocationImage || !campaignLocationImageModal) {
+    return;
+  }
+
+  campaignLocationImage.src = location.src;
+  campaignLocationImage.alt = location.alt;
+  openExclusiveLocationModal(
+    campaignLocationImageModal,
+    "campaignLocation"
+  );
 }
 
 function openDarkTriadModal() {
@@ -1531,6 +1591,7 @@ function isAnyMainMapPanelOpen() {
     kastelbergOverviewModalOpen ||
     schauenburgKnightModalOpen ||
     brownArmyModalOpen ||
+    campaignLocationImageModalOpen ||
     darkTriadModalOpen
   );
 }
@@ -2062,7 +2123,15 @@ mapViewport.addEventListener("click", (event) => {
         return;
 
       case "neuensteinTroops":
-        openNeuensteinTroopSelection();
+        openCampaignLocationImage("hellblau");
+        return;
+
+      case "orangeLocation":
+        openCampaignLocationImage("orange");
+        return;
+
+      case "greenLocation":
+        openCampaignLocationImage("gruen");
         return;
 
       case "ringelnatzTroops":

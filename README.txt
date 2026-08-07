@@ -1,14 +1,26 @@
-MEIERHOF V119 – MINIFIX GARNISON + CURSOR-LADEKREIS
+KAMPAGNENKARTE V120 – ORTSBILDER UND NEUE HOTSPOTS
 
-Geändert:
-- Nur die Schusspose des festen Garnisonsarmbrustschützen erhält wieder
-  ihre eigene Darstellungsbreite (14,6 %).
-- Idle und Nachladen der Garnison bleiben bei 7,2 %.
-- Rekrutierbarer Armbrustschütze bleibt vollständig unangetastet.
-- Cursor-Ladekreis ist außerhalb des Nachladens vollständig unsichtbar.
-- Beim Gedrückthalten von STRG erscheint ausschließlich ein dicker gelber
-  Fortschrittsbogen ohne graue/gelbe Vorform.
-- Der Bogen beginnt bei 0 und füllt sich kreisförmig bis 100 %.
-- Nach dem Schuss verschwindet er wie bisher vollständig.
-- Keine Änderung an Truppen, Gegnern, Kollision, Schaden, Spawn oder Sounds.
-- Script-Cache auf V119 erhöht.
+Enthalten:
+- index.html
+- script.js
+- style.css
+- sechs neue Ortsbilder im Ordner assets
+
+Zuordnung:
+- Dunkelblauer Kreis: ort-dunkelblau.jpg
+- Hellblauer Kreis: ort-hellblau.jpg
+- Roter Kreis: ort-rot.jpg
+- Lila Kreis: ort-lila.jpg
+- Neuer orangefarbener Hotspot: ort-orange.jpg
+- Neuer grüner Hotspot: ort-gruen.jpg
+
+Orange und Grün:
+- erhalten den bestehenden Karten-Hovereffekt
+- verwenden den vorhandenen Burgtor-/Kastelberg-Hoversound
+- öffnen beim Klick das zugehörige Ortsbild
+
+Unverändert:
+- Kampagnenkarten-Zoom und Kamerabewegung
+- Nebel, Musik und Ressourcen
+- Charakter-Hoversounds
+- alle Kampf-, Meierhof-, Garnisons- und Einheitensysteme

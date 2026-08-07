@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#050505">
   <title>Die Herren der Rench</title>
-  <link rel="stylesheet" href="style.css?v=115">
+  <link rel="stylesheet" href="style.css?v=120">
 
   <style id="meierhofFastReloadFeatureStyles">
     /* V117 – isoliertes Schnellnachladen-Feature. Keine Einheiten-/Truppenregeln. */
@@ -785,19 +785,10 @@
         <div class="map-location-window map-location-window--kastelberg">
           <img
             class="map-location-image"
-            src="assets/kastelberg-neuenstein-uebersicht.jpg?v=65"
+            src="assets/ort-dunkelblau.jpg?v=120"
             alt="Kastelberg – Haus Neuenstein"
             draggable="false"
           >
-          <button
-            class="panel-feud-button"
-            id="kastelbergPanelFeudButton"
-            type="button"
-            aria-label="Fehde um den Kastelberg beginnen"
-          >
-            <span class="panel-feud-swords" aria-hidden="true">⚔︎</span>
-            <span>FEHDE BEGINNEN?</span>
-          </button>
         </div>
       </div>
 
@@ -811,19 +802,10 @@
           <div class="map-selection-stage">
             <img
               class="map-location-image"
-              src="assets/schauenburg-ritter-uebersicht.jpg?v=65"
+              src="assets/ort-rot.jpg?v=120"
               alt="Truppen der Schauenburg"
               draggable="false"
             >
-
-            <span class="map-selection-marker map-selection-marker--red red-marker--1">?</span>
-            <span class="map-selection-marker map-selection-marker--red red-marker--2">?</span>
-            <span class="map-selection-marker map-selection-marker--red red-marker--3">?</span>
-            <span class="map-selection-marker map-selection-marker--red red-marker--4">?</span>
-            <span class="map-selection-marker map-selection-marker--red red-marker--5">?</span>
-            <span class="map-selection-marker map-selection-marker--red red-marker--6">?</span>
-            <span class="map-selection-marker map-selection-marker--red red-marker--7">?</span>
-            <span class="map-selection-marker map-selection-marker--red red-marker--8">?</span>
           </div>
         </div>
       </div>
@@ -838,17 +820,30 @@
           <div class="map-selection-stage">
             <img
               class="map-location-image"
-              src="assets/braunes-heer-auswahl.png?v=67"
+              src="assets/ort-lila.jpg?v=120"
               alt="Truppenauswahl des braun markierten Heeres"
               draggable="false"
             >
-
-            <span class="map-selection-marker map-selection-marker--green green-marker--1">?</span>
-            <span class="map-selection-marker map-selection-marker--green green-marker--2">?</span>
-            <span class="map-selection-marker map-selection-marker--green green-marker--3">?</span>
-            <span class="map-selection-marker map-selection-marker--green green-marker--4">?</span>
-            <span class="map-selection-marker map-selection-marker--green green-marker--5">?</span>
           </div>
+        </div>
+      </div>
+
+
+      <!-- V120 – isoliertes Ortsbildfenster für neue/ersetzte Kartenorte -->
+      <div
+        class="map-location-modal"
+        id="campaignLocationImageModal"
+        aria-hidden="true"
+      >
+        <div class="map-location-backdrop" aria-hidden="true"></div>
+        <div class="map-location-window map-location-window--campaign-location">
+          <img
+            class="map-location-image"
+            id="campaignLocationImage"
+            src="assets/ort-hellblau.jpg?v=120"
+            alt=""
+            draggable="false"
+          >
         </div>
       </div>
 
@@ -1422,6 +1417,6 @@
     </section>
   </main>
 
-  <script src="script.js?v=119"></script>
+  <script src="script.js?v=120"></script>
 </body>
 </html>
